@@ -3,450 +3,975 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="PDF Studio — أدوات عربية لدمج الصور وPDF، التحرير، العلامة المائية، وترقيم الصفحات في المتصفح." />
-  <title>PDF Studio | الذكاء والفن</title>
+  <meta name="description" content="PDF Studio — ارفع صوراً أو PDF، ثم اختر إجراءً. كل شيء على جهازك." />
+  <meta name="color-scheme" content="light dark" />
+  <title>PDF Studio — استوديو المستندات</title>
   <link rel="icon" type="image/png" sizes="192x192" href="assets/branding/app-icon-192.png" />
-  <link rel="apple-touch-icon" href="assets/branding/app-icon-192.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/fonts.css" />
   <link rel="stylesheet" href="assets/css/app.css" />
 </head>
 
 <body>
-  <a class="skip-link" href="#app-main">تخطي إلى المحتوى</a>
+<!--
+  DIRECTION CONTRACT — Orizuru sheet
+  THESIS: Empty window is one photographed origami square on photographed fold-paper; files unlock a top action strip. Refuses SaaS tool-card grids and a permanent side rail.
+  OWN-WORLD: cream folded-paper photograph as the stage; vermilion origami photograph as the drop sheet. Dark mode uses the dark fold, dark square, and dark button photographs. Primary is the red folded-paper button; secondary is the cream (light) or charcoal (dark) folded-paper button. Sumi ink. No violet, no gold, no crease SVG.
+  STORY: Drop files on the sheet. Only allowed actions appear. Run from the status crease. Nothing leaves the machine.
+  FIRST VIEWPORT: 40px titlebar; fold-paper stage; centered origami photo (icon, أسقط الملفات, formats, تصفّح الجهاز); 52px status bar with every cell and disabled تنفيذ.
+  FORM: orizuru crane sequence fused to the Operate shell; seed e0a103d9; challenger paper-folds-pleats-deployable-orizuru-crane-sequence.
+  FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+-->
+  <a class="skip-link" href="#work">تخطٍّ إلى مساحة العمل</a>
 
-  <div class="aurora-container" aria-hidden="true">
-    <div class="aurora-blob"></div>
-    <div class="aurora-blob"></div>
-    <div class="aurora-blob"></div>
-  </div>
-  <div class="glass-noise" aria-hidden="true"></div>
-
-  <svg style="display:none" aria-hidden="true">
-    <symbol id="icon-images" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></symbol>
-    <symbol id="icon-merge" viewBox="0 0 24 24"><path d="M12 4v16M8 16l4 4 4-4" /><path d="M4 12v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2" /></symbol>
-    <symbol id="icon-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></symbol>
-    <symbol id="icon-watermark" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7" /><line x1="9" y1="20" x2="15" y2="20" /><line x1="12" y1="4" x2="12" y2="20" /></symbol>
-    <symbol id="icon-numbers" viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9" /><line x1="4" y1="15" x2="20" y2="15" /><line x1="10" y1="3" x2="8" y2="21" /><line x1="16" y1="3" x2="14" y2="21" /></symbol>
-    <symbol id="icon-app" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></symbol>
-    <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></symbol>
-    <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></symbol>
-    <symbol id="icon-arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></symbol>
-    <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></symbol>
-    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></symbol>
-    <symbol id="icon-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></symbol>
-    <symbol id="icon-grip" viewBox="0 0 24 24"><circle cx="9" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="15" cy="19" r="1.5"/></symbol>
-    <symbol id="icon-rotate" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></symbol>
-    <symbol id="icon-file" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" /><polyline points="13 2 13 9 20 9" /></symbol>
-    <symbol id="icon-pdf-to-images" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" /><polyline points="13 2 13 9 20 9" /><rect x="8" y="13" width="8" height="6" rx="1" /><circle cx="10.5" cy="15.5" r="1" /><polyline points="16 18 14 16 11.5 18.5" /></symbol>
+  <svg class="sprite" aria-hidden="true">
+    <symbol id="icon-app" viewBox="0 0 24 24"><path d="M10.5 7.50195L4 22.002M13.5 7.50195L15.5172 12.002M20 22.002L18.2069 18.002"/><path d="M12 4.00195L12 2.00195"/><circle cx="12" cy="6.00195" r="2"/><path d="M3 12.002C4.99073 14.4213 8.27968 16.002 12 16.002C15.7203 16.002 19.0093 14.4213 21 12.002"/><path d="M12 14.502V17.502"/></symbol>
+    <symbol id="icon-index" viewBox="0 0 24 24"><path d="M13 3H11C7.22876 3 5.34315 3 4.17157 4.17157C3 5.34315 3 7.22876 3 11V13C3 16.7712 3 18.6569 4.17157 19.8284C5.34315 21 7.22876 21 11 21H13C16.7712 21 18.6569 21 19.8284 19.8284C21 18.6569 21 16.7712 21 13V11C21 7.22876 21 5.34315 19.8284 4.17157C18.6569 3 16.7712 3 13 3Z"/><path d="M9 3V21"/><path d="M15 3V21"/><path d="M21.0001 9L3.00014 9"/><path d="M21.0001 15L3.00014 15"/></symbol>
+    <symbol id="icon-scan" viewBox="0 0 24 24"><path d="M6.5 21.5C6.03563 21.5 5.80344 21.5 5.60812 21.478C3.98545 21.2952 2.70484 20.0145 2.52201 18.3919C2.5 18.1966 2.5 17.9644 2.5 17.5M17.5 21.5C17.9644 21.5 18.1966 21.5 18.3919 21.478C20.0145 21.2952 21.2952 20.0145 21.478 18.3919C21.5 18.1966 21.5 17.9644 21.5 17.5M6.5 2.5C6.03563 2.5 5.80344 2.5 5.60812 2.52201C3.98545 2.70484 2.70484 3.98545 2.52201 5.60812C2.5 5.80344 2.5 6.03563 2.5 6.5M17.5 2.5C17.9644 2.5 18.1966 2.5 18.3919 2.52201C20.0145 2.70484 21.2952 3.98545 21.478 5.60812C21.5 5.80344 21.5 6.03563 21.5 6.5"/><path d="M6.87868 6.87868C7.75736 6 9.17157 6 12 6C14.8284 6 16.2426 6 17.1213 6.87868C18 7.75736 18 9.17157 18 12C18 14.8284 18 16.2426 17.1213 17.1213C16.2426 18 14.8284 18 12 18C9.17157 18 7.75736 18 6.87868 17.1213C6 16.2426 6 14.8284 6 12C6 9.17157 6 7.75736 6.87868 6.87868Z"/><path d="M6.5 15.5L8.0333 13.8522C8.56719 13.2785 9.43281 13.2785 9.9667 13.8522C10.5259 14.4532 11.4415 14.4204 11.9623 13.7808L13.3711 12.0505C13.9688 11.3165 15.0312 11.3165 15.6289 12.0505L17.7603 14.6678"/><path d="M10.375 9.75H10.25M10.5 9.75C10.5 9.88807 10.3881 10 10.25 10C10.1119 10 10 9.88807 10 9.75C10 9.61193 10.1119 9.5 10.25 9.5C10.3881 9.5 10.5 9.61193 10.5 9.75Z"/></symbol>
+    <symbol id="icon-images" viewBox="0 0 24 24"><circle cx="7.5" cy="7.5" r="1.5"/><path d="M2.5 12C2.5 7.52166 2.5 5.28249 3.89124 3.89124C5.28249 2.5 7.52166 2.5 12 2.5C16.4783 2.5 18.7175 2.5 20.1088 3.89124C21.5 5.28249 21.5 7.52166 21.5 12C21.5 16.4783 21.5 18.7175 20.1088 20.1088C18.7175 21.5 16.4783 21.5 12 21.5C7.52166 21.5 5.28249 21.5 3.89124 20.1088C2.5 18.7175 2.5 16.4783 2.5 12Z"/><path d="M5 21C9.37246 15.775 14.2741 8.88406 21.4975 13.5424"/></symbol>
+    <symbol id="icon-merge" viewBox="0 0 24 24"><path d="M7 20C8.10457 20 9 19.1046 9 18C9 16.8954 8.10457 16 7 16C5.89543 16 5 16.8954 5 18C5 19.1046 5.89543 20 7 20Z"/><path d="M7 8C8.10457 8 9 7.10457 9 6C9 4.89543 8.10457 4 7 4C5.89543 4 5 4.89543 5 6C5 7.10457 5.89543 8 7 8Z"/><path d="M17 14C18.1046 14 19 13.1046 19 12C19 10.8954 18.1046 10 17 10C15.8954 10 15 10.8954 15 12C15 13.1046 15.8954 14 17 14Z"/><path d="M7.02116 8.2793V15.4073M14.4113 12.0047L10.0193 12.0048C8.92158 12.0048 6.86182 11.1254 7.01818 8.78001"/></symbol>
+    <symbol id="icon-organize" viewBox="0 0 24 24"><path d="M8.64298 3.14559L6.93816 3.93362C4.31272 5.14719 3 5.75397 3 6.75C3 7.74603 4.31272 8.35281 6.93817 9.56638L8.64298 10.3544C10.2952 11.1181 11.1214 11.5 12 11.5C12.8786 11.5 13.7048 11.1181 15.357 10.3544L17.0618 9.56638C19.6873 8.35281 21 7.74603 21 6.75C21 5.75397 19.6873 5.14719 17.0618 3.93362L15.357 3.14559C13.7048 2.38186 12.8786 2 12 2C11.1214 2 10.2952 2.38186 8.64298 3.14559Z"/><path d="M20.788 11.0972C20.9293 11.2959 21 11.5031 21 11.7309C21 12.7127 19.6873 13.3109 17.0618 14.5072L15.357 15.284C13.7048 16.0368 12.8786 16.4133 12 16.4133C11.1214 16.4133 10.2952 16.0368 8.64298 15.284L6.93817 14.5072C4.31272 13.3109 3 12.7127 3 11.7309C3 11.5031 3.07067 11.2959 3.212 11.0972"/><path d="M20.3767 16.2661C20.7922 16.5971 21 16.927 21 17.3176C21 18.2995 19.6873 18.8976 17.0618 20.0939L15.357 20.8707C13.7048 21.6236 12.8786 22 12 22C11.1214 22 10.2952 21.6236 8.64298 20.8707L6.93817 20.0939C4.31272 18.8976 3 18.2995 3 17.3176C3 16.927 3.20778 16.5971 3.62334 16.2661"/></symbol>
+    <symbol id="icon-split" viewBox="0 0 24 24"><path d="M21 8.5V6.6C21 4.90294 21 4.05442 20.4728 3.52721C19.9456 3 19.0971 3 17.4 3H15.5M20 4L14.5 9.5"/><path d="M3 8.5V6.6C3 4.90294 3 4.05442 3.52721 3.52721C4.05442 3 4.90294 3 6.6 3H8.5M4 4L9.65686 9.65686C10.813 10.813 11.391 11.391 11.6955 12.1261C12 12.8612 12 13.6787 12 15.3137V21"/></symbol>
+    <symbol id="icon-compress" viewBox="0 0 24 24"><path d="M6.50232 13.2635C7.34673 13.2515 10.1432 12.6706 10.7361 13.2635C11.329 13.8564 10.7481 16.6529 10.7361 17.4973M13.2685 6.49733C13.2565 7.34173 12.6756 10.1382 13.2685 10.7311C13.8614 11.324 16.6579 10.7431 17.5023 10.7311M20.9991 2.99902L13.6103 10.3812M10.3691 13.6237L3 21.001"/></symbol>
+    <symbol id="icon-watermark" viewBox="0 0 24 24"><path d="M4.98572 19.1814C5.00154 20.4212 5.08263 20.9434 5.49849 21.4149C6.0151 22.0007 6.84657 22.0007 8.50951 22.0007H15.4619C17.1248 22.0007 17.9563 22.0007 18.4729 21.4149C18.8888 20.9434 18.9699 20.4212 18.9857 19.1814"/><path d="M11.9887 19.0706L4.75696 19.0706C4.03899 19.0706 3.4179 18.485 3.50814 17.7727C3.6672 16.5171 4.30558 14.9994 6.83602 14.066C7.72556 13.7378 8.70501 13.4538 9.18761 12.6377C9.86497 11.4922 10.1635 10.2384 8.90009 8.0882C6.83602 4.0204 9.92439 1.99932 12.0114 1.99932C14.0983 1.99932 17.1489 4.1488 15.0643 8.0882C13.7986 10.2209 14.135 11.4922 14.8124 12.6377C15.295 13.4538 16.2744 13.7378 17.164 14.066C19.6944 14.9994 20.3328 16.5171 20.4918 17.7727C20.5821 18.485 19.961 19.0706 19.243 19.0706L12.0113 19.0706"/></symbol>
+    <symbol id="icon-numbers" viewBox="0 0 24 24"><path d="M11 6L21 6"/><path d="M11 12L21 12"/><path d="M11 18L21 18"/><path d="M3 15H4.5C4.77879 15 4.91819 15 5.03411 15.0231C5.51014 15.1177 5.88225 15.4899 5.97694 15.9659C6 16.0818 6 16.2212 6 16.5C6 16.7788 6 16.9182 5.97694 17.0341C5.88225 17.5101 5.51014 17.8823 5.03411 17.9769C4.91819 18 4.77879 18 4.5 18C4.22121 18 4.08181 18 3.96589 18.0231C3.48986 18.1177 3.11775 18.4899 3.02306 18.9659C3 19.0818 3 19.2212 3 19.5V20.4C3 20.6828 3 20.8243 3.08787 20.9121C3.17574 21 3.31716 21 3.6 21H6"/><path d="M3 3H4.2C4.36569 3 4.5 3.13431 4.5 3.3V9M4.5 9H3M4.5 9H6"/></symbol>
+    <symbol id="icon-pdf-to-images" viewBox="0 0 24 24"><path d="M5 21C9.20998 16.2487 13.9412 9.9475 21 14.6734"/><path d="M14 3.00231C13.5299 3 12.0307 3 11.5 3C7.02166 3 4.78249 3 3.39124 4.39124C2 5.78249 2 8.02166 2 12.5C2 16.9783 2 19.2175 3.39124 20.6088C4.78249 22 7.02166 22 11.5 22C15.9783 22 18.2175 22 19.6088 20.6088C20.9472 19.2703 20.998 17.147 20.9999 13"/><path d="M17 7.5C17.4915 8.0057 18.7998 10 19.5 10M22 7.5C21.5085 8.0057 20.2002 10 19.5 10M19.5 10V2"/></symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24"><path d="M17 12C17 14.7614 14.7614 17 12 17C9.23858 17 7 14.7614 7 12C7 9.23858 9.23858 7 12 7C14.7614 7 17 9.23858 17 12Z"/><path d="M12 2V3.5M12 20.5V22M19.0708 19.0713L18.0101 18.0106M5.98926 5.98926L4.9286 4.9286M22 12H20.5M3.5 12H2M19.0713 4.92871L18.0106 5.98937M5.98975 18.0107L4.92909 19.0714"/></symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M21.5 14.0784C20.3003 14.7189 18.9301 15.0821 17.4751 15.0821C12.7491 15.0821 8.91792 11.2509 8.91792 6.52485C8.91792 5.06986 9.28105 3.69968 9.92163 2.5C5.66765 3.49698 2.5 7.31513 2.5 11.8731C2.5 17.1899 6.8101 21.5 12.1269 21.5C16.6849 21.5 20.503 18.3324 21.5 14.0784Z"/></symbol>
+    <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M5.25 21H18.75C18.9822 21 19.0983 21 19.196 20.9904C20.1456 20.8968 20.8968 20.1456 20.9904 19.196C21 19.0983 21 18.9822 21 18.75C21 18.5178 21 18.4017 20.9904 18.304C20.8968 17.3544 20.1456 16.6032 19.196 16.5096C19.0983 16.5 18.9822 16.5 18.75 16.5H17.0607C16.8324 16.5 16.7182 16.5 16.6087 16.5121C16.2317 16.5538 15.8742 16.7018 15.5781 16.939C15.4921 17.0079 15.4114 17.0886 15.25 17.25C15.0886 17.4114 15.0079 17.4921 14.9219 17.561C14.6258 17.7982 14.2683 17.9462 13.8913 17.9879C13.7818 18 13.6676 18 13.4393 18H10.5607C10.3324 18 10.2182 18 10.1087 17.9879C9.73165 17.9462 9.37423 17.7982 9.07814 17.561C8.99213 17.4921 8.91142 17.4114 8.75 17.25C8.58858 17.0886 8.50787 17.0079 8.42186 16.939C8.12577 16.7018 7.76835 16.5538 7.3913 16.5121C7.28177 16.5 7.16763 16.5 6.93934 16.5H5.25C5.01783 16.5 4.90175 16.5 4.80397 16.5096C3.85441 16.6032 3.10315 17.3544 3.00963 18.304C3 18.4017 3 18.5178 3 18.75C3 18.9822 3 19.0983 3.00963 19.196C3.10315 20.1456 3.85441 20.8968 4.80397 20.9904C4.90175 21 5.01783 21 5.25 21Z"/><path d="M16.5 7.49996C16.5 7.49996 13.1858 3.00001 12 3C10.8141 2.99999 7.5 7.5 7.5 7.5M12 4V15"/></symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M16.9504 12.1817C17.1981 12.814 16.5076 13.5726 15.1267 15.0899C13.6702 16.6902 12.9201 17.4904 12 17.5C11.0799 17.4904 10.3298 16.6902 8.87331 15.0899C7.49239 13.5726 6.80193 12.814 7.04964 12.1817C7.05868 12.1586 7.06851 12.1359 7.0791 12.1135C7.34928 11.542 8.24477 11.5029 10 11.5002V4.99998C10 4.53501 10 4.30253 10.0511 4.11179C10.1898 3.59414 10.5941 3.1898 11.1118 3.05111C11.3025 3 11.535 3 12 3C12.4649 3 12.6974 3 12.8882 3.05111C13.4058 3.1898 13.8102 3.59414 13.9489 4.11179C14 4.30253 14 4.53501 14 4.99998V11.5002C15.7552 11.5029 16.6507 11.542 16.9209 12.1135C16.9315 12.1359 16.9413 12.1586 16.9504 12.1817Z"/><path d="M5.00006 21H19.0001"/></symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M19.5 5.5L18.8803 15.5251C18.7219 18.0864 18.6428 19.3671 18.0008 20.2879C17.6833 20.7431 17.2747 21.1273 16.8007 21.416C15.8421 22 14.559 22 11.9927 22C9.42312 22 8.1383 22 7.17905 21.4149C6.7048 21.1257 6.296 20.7408 5.97868 20.2848C5.33688 19.3626 5.25945 18.0801 5.10461 15.5152L4.5 5.5"/><path d="M3 5.5H21M16.0557 5.5L15.3731 4.09173C14.9196 3.15626 14.6928 2.68852 14.3017 2.39681C14.215 2.3321 14.1231 2.27454 14.027 2.2247C13.5939 2 13.0741 2 12.0345 2C10.9688 2 10.436 2 9.99568 2.23412C9.8981 2.28601 9.80498 2.3459 9.71729 2.41317C9.32164 2.7167 9.10063 3.20155 8.65861 4.17126L8.05292 5.5"/><path d="M9.5 16.5L9.5 10.5"/><path d="M14.5 16.5L14.5 10.5"/></symbol>
+    <symbol id="icon-grip" viewBox="0 0 24 24"><path d="M16 6C16 6.55228 15.5523 7 15 7C14.4477 7 14 6.55228 14 6C14 5.44772 14.4477 5 15 5C15.5523 5 16 5.44772 16 6Z"/><path d="M10 6C10 6.55228 9.55228 7 9 7C8.44772 7 8 6.55228 8 6C8 5.44772 8.44772 5 9 5C9.55228 5 10 5.44772 10 6Z"/><path d="M16 18C16 18.5523 15.5523 19 15 19C14.4477 19 14 18.5523 14 18C14 17.4477 14.4477 17 15 17C15.5523 17 16 17.4477 16 18Z"/><path d="M16 12C16 12.5523 15.5523 13 15 13C14.4477 13 14 12.5523 14 12C14 11.4477 14.4477 11 15 11C15.5523 11 16 11.4477 16 12Z"/><path d="M10 18C10 18.5523 9.55228 19 9 19C8.44772 19 8 18.5523 8 18C8 17.4477 8.44772 17 9 17C9.55228 17 10 17.4477 10 18Z"/><path d="M10 12C10 12.5523 9.55228 13 9 13C8.44772 13 8 12.5523 8 12C8 11.4477 8.44772 11 9 11C9.55228 11 10 11.4477 10 12Z"/></symbol>
+    <symbol id="icon-rotate" viewBox="0 0 24 24"><path d="M4 2V5.13219C4 5.42605 4.36724 5.55908 4.55527 5.33333C6.3854 3.2875 9.04499 2 12.0051 2C17.5251 2 22 6.47715 22 12C22 15.9582 19.7015 19.3793 16.367 21"/><path d="M11.7347 22.0001C12.2016 22.0001 12.6611 21.9688 13.1111 21.9084M2.26537 8.66675C2.15297 9.06394 2.06477 9.46536 2 9.86901M2.03457 13.5381C2.10487 13.9381 2.19644 14.3343 2.30852 14.7245M3.83292 17.9963C4.07124 18.3497 4.3296 18.69 4.6071 19.0147M7.42857 21.3607C7.78228 21.5632 8.15042 21.7464 8.53228 21.9084"/></symbol>
+    <symbol id="icon-file" viewBox="0 0 24 24"><path d="M8 7L16 7"/><path d="M8 11L12 11"/><path d="M13 21.5V21C13 18.1716 13 16.7574 13.8787 15.8787C14.7574 15 16.1716 15 19 15H19.5M20 13.3431V10C20 6.22876 20 4.34315 18.8284 3.17157C17.6569 2 15.7712 2 12 2C8.22877 2 6.34315 2 5.17157 3.17157C4 4.34314 4 6.22876 4 10L4 14.5442C4 17.7892 4 19.4117 4.88607 20.5107C5.06508 20.7327 5.26731 20.9349 5.48933 21.1139C6.58831 22 8.21082 22 11.4558 22C12.1614 22 12.5141 22 12.8372 21.886C12.9044 21.8623 12.9702 21.835 13.0345 21.8043C13.3436 21.6564 13.593 21.407 14.0919 20.9081L18.8284 16.1716C19.4065 15.5935 19.6955 15.3045 19.8478 14.9369C20 14.5694 20 14.1606 20 13.3431Z"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="M22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12Z"/><path d="M8 12.5L10.5 15L16 9"/></symbol>
+    <symbol id="icon-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8V12"/><path d="M12.125 15.75H12M12.25 15.75C12.25 15.8881 12.1381 16 12 16C11.8619 16 11.75 15.8881 11.75 15.75C11.75 15.6119 11.8619 15.5 12 15.5C12.1381 15.5 12.25 15.6119 12.25 15.75Z"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="M18 6L6.00081 17.9992M17.9992 18L6 6.00085"/></symbol>
+    <symbol id="icon-crop" viewBox="0 0 24 24"><path d="M4 2V4M22 20H20M16.5 20H10C7.17157 20 5.75736 20 4.87868 19.1213C4 18.2426 4 16.8284 4 14V7.5"/><path d="M20 22L20 12C20 8.22877 20 6.34315 18.8284 5.17158C17.6569 4 15.7712 4 12 4L2 4"/></symbol>
+    <symbol id="icon-ruler" viewBox="0 0 24 24"><path d="M17.5 10.5L19.5 12.5M14 14L16 16M10.5 17.5L12.5 19.5"/><path d="M10.5355 4.67767C11.9002 3.31296 12.5826 2.6306 13.3438 2.3153C14.3587 1.8949 15.4991 1.8949 16.5141 2.3153C17.2753 2.6306 17.9576 3.31296 19.3223 4.67767C20.687 6.04238 21.3694 6.72474 21.6847 7.48594C22.1051 8.50088 22.1051 9.64126 21.6847 10.6562C21.3694 11.4174 20.687 12.0998 19.3223 13.4645L13.4645 19.3223C12.0998 20.687 11.4174 21.3694 10.6562 21.6847C9.64126 22.1051 8.50088 22.1051 7.48594 21.6847C6.72474 21.3694 6.04238 20.687 4.67767 19.3223C3.31296 17.9576 2.6306 17.2753 2.3153 16.5141C1.8949 15.4991 1.8949 14.3587 2.3153 13.3438C2.6306 12.5826 3.31296 11.9002 4.67767 10.5355L10.5355 4.67767Z"/></symbol>
+    <symbol id="icon-zip" viewBox="0 0 24 24"><path d="M20 13V10.6569C20 9.83935 20 9.4306 19.8478 9.06306C19.6955 8.69552 19.4065 8.40649 18.8284 7.82843L14.0919 3.09188C13.593 2.593 13.3436 2.34355 13.0345 2.19575C12.9702 2.165 12.9044 2.13772 12.8372 2.11401C12.5141 2 12.1614 2 11.4558 2C8.21082 2 6.58831 2 5.48933 2.88607C5.26731 3.06508 5.06508 3.26731 4.88607 3.48933C4 4.58831 4 6.21082 4 9.45584V13M13 2.5V3C13 5.82843 13 7.24264 13.8787 8.12132C14.7574 9 16.1716 9 19 9H19.5"/><path d="M11 16H12M12 16H13M12 16V22M12 22H11M12 22H13M15.5 22V16H17.3618C18.0675 16 18.7977 16.3516 18.9492 17.0408C19.0128 17.33 19.0109 17.6038 18.9488 17.8923C18.7936 18.6138 18.0392 19 17.3012 19H16M5.00003 16H8.2C8.36569 16 8.5 16.1343 8.5 16.3V16.4054C8.5 16.467 8.48107 16.527 8.44577 16.5775L5.06872 21.4018C5.02399 21.4657 5 21.5418 5 21.6198C5 21.8298 5.17021 22 5.38016 22H8.32349"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 4V20M20 12H4"/></symbol>
+    <symbol id="icon-enhance" viewBox="0 0 24 24"><path d="M17.5 17.5L21.5 21.5"/><path d="M5.97185 3.79282L9.31786 4.92059C9.78049 5.08073 10.4825 4.97602 10.88 4.69283L13.2273 3.01883C14.729 1.949 15.972 2.58706 15.9733 4.44162L15.9862 7.58112C15.9884 8.11281 16.3582 8.7726 16.8087 9.05928L19.207 10.5629C21.104 11.7544 20.8884 13.1649 18.7263 13.713L15.7172 14.4729C15.1735 14.6099 14.6126 15.1709 14.4693 15.721L13.7096 18.7307C13.1679 20.8868 11.7449 21.1025 10.5601 19.2114L9.0567 16.8127C8.77007 16.3621 8.1104 15.9923 7.57881 15.9901L4.43989 15.9772C2.59198 15.9696 1.94773 14.7327 3.01737 13.2306L4.69105 10.8829C4.96789 10.4917 5.07258 9.78951 4.91247 9.3268L3.78491 5.98017C3.17623 4.16109 4.15941 3.17773 5.97185 3.79282Z"/></symbol>
+    <symbol id="icon-contrast" viewBox="0 0 24 24"><circle cx="12" cy="12.002" r="10"/><path d="M14.9097 18.3695C17.3232 17.265 19 14.8288 19 12.001C19 9.17321 17.3232 6.73703 14.9097 5.63253C13.8893 5.16557 13.3791 4.93208 12.6895 5.37484C12 5.81759 12 6.5454 12 8.00102V16.001C12 17.4566 12 18.1845 12.6895 18.6272C13.3791 19.07 13.8893 18.8365 14.9097 18.3695Z"/></symbol>
+    <symbol id="icon-quad" viewBox="0 0 24 24"><path d="M18.5 8C18.814 9.11421 19 10.4992 19 12C19 13.5008 18.814 14.8858 18.5 16M5.5 8C5.18604 9.11421 5 10.4992 5 12C5 13.5008 5.18604 14.8858 5.5 16M8 5.5C9.11421 5.18604 10.4992 5 12 5C13.5008 5 14.8858 5.18604 16 5.5M8 18.5C9.11421 18.814 10.4992 19 12 19C13.5008 19 14.8858 18.814 16 18.5"/><path d="M4.60982 7.96157C4.80302 8 5.03534 8 5.5 8C5.96466 8 6.19698 8 6.39018 7.96157C7.18356 7.80376 7.80376 7.18356 7.96157 6.39018C8 6.19698 8 5.96466 8 5.5C8 5.03534 8 4.80302 7.96157 4.60982C7.80376 3.81644 7.18356 3.19624 6.39018 3.03843C6.19698 3 5.96466 3 5.5 3C5.03534 3 4.80302 3 4.60982 3.03843C3.81644 3.19624 3.19624 3.81644 3.03843 4.60982C3 4.80302 3 5.03534 3 5.5C3 5.96466 3 6.19698 3.03843 6.39018C3.19624 7.18356 3.81644 7.80376 4.60982 7.96157Z"/><path d="M17.6098 7.96157C17.803 8 18.0353 8 18.5 8C18.9647 8 19.197 8 19.3902 7.96157C20.1836 7.80376 20.8038 7.18356 20.9616 6.39018C21 6.19698 21 5.96466 21 5.5C21 5.03534 21 4.80302 20.9616 4.60982C20.8038 3.81644 20.1836 3.19624 19.3902 3.03843C19.197 3 18.9647 3 18.5 3C18.0353 3 17.803 3 17.6098 3.03843C16.8164 3.19624 16.1962 3.81644 16.0384 4.60982C16 4.80302 16 5.03534 16 5.5C16 5.96466 16 6.19698 16.0384 6.39018C16.1962 7.18356 16.8164 7.80376 17.6098 7.96157Z"/><path d="M4.60982 20.9616C4.80302 21 5.03534 21 5.5 21C5.96466 21 6.19698 21 6.39018 20.9616C7.18356 20.8038 7.80376 20.1836 7.96157 19.3902C8 19.197 8 18.9647 8 18.5C8 18.0353 8 17.803 7.96157 17.6098C7.80376 16.8164 7.18356 16.1962 6.39018 16.0384C6.19698 16 5.96466 16 5.5 16C5.03534 16 4.80302 16 4.60982 16.0384C3.81644 16.1962 3.19624 16.8164 3.03843 17.6098C3 17.803 3 18.0353 3 18.5C3 18.9647 3 19.197 3.03843 19.3902C3.19624 20.1836 3.81644 20.8038 4.60982 20.9616Z"/><path d="M17.6098 20.9616C17.803 21 18.0353 21 18.5 21C18.9647 21 19.197 21 19.3902 20.9616C20.1836 20.8038 20.8038 20.1836 20.9616 19.3902C21 19.197 21 18.9647 21 18.5C21 18.0353 21 17.803 20.9616 17.6098C20.8038 16.8164 20.1836 16.1962 19.3902 16.0384C19.197 16 18.9647 16 18.5 16C18.0353 16 17.803 16 17.6098 16.0384C16.8164 16.1962 16.1962 16.8164 16.0384 17.6098C16 17.803 16 18.0353 16 18.5C16 18.9647 16 19.197 16.0384 19.3902C16.1962 20.1836 16.8164 20.8038 17.6098 20.9616Z"/></symbol>
+    <symbol id="icon-lock" viewBox="0 0 24 24"><path d="M12 16.5V14.5"/><path d="M4.2678 18.8447C4.49268 20.515 5.87612 21.8235 7.55965 21.9009C8.97627 21.966 10.4153 22 12 22C13.5847 22 15.0237 21.966 16.4403 21.9009C18.1239 21.8235 19.5073 20.515 19.7322 18.8447C19.8789 17.7547 20 16.6376 20 15.5C20 14.3624 19.8789 13.2453 19.7322 12.1553C19.5073 10.485 18.1239 9.17649 16.4403 9.09909C15.0237 9.03397 13.5847 9 12 9C10.4153 9 8.97627 9.03397 7.55965 9.09909C5.87612 9.17649 4.49268 10.485 4.2678 12.1553C4.12104 13.2453 3.99999 14.3624 3.99999 15.5C3.99999 16.6376 4.12104 17.7547 4.2678 18.8447Z"/><path d="M7.5 9V6.5C7.5 4.01472 9.51472 2 12 2C14.4853 2 16.5 4.01472 16.5 6.5V9"/></symbol>
+    <symbol id="icon-sign" viewBox="0 0 24 24"><path d="M4 20.5H20"/><path d="M14.2 4.8L18.4 9L9.5 17.9H5.3V13.7L14.2 4.8Z"/><path d="M12.7 6.3L16.9 10.5"/></symbol>
+    <symbol id="icon-win-min" viewBox="0 0 12 12"><path d="M2.5 6H9.5"/></symbol>
+    <symbol id="icon-win-max" viewBox="0 0 12 12"><rect x="2.75" y="2.75" width="6.5" height="6.5" rx="0.6"/></symbol>
   </svg>
 
-  <header>
-    <nav class="nav-global" aria-label="التنقل الرئيسي">
-      <button id="brand-home" class="brand-logo" type="button" aria-label="الذهاب إلى الصفحة الرئيسية">
-        <svg class="icon" aria-hidden="true"><use href="#icon-app"></use></svg>
-        <span class="brand-logo__text">PDF Studio</span>
-      </button>
+  <div class="board">
+    <div class="sheet">
+      <div class="sheet__frame" aria-hidden="true"></div>
 
-      <div class="nav-actions">
-        <button id="btn-home" class="nav-btn-back" type="button" aria-label="العودة للرئيسية">
-          <svg class="icon nav-arrow-back" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
-          <span>العودة للرئيسية</span>
-        </button>
-        <button id="theme-toggle" class="theme-btn" type="button" aria-label="تبديل الوضع الفاتح والداكن">
+      <header class="sheet__head app-titlebar titlebar-drag">
+          <button class="mark titlebar-nodrag" type="button" data-route="start" aria-label="العودة إلى البداية">
+            <svg class="icon mark__glyph" aria-hidden="true"><use href="#icon-app"></use></svg>
+            <span class="mark__name" lang="en">PDF Studio</span>
+            <span class="mark__sub">استوديو المستندات</span>
+          </button>
+
+        <button id="theme-toggle" class="ghost-btn titlebar-nodrag" type="button" aria-label="تبديل الوضع الفاتح والداكن">
           <svg class="icon icon-sun" aria-hidden="true"><use href="#icon-sun"></use></svg>
-          <svg class="icon icon-moon" style="display:none" aria-hidden="true"><use href="#icon-moon"></use></svg>
+          <svg class="icon icon-moon" aria-hidden="true"><use href="#icon-moon"></use></svg>
         </button>
+
+        <div class="win-controls titlebar-nodrag" aria-label="أزرار النافذة">
+          <button id="win-min" class="win-controls__btn" type="button" aria-label="تصغير">
+            <svg class="icon" aria-hidden="true"><use href="#icon-win-min"></use></svg>
+          </button>
+          <button id="win-max" class="win-controls__btn" type="button" aria-label="تكبير">
+            <svg class="icon" aria-hidden="true"><use href="#icon-win-max"></use></svg>
+          </button>
+          <button id="win-close" class="win-controls__btn win-controls__btn--close" type="button" aria-label="إغلاق">
+            <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="sheet__body">
+        <nav class="legend" aria-label="إجراءات المستند">
+          <div class="legend__head">
+            <h2 class="legend__title" id="legend-title">الإجراءات</h2>
+            <p class="legend__lede" id="legend-lede">ارفع ملفات أولاً</p>
+          </div>
+          <ul class="legend__list" id="legend-list"></ul>
+        </nav>
+
+        <main class="work" id="work">
+          <section id="view-start" class="view view--active" aria-labelledby="start-title" role="region">
+            <div class="start">
+              <div id="hub-drop" class="intake intake--sheet" data-kind="any">
+                <img class="sheet-photo sheet-photo--day" src="assets/textures/drop-sheet.webp" alt="" />
+                <img class="sheet-photo sheet-photo--night" src="assets/textures/drop-sheet-dark.webp" alt="" />
+                <div class="sheet-copy">
+                  <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-upload"></use></svg>
+                  <h1 class="start__title" id="start-title" tabindex="-1">أسقط الملفات</h1>
+                  <p class="intake__title">أسقط صوراً أو PDF</p>
+                  <p class="intake__hint">متعدد · مختلط · JPG · PNG · PDF</p>
+                  <button id="hub-browse" type="button" class="btn btn--sheet">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                  </button>
+                </div>
+              </div>
+              <input id="hub-input" type="file" accept="image/*,application/pdf,.pdf" multiple hidden />
+
+              <div id="hub-panel" class="start__files" hidden>
+                <div class="doclist__head">
+                  <h1 class="doclist__title" id="hub-mix">الملفات</h1>
+                  <div class="btn-row start__file-actions">
+                    <button id="hub-add" type="button" class="btn btn--quiet">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> إضافة
+                    </button>
+                    <button id="hub-sort" type="button" class="btn btn--quiet" hidden>
+                      <svg class="icon" aria-hidden="true"><use href="#icon-organize"></use></svg> اقتراح الترتيب
+                    </button>
+                    <button id="hub-clear" type="button" class="btn btn--quiet">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> تفريغ
+                    </button>
+                  </div>
+                </div>
+                <div id="hub-list" class="doclist start__chips"></div>
+                <div id="hub-actions" hidden></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-scan" class="view" aria-labelledby="scan-title" role="region" hidden>
+            <div class="view__head view__head--scan">
+              <h2 class="view__title" id="scan-title" tabindex="-1">صور → PDF</h2>
+              <ol class="flow flow--compact" aria-hidden="true">
+                <li class="flow__node"><span class="flow__glyph" data-tone="in"><svg class="icon"><use href="#icon-scan"></use></svg></span></li>
+                <li class="flow__arrow"><svg class="icon"><use href="#icon-arrow"></use></svg></li>
+                <li class="flow__node"><span class="flow__glyph" data-tone="mid"><svg class="icon"><use href="#icon-quad"></use></svg></span></li>
+                <li class="flow__arrow"><svg class="icon"><use href="#icon-arrow"></use></svg></li>
+                <li class="flow__node"><span class="flow__glyph" data-tone="out"><svg class="icon"><use href="#icon-file"></use></svg></span></li>
+              </ol>
+              <p class="view__lede">أسقط الصورة، اسحب الأركان على الأصل، وشاهد التدوير والألوان فوراً.</p>
+            </div>
+
+            <div id="scan-start" class="view__body">
+              <div id="scan-drop" class="intake intake--hero" data-kind="image">
+                <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-scan"></use></svg>
+                <span class="intake__title">أسقط صور المستندات هنا</span>
+                <span class="intake__hint">JPG · PNG · WEBP</span>
+                <button id="scan-browse" type="button" class="btn">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                </button>
+              </div>
+              <input id="scan-input" type="file" accept="image/*" multiple hidden />
+            </div>
+
+            <div id="scan-workspace" class="scan" hidden>
+              <div class="scan__stage">
+                <div class="scan__canvas-wrap">
+                  <canvas id="scan-canvas" class="scan__canvas" width="800" height="600"
+                          aria-label="معاينة الصورة مع أركان المستند القابلة للسحب"
+                          tabindex="0"></canvas>
+                  <p class="scan__overlay-hint" id="scan-hint">اسحب الأركان على الصورة الأصلية. التدوير والألوان تظهر فوراً.</p>
+                  <div class="scan__pager">
+                    <button id="scan-prev" type="button" class="ghost-btn ghost-btn--label">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-arrow"></use></svg> السابقة
+                    </button>
+                    <span class="scan__count num" id="scan-count">1 / 1</span>
+                    <button id="scan-next" type="button" class="ghost-btn ghost-btn--label">
+                      التالية <svg class="icon flip" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <aside class="scan__panel">
+                    <div class="panel-block">
+                      <h3 class="panel-block__title">الحواف</h3>
+                      <p class="panel-block__meta" id="scan-detect-meta">لم يبدأ الكشف بعد.</p>
+                      <div class="btn-row">
+                        <button id="scan-redetect" type="button" class="btn btn--quiet">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-quad"></use></svg> كشف تلقائي
+                        </button>
+                        <button id="scan-full" type="button" class="btn btn--quiet">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-crop"></use></svg> الصورة كاملة
+                        </button>
+                      </div>
+                      <button id="scan-preview" type="button" class="btn btn--wide is-current" aria-pressed="true">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-enhance"></use></svg>
+                        <span class="btn__label">معاينة حية</span>
+                      </button>
+                    </div>
+
+                <div class="panel-block">
+                  <h3 class="panel-block__title">المعالجة</h3>
+                  <div class="choice-grid choice-grid--tones" role="radiogroup" aria-label="نمط المعالجة">
+                    <label class="choice" data-tone="color"><input type="radio" name="scan-mode" value="color" checked /><span><i class="tone" aria-hidden="true"></i> ملوّن</span></label>
+                    <label class="choice" data-tone="sharp"><input type="radio" name="scan-mode" value="sharp" /><span><i class="tone" aria-hidden="true"></i> تباين</span></label>
+                    <label class="choice" data-tone="gray"><input type="radio" name="scan-mode" value="gray" /><span><i class="tone" aria-hidden="true"></i> رمادي</span></label>
+                    <label class="choice" data-tone="bw"><input type="radio" name="scan-mode" value="bw" /><span><i class="tone" aria-hidden="true"></i> أبيض/أسود</span></label>
+                    <label class="choice" data-tone="original"><input type="radio" name="scan-mode" value="original" /><span><i class="tone" aria-hidden="true"></i> الأصل</span></label>
+                  </div>
+                </div>
+
+                <div class="panel-block">
+                  <h3 class="panel-block__title">الاتجاه</h3>
+                  <div class="btn-row">
+                    <button id="scan-rotate" type="button" class="btn btn--quiet">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-rotate"></use></svg> تدوير ٩٠°
+                    </button>
+                    <button id="scan-remove" type="button" class="btn btn--quiet btn--danger">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> إزالة الصفحة
+                    </button>
+                  </div>
+                </div>
+
+                <div class="panel-block">
+                  <h3 class="panel-block__title">الناتج</h3>
+                  <div class="field">
+                    <label for="scan-output">الصيغة</label>
+                    <select id="scan-output">
+                      <option value="pdf">ملف PDF واحد</option>
+                      <option value="jpeg">صور JPG</option>
+                      <option value="png">صور PNG</option>
+                    </select>
+                  </div>
+                  <div class="btn-row">
+                    <button id="scan-add" type="button" class="btn btn--quiet">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> إضافة صور
+                    </button>
+                    <button id="scan-clear" type="button" class="btn btn--quiet">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق
+                    </button>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </section>
+
+          <section id="view-images" class="view" aria-labelledby="images-title" role="region" hidden>
+            <div class="view__head">
+              <h2 class="view__title" id="images-title" tabindex="-1">صور → PDF</h2>
+              <p class="view__lede">رتّب الصفحات، واضبط المقاس والهوامش.</p>
+            </div>
+
+            <div class="view__body">
+              <div id="images-drop" class="intake" data-kind="image">
+                <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-images"></use></svg>
+                <span class="intake__title">أسقط الصور هنا</span>
+                <span class="intake__hint">PNG · JPG · WEBP · GIF · BMP</span>
+                <button id="images-browse" type="button" class="btn">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                </button>
+              </div>
+              <input id="images-input" type="file" accept="image/*" multiple hidden />
+
+              <div id="images-panel" hidden>
+                <div class="fieldset">
+                  <div class="field">
+                    <label for="images-page">مقاس الصفحة</label>
+                    <select id="images-page">
+                      <option value="a4">A4</option>
+                      <option value="letter">Letter</option>
+                      <option value="fit">بمقاس كل صورة</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="images-orient">الاتجاه</label>
+                    <select id="images-orient">
+                      <option value="auto">تلقائي حسب الصورة</option>
+                      <option value="portrait">طولي</option>
+                      <option value="landscape">عرضي</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="images-margin">الهامش (مم)</label>
+                    <input id="images-margin" type="number" min="0" max="40" step="1" value="8" />
+                  </div>
+                </div>
+
+                <div class="doclist__head">
+                  <h3 class="doclist__title">ترتيب الصفحات</h3>
+                  <div class="btn-row">
+                    <button id="images-add" type="button" class="btn btn--quiet">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> إضافة
+                    </button>
+                    <button id="images-sort" type="button" class="btn btn--quiet" hidden>
+                      <svg class="icon" aria-hidden="true"><use href="#icon-organize"></use></svg> اقتراح الترتيب
+                    </button>
+                    <button id="images-clear" type="button" class="btn btn--quiet">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> تفريغ
+                    </button>
+                  </div>
+                </div>
+                <div id="images-list" class="doclist"></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-merge" class="view" aria-labelledby="merge-title" role="region" hidden>
+            <div class="view__head">
+              <h2 class="view__title" id="merge-title" tabindex="-1">دمج</h2>
+              <p class="view__lede">PDF + PDF في ملف واحد.</p>
+            </div>
+
+            <div class="view__body">
+              <div id="merge-drop" class="intake" data-kind="pdf">
+                <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-merge"></use></svg>
+                <span class="intake__title">أسقط ملفات PDF هنا</span>
+                <span class="intake__hint">يمكن اختيار عدة ملفات دفعة واحدة</span>
+                <button id="merge-browse" type="button" class="btn">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                </button>
+              </div>
+              <input id="merge-input" type="file" accept="application/pdf,.pdf" multiple hidden />
+
+              <div id="merge-panel" hidden>
+                <div class="doclist__head">
+                  <h3 class="doclist__title">تسلسل الدمج</h3>
+                  <div class="btn-row">
+                    <button id="merge-add" type="button" class="btn btn--quiet">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> إضافة
+                    </button>
+                    <button id="merge-clear" type="button" class="btn btn--quiet">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> تفريغ
+                    </button>
+                  </div>
+                </div>
+                <div id="merge-list" class="doclist"></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-organize" class="view" aria-labelledby="organize-title" role="region" hidden>
+            <div class="view__head">
+              <h2 class="view__title" id="organize-title" tabindex="-1">ترتيب</h2>
+              <p class="view__lede">أعد الترتيب، دوّر، احذف، أو أدرج صفحات وصوراً جديدة داخل المستند.</p>
+            </div>
+
+            <div class="view__body">
+              <div id="organize-drop" class="intake" data-kind="pdf">
+                <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-organize"></use></svg>
+                <span class="intake__title">أسقط ملف PDF هنا</span>
+                <span class="intake__hint">ملف واحد — تُعرض صفحاته للتعديل</span>
+                <button id="organize-browse" type="button" class="btn">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                </button>
+              </div>
+              <input id="organize-input" type="file" accept="application/pdf,.pdf" hidden />
+
+              <div id="organize-panel" hidden>
+                <div class="doclist__head">
+                  <h3 class="doclist__title">صفحات المستند</h3>
+                  <div class="btn-row">
+                    <button id="organize-add-pdf" type="button" class="btn btn--quiet">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-file"></use></svg> إدراج PDF
+                    </button>
+                    <button id="organize-add-img" type="button" class="btn btn--quiet">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-images"></use></svg> إدراج صورة
+                    </button>
+                    <button id="organize-clear" type="button" class="btn btn--quiet">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق
+                    </button>
+                    <input id="organize-add-pdf-input" type="file" accept="application/pdf,.pdf" multiple hidden />
+                    <input id="organize-add-img-input" type="file" accept="image/*" multiple hidden />
+                  </div>
+                </div>
+                <p class="note" id="organize-anchor">الإدراج التالي سيكون في نهاية المستند. اختر صفحة ليُدرج بعدها مباشرة.</p>
+                <div id="organize-list" class="doclist doclist--pages"></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-split" class="view" aria-labelledby="split-title" role="region" hidden>
+            <div class="view__head">
+              <h2 class="view__title" id="split-title" tabindex="-1">تقسيم</h2>
+              <p class="view__lede">قسّم المستند إلى ملفات، أو استخرج نطاق صفحات في ملف مستقل.</p>
+            </div>
+
+            <div class="view__body">
+              <div id="split-drop" class="intake" data-kind="pdf">
+                <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-split"></use></svg>
+                <span class="intake__title">أسقط ملف PDF هنا</span>
+                <span class="intake__hint">ملف واحد</span>
+                <button id="split-browse" type="button" class="btn">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                </button>
+              </div>
+              <input id="split-input" type="file" accept="application/pdf,.pdf" hidden />
+
+              <div id="split-panel" hidden>
+                <div class="fieldset">
+                  <div class="field">
+                    <label for="split-mode">طريقة التقسيم</label>
+                    <select id="split-mode">
+                      <option value="ranges">نطاقات محددة</option>
+                      <option value="every">كل عدد من الصفحات</option>
+                      <option value="single">كل صفحة في ملف</option>
+                      <option value="extract">استخراج في ملف واحد</option>
+                    </select>
+                  </div>
+                  <div class="field" id="split-ranges-field">
+                    <label for="split-ranges">النطاقات</label>
+                    <input id="split-ranges" type="text" inputmode="latin" value="1-3, 4-6" />
+                  </div>
+                  <div class="field" id="split-every-field" hidden>
+                    <label for="split-every">عدد الصفحات لكل ملف</label>
+                    <input id="split-every" type="number" min="1" max="9999" value="2" />
+                  </div>
+                </div>
+                    <p class="note" id="split-note">اكتب النطاقات مفصولة بفواصل، مثل <code>1-3, 5, 8-12</code>.</p>
+                    <div class="doclist__head">
+                      <h3 class="doclist__title">الملفات الناتجة</h3>
+                      <button id="split-clear" type="button" class="btn btn--quiet">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                      </button>
+                    </div>
+                    <div class="plan" id="split-plan"></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-compress" class="view" aria-labelledby="compress-title" role="region" hidden>
+            <div class="view__head">
+              <h2 class="view__title" id="compress-title" tabindex="-1">ضغط</h2>
+              <p class="view__lede">يعيد بناء الصفحات كصور مضغوطة بدقة تختارها. مناسب للمستندات الممسوحة والمصوّرة.</p>
+            </div>
+
+            <div class="view__body">
+              <div id="compress-drop" class="intake" data-kind="pdf">
+                <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-compress"></use></svg>
+                <span class="intake__title">أسقط ملف PDF هنا</span>
+                <span class="intake__hint">ملف واحد</span>
+                <button id="compress-browse" type="button" class="btn">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                </button>
+              </div>
+              <input id="compress-input" type="file" accept="application/pdf,.pdf" hidden />
+
+              <div id="compress-panel" hidden>
+                <div class="fieldset">
+                  <div class="field">
+                    <label for="compress-level">مستوى الضغط</label>
+                    <select id="compress-level">
+                      <option value="light">خفيف — 150 نقطة/بوصة</option>
+                      <option value="balanced" selected>متوازن — 120 نقطة/بوصة</option>
+                      <option value="strong">قوي — 96 نقطة/بوصة</option>
+                      <option value="extreme">أقصى — 72 نقطة/بوصة</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="compress-gray">اللون</label>
+                    <select id="compress-gray">
+                      <option value="keep">كما هو</option>
+                      <option value="gray">تحويل إلى رمادي</option>
+                    </select>
+                  </div>
+                </div>
+                <p class="note">
+                  الضغط يحوّل كل صفحة إلى صورة، فيصغُر الحجم كثيراً لكن النص يفقد قابلية البحث والتحديد.
+                  استخدمه للمستندات الممسوحة، لا للتقارير النصية.
+                </p>
+                <div class="readout" id="compress-readout"></div>
+                <button id="compress-clear" type="button" class="btn btn--quiet">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-watermark" class="view" aria-labelledby="watermark-title" role="region" hidden>
+            <div class="view__head">
+              <h2 class="view__title" id="watermark-title" tabindex="-1">علامة</h2>
+              <p class="view__lede">اطبع نصاً شفافاً فوق كل صفحة.</p>
+            </div>
+
+            <div class="view__body">
+              <div id="watermark-drop" class="intake" data-kind="pdf">
+                <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-watermark"></use></svg>
+                <span class="intake__title">أسقط ملف PDF هنا</span>
+                <span class="intake__hint">ملف واحد</span>
+                <button id="watermark-browse" type="button" class="btn">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                </button>
+              </div>
+              <input id="watermark-input" type="file" accept="application/pdf,.pdf" hidden />
+
+              <div id="watermark-panel" hidden>
+                <div class="fieldset">
+                  <div class="field field--wide">
+                    <label for="watermark-text">النص</label>
+                    <input id="watermark-text" type="text" value="نسخة غير مصرّح بها — سري" />
+                  </div>
+                  <div class="field">
+                    <label for="watermark-position">الموضع</label>
+                    <select id="watermark-position">
+                      <option value="center">المنتصف</option>
+                      <option value="tile">مكرّر على الصفحة</option>
+                      <option value="top-right">أعلى اليمين</option>
+                      <option value="top-left">أعلى اليسار</option>
+                      <option value="bottom-right">أسفل اليمين</option>
+                      <option value="bottom-left">أسفل اليسار</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="watermark-opacity">الشفافية ٪</label>
+                    <input id="watermark-opacity" type="number" min="5" max="100" value="18" />
+                  </div>
+                  <div class="field">
+                    <label for="watermark-size">الحجم</label>
+                    <input id="watermark-size" type="number" min="16" max="220" value="76" />
+                  </div>
+                  <div class="field">
+                    <label for="watermark-angle">الزاوية</label>
+                    <input id="watermark-angle" type="number" min="-90" max="90" value="-32" />
+                  </div>
+                  <div class="field">
+                    <label for="watermark-color">اللون</label>
+                    <input id="watermark-color" type="color" value="#cf3a21" />
+                  </div>
+                </div>
+                <div class="preview" id="watermark-preview">
+                  <span class="preview__label">معاينة الصفحة الأولى</span>
+                  <div class="preview__stage"><canvas id="watermark-canvas" width="360" height="509"></canvas></div>
+                </div>
+                <button id="watermark-clear" type="button" class="btn btn--quiet">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-numbers" class="view" aria-labelledby="numbers-title" role="region" hidden>
+            <div class="view__head">
+              <h2 class="view__title" id="numbers-title" tabindex="-1">ترقيم</h2>
+              <p class="view__lede">أرقام نصية حقيقية داخل الملف، قابلة للبحث والنسخ.</p>
+            </div>
+
+            <div class="view__body">
+              <div id="numbers-drop" class="intake" data-kind="pdf">
+                <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-numbers"></use></svg>
+                <span class="intake__title">أسقط ملف PDF هنا</span>
+                <span class="intake__hint">ملف واحد</span>
+                <button id="numbers-browse" type="button" class="btn">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                </button>
+              </div>
+              <input id="numbers-input" type="file" accept="application/pdf,.pdf" hidden />
+
+              <div id="numbers-panel" hidden>
+                <div class="fieldset">
+                  <div class="field">
+                    <label for="numbers-template">النمط</label>
+                    <select id="numbers-template">
+                      <option value="plain">1</option>
+                      <option value="dash">- 1 -</option>
+                      <option value="total">1 / 20</option>
+                      <option value="brackets">[ 1 ]</option>
+                      <option value="page">صفحة 1</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="numbers-position">الموضع</label>
+                    <select id="numbers-position">
+                      <option value="bottom-center">أسفل المنتصف</option>
+                      <option value="bottom-right">أسفل اليمين</option>
+                      <option value="bottom-left">أسفل اليسار</option>
+                      <option value="top-center">أعلى المنتصف</option>
+                      <option value="top-right">أعلى اليمين</option>
+                      <option value="top-left">أعلى اليسار</option>
+                      <option value="bottom-outer">هامش خارجي متناوب</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="numbers-start">يبدأ من</label>
+                    <input id="numbers-start" type="number" min="1" value="1" />
+                  </div>
+                  <div class="field">
+                    <label for="numbers-size">الحجم</label>
+                    <input id="numbers-size" type="number" min="8" max="64" value="16" />
+                  </div>
+                  <div class="field">
+                    <label for="numbers-margin">الهامش</label>
+                    <input id="numbers-margin" type="number" min="12" max="120" value="34" />
+                  </div>
+                  <div class="field">
+                    <label for="numbers-color">اللون</label>
+                    <input id="numbers-color" type="color" value="#16201a" />
+                  </div>
+                </div>
+                    <label class="check" for="numbers-skip-first">
+                      <input id="numbers-skip-first" type="checkbox" />
+                      <span>تجاوز الصفحة الأولى</span>
+                    </label>
+                    <p class="note" id="numbers-note">الأرقام تُكتب كنص حقيقي داخل الملف، فتبقى قابلة للبحث والنسخ.</p>
+                <div class="preview" id="numbers-preview">
+                  <span class="preview__label">معاينة الصفحة الأولى المرقّمة</span>
+                  <div class="preview__stage"><canvas id="numbers-canvas" width="360" height="509"></canvas></div>
+                </div>
+                <button id="numbers-clear" type="button" class="btn btn--quiet">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-rasterize" class="view" aria-labelledby="rasterize-title" role="region" hidden>
+            <div class="view__head">
+              <h2 class="view__title" id="rasterize-title" tabindex="-1">PDF → صور</h2>
+              <p class="view__lede">صفحة → صورة. مجلد أو ZIP.</p>
+            </div>
+
+            <div class="view__body">
+              <div id="rasterize-drop" class="intake" data-kind="pdf">
+                <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-pdf-to-images"></use></svg>
+                <span class="intake__title">أسقط ملف PDF هنا</span>
+                <span class="intake__hint">ملف واحد</span>
+                <button id="rasterize-browse" type="button" class="btn">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                </button>
+              </div>
+              <input id="rasterize-input" type="file" accept="application/pdf,.pdf" hidden />
+
+              <div id="rasterize-panel" hidden>
+                <div class="fieldset">
+                  <div class="field">
+                    <label for="rasterize-format">الصيغة</label>
+                    <select id="rasterize-format">
+                      <option value="png">PNG</option>
+                      <option value="jpeg">JPG</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="rasterize-scale">الدقة (مضاعف)</label>
+                    <select id="rasterize-scale">
+                      <option value="1">×1 — عرض</option>
+                      <option value="2" selected>×2 — قياسي</option>
+                      <option value="3">×3 — طباعة</option>
+                      <option value="4">×4 — أقصى</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="rasterize-target">مكان الحفظ</label>
+                    <select id="rasterize-target">
+                      <option value="zip">ملف مضغوط ZIP</option>
+                      <option value="folder">مجلد على الجهاز</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="doclist__head">
+                  <h3 class="doclist__title">الصفحات</h3>
+                  <button id="rasterize-clear" type="button" class="btn btn--quiet">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                  </button>
+                </div>
+                <div id="rasterize-list" class="doclist doclist--pages"></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-sign" class="view" aria-labelledby="sign-title" role="region" hidden>
+            <h2 class="view__title" id="sign-title" tabindex="-1">توقيع</h2>
+          </section>
+
+          <section id="view-protect" class="view" aria-labelledby="protect-title" role="region" hidden>
+            <div class="view__head">
+              <h2 class="view__title" id="protect-title" tabindex="-1">حماية</h2>
+              <p class="view__lede">AES-256 على الجهاز. إزالة الحماية بكلمة السر المعروفة فقط.</p>
+            </div>
+            <div class="view__body">
+              <div class="fieldset">
+                <div class="field field--wide">
+                  <span id="protect-mode-label">العملية</span>
+                  <div class="choice-grid" role="radiogroup" aria-labelledby="protect-mode-label">
+                    <label class="choice">
+                      <input type="radio" name="protect-mode" value="lock" checked />
+                      <span>حماية</span>
+                    </label>
+                    <label class="choice">
+                      <input type="radio" name="protect-mode" value="unlock" />
+                      <span>إزالة الحماية</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div id="protect-drop" class="intake" data-kind="pdf">
+                <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-lock"></use></svg>
+                <span class="intake__title">أسقط ملف PDF هنا</span>
+                <span class="intake__hint">ملف واحد — محلي</span>
+                <button id="protect-browse" type="button" class="btn">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                </button>
+              </div>
+              <input id="protect-input" type="file" accept="application/pdf,.pdf" hidden />
+              <div id="protect-panel" hidden>
+                <div class="readout" id="protect-readout"></div>
+                <p class="note" id="protect-lock-note">إن نسيت كلمة السر فلن يمكن فتح الملف لاحقاً.</p>
+                <p class="note" id="protect-unlock-note" hidden>لا تخمين ولا كسر — كلمة السر المعروفة فقط.</p>
+                <p class="note" id="protect-status-note" hidden></p>
+                <div class="fieldset" id="protect-lock-fields">
+                  <div class="field">
+                    <label for="protect-pass">كلمة سر الفتح</label>
+                    <input id="protect-pass" type="password" autocomplete="new-password" spellcheck="false" autocapitalize="off" dir="ltr" maxlength="127" />
+                  </div>
+                  <div class="field">
+                    <label for="protect-pass-confirm">تأكيد كلمة السر</label>
+                    <input id="protect-pass-confirm" type="password" autocomplete="new-password" spellcheck="false" autocapitalize="off" dir="ltr" maxlength="127" />
+                  </div>
+                </div>
+                <div class="fieldset" id="protect-unlock-fields" hidden>
+                  <div class="field field--wide">
+                    <label for="protect-unlock-pass">كلمة السر المعروفة</label>
+                    <input id="protect-unlock-pass" type="password" autocomplete="current-password" spellcheck="false" autocapitalize="off" dir="ltr" maxlength="127" />
+                  </div>
+                </div>
+                <label class="check" id="protect-show-wrap">
+                  <input id="protect-show-pass" type="checkbox" />
+                  إظهار كلمة السر
+                </label>
+                <div class="btn-row">
+                  <button id="protect-run" type="button" class="btn btn--act" hidden>
+                    <svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg>
+                    <span id="protect-run-label">حماية وحفظ</span>
+                  </button>
+                  <button id="protect-clear" type="button" class="btn btn--quiet">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-crop" class="view" aria-labelledby="crop-title" role="region" hidden>
+            <div class="view__head">
+              <h2 class="view__title" id="crop-title" tabindex="-1">قص</h2>
+              <p class="view__lede">اسحب المربع على المعاينة. هذه الصفحة أو الكل.</p>
+            </div>
+            <div class="view__body">
+              <div id="crop-drop" class="intake" data-kind="pdf">
+                <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-crop"></use></svg>
+                <span class="intake__title">أسقط ملف PDF هنا</span>
+                <span class="intake__hint">ملف واحد</span>
+                <button id="crop-browse" type="button" class="btn">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                </button>
+              </div>
+              <input id="crop-input" type="file" accept="application/pdf,.pdf" hidden />
+              <div id="crop-panel" hidden>
+                <div class="fieldset">
+                  <div class="field field--wide">
+                    <span id="crop-scope-label">نطاق القصّ</span>
+                    <div class="choice-grid" role="radiogroup" aria-labelledby="crop-scope-label">
+                      <label class="choice">
+                        <input id="crop-scope-current" type="radio" name="crop-scope" value="current" checked />
+                        <span>هذه الصفحة</span>
+                      </label>
+                      <label class="choice">
+                        <input id="crop-scope-all" type="radio" name="crop-scope" value="all" />
+                        <span>كل الصفحات</span>
+                      </label>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label for="crop-page" id="crop-page-label">الصفحة المعروضة</label>
+                    <input id="crop-page" type="number" min="1" value="1" inputmode="numeric" />
+                    <span id="crop-page-total" class="num" hidden>0</span>
+                  </div>
+                </div>
+                <div class="btn-row">
+                  <button id="crop-prev" type="button" class="btn btn--quiet" disabled>الصفحة السابقة</button>
+                  <button id="crop-next" type="button" class="btn btn--quiet" disabled>الصفحة التالية</button>
+                  <button id="crop-reset" type="button" class="btn btn--quiet">إعادة المربع</button>
+                  <button id="crop-fill" type="button" class="btn btn--quiet">ملء الصفحة</button>
+                </div>
+                <div class="preview" id="crop-preview">
+                  <span class="preview__label" id="crop-preview-label">اسحب المربع أو زواياه.</span>
+                  <div class="preview__stage">
+                    <div class="crop-stage" id="crop-stage">
+                      <canvas id="crop-canvas" width="360" height="509"></canvas>
+                      <div class="crop-veil" id="crop-veil">
+                        <div class="crop-shade" data-shade="t"></div>
+                        <div class="crop-shade" data-shade="l"></div>
+                        <div class="crop-shade" data-shade="r"></div>
+                        <div class="crop-shade" data-shade="b"></div>
+                        <div class="crop-rect" id="crop-rect" tabindex="0" role="slider" aria-labelledby="crop-preview-label" aria-valuemin="0" aria-valuemax="100">
+                          <span class="crop-handle" data-handle="nw"></span>
+                          <span class="crop-handle" data-handle="n"></span>
+                          <span class="crop-handle" data-handle="ne"></span>
+                          <span class="crop-handle" data-handle="e"></span>
+                          <span class="crop-handle" data-handle="se"></span>
+                          <span class="crop-handle" data-handle="s"></span>
+                          <span class="crop-handle" data-handle="sw"></span>
+                          <span class="crop-handle" data-handle="w"></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="readout" id="crop-readout" aria-live="polite"></div>
+                <p class="note">المحتوى خارج المربع يبقى في الملف — ليس حذفاً سرياً.</p>
+                <div class="btn-row">
+                  <button id="crop-save" type="button" class="btn btn--act">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-crop"></use></svg> اقتصاص وحفظ
+                  </button>
+                  <button id="crop-clear" type="button" class="btn btn--quiet">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-extract-images" class="view" aria-labelledby="extract-images-title" role="region" hidden>
+            <div class="view__head">
+              <h2 class="view__title" id="extract-images-title" tabindex="-1">صور أصلية</h2>
+              <p class="view__lede">XObject كما خُزّن — ليس رسم الصفحة.</p>
+            </div>
+            <div class="view__body">
+              <div id="extract-images-drop" class="intake" data-kind="pdf">
+                <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-images"></use></svg>
+                <span class="intake__title">أسقط ملف PDF هنا</span>
+                <span class="intake__hint">JPEG كما خُزّن · ملف واحد</span>
+                <button id="extract-images-browse" type="button" class="btn">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                </button>
+              </div>
+              <input id="extract-images-input" type="file" accept="application/pdf,.pdf" hidden />
+              <div id="extract-images-panel" hidden>
+                <div class="fieldset">
+                  <div class="field">
+                    <label for="extract-images-target">مكان الحفظ</label>
+                    <select id="extract-images-target">
+                      <option value="zip">ملف مضغوط ZIP</option>
+                      <option value="folder">مجلد على الجهاز</option>
+                    </select>
+                  </div>
+                </div>
+                <p class="note">تختلف عن «PDF → صور»: هنا لا نرسم الصفحة.</p>
+                <div class="doclist__head">
+                  <h3 class="doclist__title">الصور</h3>
+                  <button id="extract-images-clear" type="button" class="btn btn--quiet">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                  </button>
+                </div>
+                <div id="extract-images-list" class="doclist doclist--pages"></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-ocr" class="view" aria-labelledby="ocr-title" role="region" hidden>
+            <div class="view__head">
+              <h2 class="view__title" id="ocr-title" tabindex="-1">بحث</h2>
+              <p class="view__lede">طبقة نص مخفية عربي+إنجليزي. الشكل كما هو.</p>
+            </div>
+            <div class="view__body">
+              <div id="ocr-drop" class="intake" data-kind="pdf">
+                <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-file"></use></svg>
+                <span class="intake__title">أسقط ملف PDF هنا</span>
+                <span class="intake__hint">ملف واحد — محلي</span>
+                <button id="ocr-browse" type="button" class="btn">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                </button>
+              </div>
+              <input id="ocr-input" type="file" accept="application/pdf,.pdf" hidden />
+              <div id="ocr-panel" hidden>
+                <div class="fieldset">
+                  <div class="field">
+                    <label for="ocr-dpi">دقة التعرف</label>
+                    <select id="ocr-dpi">
+                      <option value="150">أسرع — 150</option>
+                      <option value="200" selected>متوازن — 200</option>
+                      <option value="300">أدق — 300</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="ocr-psm">تخطيط الصفحة</label>
+                    <select id="ocr-psm">
+                      <option value="3" selected>تلقائي</option>
+                      <option value="4">عمود واحد</option>
+                      <option value="6">كتلة نص واحدة</option>
+                    </select>
+                  </div>
+                  <div class="field field--wide">
+                    <label for="ocr-ranges">صفحات محددة (اختياري)</label>
+                    <input id="ocr-ranges" type="text" inputmode="numeric" placeholder="مثل 1-3, 5" autocomplete="off" />
+                  </div>
+                  <div class="field field--wide">
+                    <label class="choice">
+                      <input id="ocr-skip-text" type="checkbox" checked />
+                      <span>تجاوز الصفحات ذات النص الرقمي</span>
+                    </label>
+                  </div>
+                </div>
+                <p class="note">المطبوع العربي الواضح أفضل. خط اليد أضعف.</p>
+                <div class="readout" id="ocr-readout"></div>
+                <div class="btn-row">
+                  <button id="ocr-save" type="button" class="btn btn--act">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-file"></use></svg> تعرّف وحفظ
+                  </button>
+                  <button id="ocr-clear" type="button" class="btn btn--quiet">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
       </div>
-    </nav>
-  </header>
 
-  <main id="app-main">
-    <section id="view-hub" class="view-container view--active" aria-labelledby="hub-heading" aria-hidden="false" role="region">
-      <h1 id="hub-heading" class="view-focus-target" tabindex="-1">مركز الأدوات</h1>
-      <div class="hub-grid">
-        <div class="hub-card" data-route="imagesToPdf">
-          <div class="hub-card__icon"><svg class="icon" aria-hidden="true"><use href="#icon-images"></use></svg></div>
-          <h3 class="hub-card__title">صور إلى PDF</h3>
-          <p class="hub-card__desc">استورد مجلدات من الصور وحولها لحظياً إلى كتاب إلكتروني أو مجلد PDF عالي الدقة.</p>
+      <footer class="titleblock" aria-label="شريط التنفيذ">
+        <div class="tb__cell">
+          <span class="tb__label">الأداة</span>
+          <span class="tb__value" id="tb-op">—</span>
         </div>
-        <div class="hub-card" data-route="mergePdf">
-          <div class="hub-card__icon"><svg class="icon" aria-hidden="true"><use href="#icon-merge"></use></svg></div>
-          <h3 class="hub-card__title">دمـج الملفـات</h3>
-          <p class="hub-card__desc">ادمج عدة ملفات PDF في مستند واحد ورتبها بمنتهى السهولة والسلاسة.</p>
+        <div class="tb__cell">
+          <span class="tb__label">الملف</span>
+          <span class="tb__value tb__value--clip" id="tb-source">—</span>
         </div>
-        <div class="hub-card" data-route="editPdf">
-          <div class="hub-card__icon"><svg class="icon" aria-hidden="true"><use href="#icon-edit"></use></svg></div>
-          <h3 class="hub-card__title">تحرير الصفحات</h3>
-          <p class="hub-card__desc">أضف صفحات جديدة، احذف، دَوّر، ورتِّب صفحات المستند باستخدام واجهة مرئية.</p>
+        <div class="tb__cell tb__cell--num">
+          <span class="tb__label">صفحات</span>
+          <span class="tb__value tb__value--num" id="tb-pages">—</span>
         </div>
-        <div class="hub-card" data-route="watermarkPdf">
-          <div class="hub-card__icon"><svg class="icon" aria-hidden="true"><use href="#icon-watermark"></use></svg></div>
-          <h3 class="hub-card__title">إضافة علامة مائية</h3>
-          <p class="hub-card__desc">احمِ مستنداتك عبر طباعة نص شفاف كعلامة مائية فوق كافة صفحات الملف.</p>
+        <div class="tb__cell tb__cell--num">
+          <span class="tb__label">الحجم</span>
+          <span class="tb__value tb__value--num" id="tb-size">—</span>
         </div>
-        <div class="hub-card" data-route="pageNumberPdf">
-          <div class="hub-card__icon"><svg class="icon" aria-hidden="true"><use href="#icon-numbers"></use></svg></div>
-          <h3 class="hub-card__title">ترقيم الصفحات</h3>
-          <p class="hub-card__desc">تسلسل آلي احترافي لصفحات المستند بصيغ مخصصة ليضفي طابعاً أكاديمياً ورسمياً.</p>
+        <div class="tb__cell tb__cell--name">
+          <label class="tb__label" for="tb-name">حفظ باسم</label>
+          <input class="tb__input" id="tb-name" type="text" autocomplete="off" spellcheck="false" />
         </div>
-        <div class="hub-card" data-route="pdfToImages">
-          <div class="hub-card__icon"><svg class="icon" aria-hidden="true"><use href="#icon-pdf-to-images"></use></svg></div>
-          <h3 class="hub-card__title">PDF إلى صور</h3>
-          <p class="hub-card__desc">حوّل صفحات ملف PDF إلى صور عالية الدقة بصيغة PNG أو JPG بضغطة واحدة.</p>
+        <div class="tb__cell tb__cell--state" id="tb-state-cell" data-state="idle">
+          <span class="tb__label">الحالة</span>
+          <span class="tb__state">
+            <span class="tb__dot" aria-hidden="true"></span>
+            <span class="tb__value" id="tb-state">جاهز</span>
+          </span>
         </div>
-      </div>
-    </section>
-
-    <section id="view-imagesToPdf" class="view-container workspace-view view--hidden" aria-labelledby="title-imagesToPdf" aria-hidden="true" role="region">
-      <div class="workspace-header">
-        <h2 id="title-imagesToPdf" class="view-focus-target" tabindex="-1">صور إلى PDF</h2>
-        <p>اسحب صورك هنا وقم بترتيبها بحرية تامة لإنتاج ملف PDF استثنائي</p>
-      </div>
-
-      <div class="glass-panel">
-        <div id="images-drop" class="drop-zone">
-          <svg class="icon drop-zone__icon" aria-hidden="true"><use href="#icon-images"></use></svg>
-          <span class="drop-zone__title">أسقط الصور هنا</span>
-          <button id="images-browse" type="button" class="btn btn--outline"><svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفح الجهاز</button>
+        <div class="tb__run">
+          <kbd class="tb__kbd" title="Ctrl+Enter أو Ctrl+S">
+            <span class="tb__kbd-mod"></span>
+            <span class="tb__kbd-key">Enter</span>
+          </kbd>
+          <button class="btn btn--act" id="tb-run" type="button" disabled>
+            <svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg>
+            <span id="tb-run-label">تنفيذ</span>
+          </button>
         </div>
-        <input id="images-input" type="file" accept="image/*" multiple hidden />
-
-        <div class="workspace-note">
-          <div class="helper-row">
-            <span class="helper-chip helper-chip--accent">ترتيب خطي ثابت</span>
-            <span class="helper-chip">دعم PNG / JPG / WEBP</span>
-            <span class="helper-chip">استخدم السحب أو الأسهم للحركة الدقيقة</span>
-          </div>
-        </div>
-        <div id="images-caption" class="list-caption" hidden>
-          <strong>ترتيب صفحات الملف النهائي</strong>
-          <span>الترتيب الظاهر هنا هو الترتيب الذي سيُصدر داخل PDF.</span>
-        </div>
-        <div id="images-list" class="thumb-list"></div>
-        <div id="images-empty" class="list-empty" hidden>أضف صوراً لتظهر هنا ضمن قائمة ثابتة يمكن ترتيبها بدقة.</div>
-
-        <div class="action-bar">
-          <div class="input-field">
-            <label for="images-filename">اسم الملف النهائي</label>
-            <input id="images-filename" type="text" value="معرض-الصور.pdf" />
-          </div>
-          <div class="action-bar__actions">
-            <button id="images-add" type="button" class="btn btn--outline"><svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> إضافة صور</button>
-            <button id="images-clear" type="button" class="btn btn--outline"><svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> تفريغ</button>
-            <button id="images-build" type="button" class="btn btn--primary" disabled><svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg> إنشاء وتنزيل PDF</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="view-mergePdf" class="view-container workspace-view view--hidden" aria-labelledby="title-mergePdf" aria-hidden="true" role="region">
-      <div class="workspace-header">
-        <h2 id="title-mergePdf" class="view-focus-target" tabindex="-1">دمـج ملفات PDF</h2>
-        <p>اجمع مستنداتك ورتبها لتكون في ملف واحد متصل</p>
-      </div>
-
-      <div class="glass-panel">
-        <div id="merge-drop" class="drop-zone">
-          <svg class="icon drop-zone__icon" aria-hidden="true"><use href="#icon-merge"></use></svg>
-          <span class="drop-zone__title">أسقط الملفات هنا</span>
-          <button id="merge-browse" type="button" class="btn btn--outline"><svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفح المستندات</button>
-        </div>
-        <input id="merge-input" type="file" accept="application/pdf,.pdf" multiple hidden />
-
-        <div id="merge-caption" class="list-caption" hidden>
-          <strong>تسلسل الدمج</strong>
-          <span>يمكنك تغيير الترتيب بالسحب أو بالتحريك خطوة بخطوة.</span>
-        </div>
-        <div id="merge-list" class="thumb-list"></div>
-        <div id="merge-empty" class="list-empty" hidden>أضف ملفات PDF ليظهر ترتيب الدمج النهائي هنا.</div>
-
-        <div class="action-bar">
-          <div class="input-field">
-            <label for="merge-filename">اسم الملف النهائي</label>
-            <input id="merge-filename" type="text" value="الملفات-المدمجة.pdf" />
-          </div>
-          <div class="action-bar__actions">
-            <button id="merge-add" type="button" class="btn btn--outline"><svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> إضافة ملفات</button>
-            <button id="merge-clear" type="button" class="btn btn--outline"><svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> تفريغ</button>
-            <button id="merge-build" type="button" class="btn btn--primary" disabled><svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg> دمج وتنزيل PDF</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="view-editPdf" class="view-container workspace-view view--hidden" aria-labelledby="title-editPdf" aria-hidden="true" role="region">
-      <div class="workspace-header">
-        <h2 id="title-editPdf" class="view-focus-target" tabindex="-1">التحرير المتقدم</h2>
-        <p id="edit-header-text">اختر ملفاً لتبدأ بالتعديل على صفحاته</p>
-      </div>
-
-      <div class="glass-panel">
-        <div id="edit-start">
-          <div id="edit-drop" class="drop-zone drop-zone--hero">
-            <svg class="icon drop-zone__icon drop-zone__icon--lg" aria-hidden="true"><use href="#icon-edit"></use></svg>
-            <span class="drop-zone__title drop-zone__title--lg">أسقط ملف PDF للبدء</span>
-            <button id="edit-browse" type="button" class="btn btn--primary drop-zone__cta"><svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> اختيار ملف</button>
-          </div>
-          <input id="edit-input" type="file" accept="application/pdf,.pdf" hidden />
-        </div>
-
-        <div id="edit-workspace" hidden>
-          <div class="workspace-toolbar">
-            <strong id="edit-basename" class="workspace-toolbar__title"></strong>
-            <div class="workspace-toolbar__actions">
-              <button id="edit-add-pdf" type="button" class="btn btn--outline btn--sm"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-file"></use></svg> دمج ملف PDF</button>
-              <button id="edit-add-img" type="button" class="btn btn--outline btn--sm"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-images"></use></svg> إدراج صورة كصفحة</button>
-              <input id="edit-add-pdf-in" type="file" accept="application/pdf,.pdf" multiple hidden />
-              <input id="edit-add-img-in" type="file" accept="image/*" multiple hidden />
-            </div>
-          </div>
-          <div id="edit-anchor-note" class="workspace-note">الإدراج التالي سيتم في نهاية المستند. اختر صفحة لتصبح نقطة إدراج مباشرة بعدها.</div>
-          <div id="edit-caption" class="list-caption" hidden>
-            <strong>ترتيب الصفحات</strong>
-            <span>يمكنك تحديد صفحة ثم إدراج محتوى بعدها مباشرة، أو إعادة الترتيب بالسحب/الأسهم.</span>
-          </div>
-          <div id="edit-list" class="thumb-list"></div>
-          <div id="edit-empty" class="list-empty" hidden>لا توجد صفحات حالياً داخل مساحة التحرير.</div>
-
-          <div class="action-bar">
-            <div class="input-field">
-              <label for="edit-filename">الاسم النهائي</label>
-              <input id="edit-filename" type="text" value="معدل.pdf" />
-            </div>
-            <div class="action-bar__actions">
-              <button id="edit-clear" type="button" class="btn btn--outline"><svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> إغلاق الملف</button>
-              <button id="edit-build" type="button" class="btn btn--primary" disabled><svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg> حفظ التعديلات</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="view-watermarkPdf" class="view-container workspace-view view--hidden" aria-labelledby="title-watermarkPdf" aria-hidden="true" role="region">
-      <div class="workspace-header">
-        <h2 id="title-watermarkPdf" class="view-focus-target" tabindex="-1">العلامة المائية</h2>
-        <p id="watermark-header-text">اطبع ختمك وحافظ على سريّة مستنداتك</p>
-      </div>
-
-      <div class="glass-panel">
-        <div id="watermark-start">
-          <div id="watermark-drop" class="drop-zone drop-zone--hero">
-            <svg class="icon drop-zone__icon drop-zone__icon--lg" aria-hidden="true"><use href="#icon-watermark"></use></svg>
-            <span class="drop-zone__title drop-zone__title--lg">اختر ملف PDF</span>
-            <button id="watermark-browse" type="button" class="btn btn--primary drop-zone__cta"><svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> اختيار ملف</button>
-          </div>
-          <input id="watermark-input" type="file" accept="application/pdf,.pdf" hidden />
-        </div>
-
-        <div id="watermark-workspace" hidden>
-          <div class="workspace-doc-title">
-            <strong id="watermark-basename"></strong>
-          </div>
-
-          <div class="form-grid">
-            <div class="input-field input-field--span-2">
-              <label for="watermark-text">النص</label>
-              <input id="watermark-text" type="text" value="نسخة غير مصرحة - سري" />
-            </div>
-            <div class="input-field">
-              <label for="watermark-opacity">الشفافية (0-100%)</label>
-              <input id="watermark-opacity" type="number" min="5" max="100" value="20" />
-            </div>
-            <div class="input-field">
-              <label for="watermark-size">الحجم</label>
-              <input id="watermark-size" type="number" min="24" max="220" value="84" />
-            </div>
-            <div class="input-field">
-              <label for="watermark-angle">الزاوية</label>
-              <input id="watermark-angle" type="number" min="-90" max="90" value="-35" />
-            </div>
-            <div class="input-field">
-              <label for="watermark-color">اللون</label>
-              <input id="watermark-color" type="color" value="#111111" />
-            </div>
-            <div class="input-field">
-              <label for="watermark-position">الموضع</label>
-              <select id="watermark-position">
-                <option value="center">المنتصف</option>
-                <option value="top-right">أعلى اليمين</option>
-                <option value="top-left">أعلى اليسار</option>
-                <option value="bottom-right">أسفل اليمين</option>
-                <option value="bottom-left">أسفل اليسار</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="action-bar stack--md">
-            <div class="input-field">
-              <label for="watermark-filename">اسم الملف النهائي</label>
-              <input id="watermark-filename" type="text" value="محمي.pdf" />
-            </div>
-            <div class="action-bar__actions">
-              <button id="watermark-clear" type="button" class="btn btn--outline">إلغاء</button>
-              <button id="watermark-build" type="button" class="btn btn--primary"><svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg> بصم وتنزيل</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="view-pageNumberPdf" class="view-container workspace-view view--hidden" aria-labelledby="title-pageNumberPdf" aria-hidden="true" role="region">
-      <div class="workspace-header">
-        <h2 id="title-pageNumberPdf" class="view-focus-target" tabindex="-1">ترقيم الصفحات</h2>
-        <p id="number-header-text">أضف ترقيماً تسلسلياً لأسفل صفحات المستند</p>
-      </div>
-
-      <div class="glass-panel">
-        <div id="number-start">
-          <div id="number-drop" class="drop-zone drop-zone--hero">
-            <svg class="icon drop-zone__icon drop-zone__icon--lg" aria-hidden="true"><use href="#icon-numbers"></use></svg>
-            <span class="drop-zone__title drop-zone__title--lg">اختر ملف PDF</span>
-            <button id="number-browse" type="button" class="btn btn--primary drop-zone__cta"><svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> اختيار ملف</button>
-          </div>
-          <input id="number-input" type="file" accept="application/pdf,.pdf" hidden />
-        </div>
-
-        <div id="number-workspace" hidden>
-          <div class="workspace-doc-title">
-            <strong id="number-basename"></strong>
-          </div>
-
-          <div class="workspace-note">
-            <div class="helper-row">
-              <span class="helper-chip helper-chip--accent">ترقيم نصي حقيقي</span>
-              <span class="helper-chip">قابل للبحث داخل PDF</span>
-              <span class="helper-chip">تحكم بالمكان والحجم والهوامش</span>
-            </div>
-          </div>
-          <div class="form-grid stack--md">
-            <div class="input-field">
-              <label for="number-template">نمط الترقيم</label>
-              <select id="number-template">
-                <option value="plain">{n}</option>
-                <option value="dash">- {n} -</option>
-                <option value="total">{n} / {total}</option>
-                <option value="brackets">[ {n} ]</option>
-              </select>
-            </div>
-            <div class="input-field">
-              <label for="number-startNum">البدء من رقم</label>
-              <input id="number-startNum" type="number" min="1" value="1" />
-            </div>
-            <div class="input-field">
-              <label for="number-position">الموضع</label>
-              <select id="number-position">
-                <option value="bottom-center">أسفل المنتصف</option>
-                <option value="bottom-right">أسفل اليمين</option>
-                <option value="bottom-left">أسفل اليسار</option>
-                <option value="top-center">أعلى المنتصف</option>
-                <option value="top-right">أعلى اليمين</option>
-                <option value="top-left">أعلى اليسار</option>
-                <option value="bottom-outer">هامش خارجي متناوب</option>
-              </select>
-            </div>
-            <div class="input-field">
-              <label for="number-size">الحجم</label>
-              <input id="number-size" type="number" min="10" max="64" value="18" />
-            </div>
-            <div class="input-field">
-              <label for="number-margin">الهامش</label>
-              <input id="number-margin" type="number" min="12" max="120" value="36" />
-            </div>
-            <div class="input-field">
-              <label for="number-color">اللون</label>
-              <input id="number-color" type="color" value="#111111" />
-            </div>
-          </div>
-          <label class="control-check control-check--block" for="number-skipFirst">
-            <input id="number-skipFirst" type="checkbox" />
-            <span>تجاوز الصفحة الأولى</span>
-          </label>
-
-          <div class="action-bar stack--md">
-            <div class="input-field">
-              <label for="number-filename">اسم الملف النهائي</label>
-              <input id="number-filename" type="text" value="مرقم.pdf" />
-            </div>
-            <div class="action-bar__actions">
-              <button id="number-clear" type="button" class="btn btn--outline">إلغاء</button>
-              <button id="number-build" type="button" class="btn btn--primary"><svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg> ترقيم وتنزيل</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="view-pdfToImages" class="view-container workspace-view view--hidden" aria-labelledby="title-pdfToImages" aria-hidden="true" role="region">
-      <div class="workspace-header">
-        <h2 id="title-pdfToImages" class="view-focus-target" tabindex="-1">PDF إلى صور</h2>
-        <p id="pdfToImages-header-text">حوّل صفحات ملف PDF إلى صور منفصلة عالية الدقة</p>
-      </div>
-
-      <div class="glass-panel">
-        <div id="pdfToImages-start">
-          <div id="pdfToImages-drop" class="drop-zone drop-zone--hero">
-            <svg class="icon drop-zone__icon drop-zone__icon--lg" aria-hidden="true"><use href="#icon-pdf-to-images"></use></svg>
-            <span class="drop-zone__title drop-zone__title--lg">اختر ملف PDF</span>
-            <button id="pdfToImages-browse" type="button" class="btn btn--primary drop-zone__cta"><svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> اختيار ملف</button>
-          </div>
-          <input id="pdfToImages-input" type="file" accept="application/pdf,.pdf" hidden />
-        </div>
-
-        <div id="pdfToImages-workspace" hidden>
-          <div class="workspace-doc-title">
-            <strong id="pdfToImages-basename"></strong>
-          </div>
-
-          <div class="workspace-note">
-            <div class="helper-row">
-              <span class="helper-chip helper-chip--accent">جودة عالية</span>
-              <span class="helper-chip">PNG / JPG</span>
-              <span class="helper-chip">تنزيل فردي أو جماعي</span>
-            </div>
-          </div>
-          <div class="form-grid stack--md">
-            <div class="input-field">
-              <label for="pdfToImages-format">الصيغة</label>
-              <select id="pdfToImages-format">
-                <option value="png">PNG</option>
-                <option value="jpeg">JPG</option>
-              </select>
-            </div>
-            <div class="input-field">
-              <label for="pdfToImages-scale">دقة العرض (مضاعف)</label>
-              <input id="pdfToImages-scale" type="number" min="1" max="4" step="0.5" value="2" />
-            </div>
-          </div>
-
-          <div id="pdfToImages-caption" class="list-caption" hidden>
-            <strong>معاينة الصفحات</strong>
-            <span>انقر على التحميل بجانب أي صفحة لتنزيلها، أو حمّل الكل دفعة واحدة.</span>
-          </div>
-          <div id="pdfToImages-list" class="thumb-list"></div>
-          <div id="pdfToImages-empty" class="list-empty" hidden>لا توجد صفحات للعرض.</div>
-
-          <div class="action-bar stack--md">
-            <div class="input-field">
-              <label for="pdfToImages-prefix">بادئة اسم الملف</label>
-              <input id="pdfToImages-prefix" type="text" value="صفحة" />
-            </div>
-            <div class="action-bar__actions">
-              <button id="pdfToImages-clear" type="button" class="btn btn--outline">إلغاء</button>
-              <button id="pdfToImages-build" type="button" class="btn btn--primary"><svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg> تحويل وتنزيل الكل</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <div class="loader-overlay" id="loading-overlay" role="dialog" aria-modal="true" aria-labelledby="loading-title" aria-describedby="loading-desc" aria-hidden="true" aria-busy="false">
-    <div class="spider-spinner" aria-hidden="true"></div>
-    <h2 class="loader-overlay__title" id="loading-title">جارِ المعالجة</h2>
-    <p class="loader-overlay__desc" id="loading-desc">يرجى الانتظار بينما نقوم بالسحر...</p>
+      </footer>
+    </div>
   </div>
 
-  <div id="toast-container" class="toast-container" aria-live="polite" aria-relevant="additions text"></div>
+  <div class="progress" id="progress" role="dialog" aria-modal="true" aria-labelledby="progress-title"
+       aria-describedby="progress-desc" aria-hidden="true" aria-busy="false">
+    <div class="progress__card">
+      <h2 class="progress__title" id="progress-title">قيد التنفيذ</h2>
+      <p class="progress__desc" id="progress-desc">يرجى الانتظار.</p>
+      <p class="progress__detail" id="progress-detail" hidden></p>
+      <div class="progress__track"><div class="progress__bar" id="progress-bar"></div></div>
+      <div class="progress__foot">
+        <span class="progress__pct" id="progress-pct">0%</span>
+        <button class="btn btn--quiet" id="progress-cancel" type="button">إيقاف</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite" aria-relevant="additions text"></div>
 
   <script src="assets/vendor/pdf-lib.min.js"></script>
   <script src="assets/vendor/Sortable.min.js"></script>
