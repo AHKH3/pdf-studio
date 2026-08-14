@@ -243,7 +243,7 @@ export const extractImagesTool = {
   name: title,
   icon: "icon-images",
   input: "PDF",
-  actionLabel: "حفظ الصور",
+  actionLabel: "حفظ",
   setup: () => mount(),
   enter,
   run,

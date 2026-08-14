@@ -203,7 +203,7 @@ export const splitTool = {
   name: "تقسيم",
   icon: "icon-split",
   input: "PDF",
-  actionLabel: "تقسيم وحفظ",
+  actionLabel: "تقسيم",
 
   setup() {
     wireIntake({ dropId: "split-drop", inputId: "split-input", browseId: "split-browse", accept: "pdf", onFiles: load });

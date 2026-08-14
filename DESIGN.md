@@ -26,43 +26,43 @@ colors:
   night-accent: "#C4332E"
 typography:
   display:
-    fontFamily: "Amiri, Playfair Display, serif"
+    fontFamily: "Playfair Display, Amiri, serif"
     fontSize: "clamp(1.875rem, 4vw, 2.375rem)"
     fontWeight: 700
     lineHeight: 1.35
   headline:
-    fontFamily: "Amiri, Playfair Display, serif"
+    fontFamily: "Playfair Display, Amiri, serif"
     fontSize: "1.5rem"
     fontWeight: 700
     lineHeight: 1.35
   wordmark:
-    fontFamily: "Playfair Display, Geist, serif"
+    fontFamily: "Playfair Display, serif"
     fontSize: "1rem"
     fontWeight: 600
     letterSpacing: "0.01em"
     lineHeight: 1
   copy:
-    fontFamily: "Noto Naskh Arabic, Geist, serif"
+    fontFamily: "Playfair Display, Noto Naskh Arabic, serif"
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.7
   body:
-    fontFamily: "Noto Sans Arabic, Geist, system-ui, sans-serif"
+    fontFamily: "Playfair Display, Noto Naskh Arabic, serif"
     fontSize: "0.875rem"
     fontWeight: 400
     lineHeight: 1.55
   label:
-    fontFamily: "Noto Sans Arabic, Geist, system-ui, sans-serif"
+    fontFamily: "Playfair Display, Noto Naskh Arabic, serif"
     fontSize: "0.75rem"
     fontWeight: 550
     lineHeight: 1.3
   micro:
-    fontFamily: "Geist, Noto Sans Arabic, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Playfair Display, Noto Naskh Arabic, serif"
     fontSize: "0.6875rem"
     fontWeight: 400
     lineHeight: 1.3
   data:
-    fontFamily: "Geist, Noto Sans Arabic, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Playfair Display, Noto Naskh Arabic, serif"
     fontSize: "0.75rem"
     fontWeight: 400
     lineHeight: 1.3
@@ -126,7 +126,7 @@ components:
 
 PDF Studio sits on a photographed sheet of cream folded paper. The empty state is a photographed vermilion origami square. Primary actions use the red folded-paper button face; secondary actions use the cream folded-paper button face. There is no violet and no gold. Window chrome stays flush (40px hidden titlebar + overlay). Quiet controls stay hairline. Shadows exist on the origami faces and on floating layers (dialogs, toasts). Motion stays short: 120/160/200ms.
 
-Arabic is native: Amiri display, Noto Sans Arabic UI, Noto Naskh Arabic copy, Playfair Display wordmark, Geist figures. The existing SVG sprite stays; icons are coloured by route. Dark mode (`data-theme="blueprint"`, a JavaScript lock) uses the dark fold photograph, dark origami square, and dark button photographs.
+Arabic is native: Amiri headings, Noto Naskh Arabic UI, Playfair Display for any Latin. The existing SVG sprite stays. Dark mode (`data-theme="blueprint"`, a JavaScript lock) uses the dark fold photograph, dark origami square, and dark button photographs.
 
 Scan is the first feature: corners stay on the original image. Rotate and colour filters preview live in that same window. Warped extraction is export-only, never mixed with corner drag.
 
@@ -161,20 +161,20 @@ Neutrals sampled from the cream fold photograph. Accent sampled from the origami
 
 ## Typography
 
-**Display Font:** Amiri (Arabic headings) with Playfair Display for the Latin wordmark only.
-**Body Font:** Noto Sans Arabic for UI; Noto Naskh Arabic for ledes and notes.
-**Label/Data Font:** Geist with tabular lining figures.
+**Display Font:** Amiri for Arabic headings. Playfair Display for every Latin string, including the wordmark.
+**Body Font:** Noto Naskh Arabic for all Arabic UI — buttons, labels, lists, ledes, notes.
+**Latin Font:** Playfair Display only. No other English face.
 
-**Character:** Classical Naskh display sitting in a flat paper instrument. Amiri is the document; Geist and Noto Sans are the instrument.
+**Character:** Classical Naskh sitting on photographed paper. Amiri is the title; Naskh is the instrument; Playfair is the Latin.
 
 ### Hierarchy
-- **Display** (Amiri 700, clamp(30–38px) / `--t-2xl`): start title only.
+- **Display** (Amiri 700, clamp(30–38px) / `--t-2xl`): start title only. Latin in the same line is Playfair.
 - **Headline** (Amiri 700, 24px / `--t-xl`): tool view titles.
 - **Wordmark** (Playfair Display 600, 1rem): "PDF Studio" with `lang="en"`.
 - **Copy** (Noto Naskh Arabic 400, 16px, 1.7): ledes and notes. Max ~62ch.
-- **Body** (Noto Sans Arabic 400, 14px, 1.55): controls, lists, legend.
-- **Label** (Noto Sans Arabic 550, 12px): field labels, status labels, panel titles.
-- **Data** (Geist, tabular-nums): page counts, sizes, scan pager, legend badges.
+- **Body** (Noto Naskh Arabic 400, 14px, 1.55): controls, lists, legend, buttons.
+- **Label** (Noto Naskh Arabic 550, 12px): field labels, status labels, panel titles.
+- **Data** (Playfair Display, tabular-nums): page counts, sizes, scan pager, Latin figures.
 
 **The No Tracking Rule.** Never apply letter-spacing to Arabic. Tracking is allowed only on the Latin wordmark (`0.01em`).
 
@@ -218,7 +218,7 @@ Mostly flat and tonal. Hairlines do the work. Shadows are reserved for floating 
 - **Focus:** 2px origami-red outline, 3px offset, 4px red-soft halo. Visible for keyboard.
 
 ### Inputs / Fields
-- Paper fill, 6px radius, strong hairline. Focus: 2px origami-red outline, 2px offset, 4px red-soft halo. Number fields use Geist, LTR, end-aligned. Checkboxes are 15px, 4px radius, red when checked.
+- Paper fill, 6px radius, strong hairline. Focus: 2px origami-red outline, 2px offset, 4px red-soft halo. Number fields use Playfair Display, LTR, end-aligned. Checkboxes are 15px, 4px radius, red when checked.
 
 ### Navigation
 - Rail titled **الأدوات**, one vertical list without grouping chrome. Coloured square icon wells stay route-tinted when current. Disabled rows dim to 55% with muted wells but stay focusable. Icon-only under `900px`; horizontal strip under `640px`.
@@ -239,7 +239,7 @@ Mostly flat and tonal. Hairlines do the work. Shadows are reserved for floating 
 
 ### Do:
 - **Do** keep the top action strip + work + status-bar topology.
-- **Do** self-host Amiri, Noto Sans Arabic, Noto Naskh Arabic, Playfair Display, and Geist as local woff2.
+- **Do** self-host Amiri, Noto Naskh Arabic, and Playfair Display as local woff2.
 - **Do** use origami red for the thing the user is about to do.
 - **Do** respect `prefers-reduced-motion` (durations collapse to `0.001ms`).
 - **Do** keep `data-theme="blueprint"` as the dark-mode attribute; JavaScript owns the name.
@@ -250,7 +250,7 @@ Mostly flat and tonal. Hairlines do the work. Shadows are reserved for floating 
 - **Don't** use process magenta, sage, terracotta, aurora/glass, Bootstrap blue, or violet.
 - **Don't** letter-space Arabic labels.
 - **Don't** put a coloured `border-inline` thicker than 1px on rows, notes, or cards.
-- **Don't** use display faces on buttons, data, or field labels.
+- **Don't** put Amiri on buttons, data, or field labels — those stay Noto Naskh. Latin on those roles is Playfair Display.
 - **Don't** invent a purple or gold button. Secondary is cream folded paper; primary is red folded paper.
 - **Don't** use pill (999px) buttons.
 - **Don't** restyle dark mode as a blueprint or a magenta proofing monitor; it is the dark folded-paper photographs.

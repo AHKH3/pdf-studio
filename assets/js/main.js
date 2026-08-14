@@ -80,7 +80,7 @@ async function boot() {
   } catch (error) {
     console.error(error);
     document.body.innerHTML =
-      '<p style="padding:2rem;font:1rem system-ui">تعذّر تحميل مكوّنات PDF. شغّل الأمر npm install ثم أعد فتح التطبيق.</p>';
+      '<p style="padding:2rem;font:1rem \'Playfair Display\', \'Noto Naskh Arabic\', serif">تعذّر تحميل مكوّنات PDF. شغّل الأمر npm install ثم أعد فتح التطبيق.</p>';
     return;
   }
 

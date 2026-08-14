@@ -197,7 +197,7 @@ export const rasterizeTool = {
   name: "PDF → صور",
   icon: "icon-pdf-to-images",
   input: "PDF",
-  actionLabel: "تصدير الصور",
+  actionLabel: "تصدير",
 
   setup() {
     list = new DocList("rasterize-list", {

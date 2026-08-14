@@ -17,7 +17,7 @@
   THESIS: Empty window is one photographed origami square on photographed fold-paper; files unlock a top action strip. Refuses SaaS tool-card grids and a permanent side rail.
   OWN-WORLD: cream folded-paper photograph as the stage; vermilion origami photograph as the drop sheet. Dark mode uses the dark fold, dark square, and dark button photographs. Primary is the red folded-paper button; secondary is the cream (light) or charcoal (dark) folded-paper button. Sumi ink. No violet, no gold, no crease SVG.
   STORY: Drop files on the sheet. Only allowed actions appear. Run from the status crease. Nothing leaves the machine.
-  FIRST VIEWPORT: 40px titlebar; fold-paper stage; centered origami photo (icon, أسقط الملفات, formats, تصفّح الجهاز); 52px status bar with every cell and disabled تنفيذ.
+  FIRST VIEWPORT: 40px titlebar (cropped fold-paper strip, PDF Studio, theme square); fold-paper stage; centered origami photo; after files the allowed actions sit in the titlebar, not a second strip; 52px status bar with every cell and disabled تنفيذ.
   FORM: orizuru crane sequence fused to the Operate shell; seed e0a103d9; challenger paper-folds-pleats-deployable-orizuru-crane-sequence.
   FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
 -->
@@ -68,10 +68,15 @@
           <button class="mark titlebar-nodrag" type="button" data-route="start" aria-label="العودة إلى البداية">
             <svg class="icon mark__glyph" aria-hidden="true"><use href="#icon-app"></use></svg>
             <span class="mark__name" lang="en">PDF Studio</span>
-            <span class="mark__sub">استوديو المستندات</span>
           </button>
 
-        <button id="theme-toggle" class="ghost-btn titlebar-nodrag" type="button" aria-label="تبديل الوضع الفاتح والداكن">
+        <nav class="legend titlebar-nodrag" aria-label="إجراءات المستند">
+          <h2 class="legend__title sr-only" id="legend-title">الإجراءات</h2>
+          <p class="legend__lede sr-only" id="legend-lede">ارفع ملفات أولاً</p>
+          <ul class="legend__list" id="legend-list"></ul>
+        </nav>
+
+        <button id="theme-toggle" class="theme-toggle titlebar-nodrag" type="button" aria-label="تبديل الوضع الفاتح والداكن">
           <svg class="icon icon-sun" aria-hidden="true"><use href="#icon-sun"></use></svg>
           <svg class="icon icon-moon" aria-hidden="true"><use href="#icon-moon"></use></svg>
         </button>
@@ -90,14 +95,6 @@
       </header>
 
       <div class="sheet__body">
-        <nav class="legend" aria-label="إجراءات المستند">
-          <div class="legend__head">
-            <h2 class="legend__title" id="legend-title">الإجراءات</h2>
-            <p class="legend__lede" id="legend-lede">ارفع ملفات أولاً</p>
-          </div>
-          <ul class="legend__list" id="legend-list"></ul>
-        </nav>
-
         <main class="work" id="work">
           <section id="view-start" class="view view--active" aria-labelledby="start-title" role="region">
             <div class="start">
@@ -110,7 +107,7 @@
                   <p class="intake__title">أسقط صوراً أو PDF</p>
                   <p class="intake__hint">متعدد · مختلط · JPG · PNG · PDF</p>
                   <button id="hub-browse" type="button" class="btn btn--sheet">
-                    <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                    تصفّح
                   </button>
                 </div>
               </div>
@@ -120,13 +117,13 @@
                 <div class="doclist__head">
                   <h1 class="doclist__title" id="hub-mix">الملفات</h1>
                   <div class="btn-row start__file-actions">
-                    <button id="hub-add" type="button" class="btn btn--quiet">
+                    <button id="hub-add" type="button" class="btn">
                       <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> إضافة
                     </button>
-                    <button id="hub-sort" type="button" class="btn btn--quiet" hidden>
-                      <svg class="icon" aria-hidden="true"><use href="#icon-organize"></use></svg> اقتراح الترتيب
+                    <button id="hub-sort" type="button" class="btn" hidden>
+                      <svg class="icon" aria-hidden="true"><use href="#icon-organize"></use></svg> ترتيب
                     </button>
-                    <button id="hub-clear" type="button" class="btn btn--quiet">
+                    <button id="hub-clear" type="button" class="btn">
                       <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> تفريغ
                     </button>
                   </div>
@@ -156,7 +153,7 @@
                 <span class="intake__title">أسقط صور المستندات هنا</span>
                 <span class="intake__hint">JPG · PNG · WEBP</span>
                 <button id="scan-browse" type="button" class="btn">
-                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                  تصفّح
                 </button>
               </div>
               <input id="scan-input" type="file" accept="image/*" multiple hidden />
@@ -170,11 +167,11 @@
                           tabindex="0"></canvas>
                   <p class="scan__overlay-hint" id="scan-hint">اسحب الأركان على الصورة الأصلية. التدوير والألوان تظهر فوراً.</p>
                   <div class="scan__pager">
-                    <button id="scan-prev" type="button" class="ghost-btn ghost-btn--label">
+                    <button id="scan-prev" type="button" class="btn btn--compact">
                       <svg class="icon" aria-hidden="true"><use href="#icon-arrow"></use></svg> السابقة
                     </button>
                     <span class="scan__count num" id="scan-count">1 / 1</span>
-                    <button id="scan-next" type="button" class="ghost-btn ghost-btn--label">
+                    <button id="scan-next" type="button" class="btn btn--compact">
                       التالية <svg class="icon flip" aria-hidden="true"><use href="#icon-arrow"></use></svg>
                     </button>
                   </div>
@@ -186,16 +183,16 @@
                       <h3 class="panel-block__title">الحواف</h3>
                       <p class="panel-block__meta" id="scan-detect-meta">لم يبدأ الكشف بعد.</p>
                       <div class="btn-row">
-                        <button id="scan-redetect" type="button" class="btn btn--quiet">
-                          <svg class="icon" aria-hidden="true"><use href="#icon-quad"></use></svg> كشف تلقائي
+                        <button id="scan-redetect" type="button" class="btn">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-quad"></use></svg> كشف
                         </button>
-                        <button id="scan-full" type="button" class="btn btn--quiet">
-                          <svg class="icon" aria-hidden="true"><use href="#icon-crop"></use></svg> الصورة كاملة
+                        <button id="scan-full" type="button" class="btn">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-crop"></use></svg> كاملة
                         </button>
                       </div>
-                      <button id="scan-preview" type="button" class="btn btn--wide is-current" aria-pressed="true">
+                      <button id="scan-preview" type="button" class="btn btn--act btn--wide" aria-pressed="true">
                         <svg class="icon" aria-hidden="true"><use href="#icon-enhance"></use></svg>
-                        <span class="btn__label">معاينة حية</span>
+                        <span class="btn__label">معاينة</span>
                       </button>
                     </div>
 
@@ -213,11 +210,11 @@
                 <div class="panel-block">
                   <h3 class="panel-block__title">الاتجاه</h3>
                   <div class="btn-row">
-                    <button id="scan-rotate" type="button" class="btn btn--quiet">
-                      <svg class="icon" aria-hidden="true"><use href="#icon-rotate"></use></svg> تدوير ٩٠°
+                    <button id="scan-rotate" type="button" class="btn">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-rotate"></use></svg> تدوير
                     </button>
-                    <button id="scan-remove" type="button" class="btn btn--quiet btn--danger">
-                      <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> إزالة الصفحة
+                    <button id="scan-remove" type="button" class="btn">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> إزالة
                     </button>
                   </div>
                 </div>
@@ -233,10 +230,10 @@
                     </select>
                   </div>
                   <div class="btn-row">
-                    <button id="scan-add" type="button" class="btn btn--quiet">
-                      <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> إضافة صور
+                    <button id="scan-add" type="button" class="btn">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> إضافة
                     </button>
-                    <button id="scan-clear" type="button" class="btn btn--quiet">
+                    <button id="scan-clear" type="button" class="btn">
                       <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق
                     </button>
                   </div>
@@ -257,7 +254,7 @@
                 <span class="intake__title">أسقط الصور هنا</span>
                 <span class="intake__hint">PNG · JPG · WEBP · GIF · BMP</span>
                 <button id="images-browse" type="button" class="btn">
-                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                  تصفّح
                 </button>
               </div>
               <input id="images-input" type="file" accept="image/*" multiple hidden />
@@ -289,13 +286,13 @@
                 <div class="doclist__head">
                   <h3 class="doclist__title">ترتيب الصفحات</h3>
                   <div class="btn-row">
-                    <button id="images-add" type="button" class="btn btn--quiet">
+                    <button id="images-add" type="button" class="btn">
                       <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> إضافة
                     </button>
-                    <button id="images-sort" type="button" class="btn btn--quiet" hidden>
-                      <svg class="icon" aria-hidden="true"><use href="#icon-organize"></use></svg> اقتراح الترتيب
+                    <button id="images-sort" type="button" class="btn" hidden>
+                      <svg class="icon" aria-hidden="true"><use href="#icon-organize"></use></svg> ترتيب
                     </button>
-                    <button id="images-clear" type="button" class="btn btn--quiet">
+                    <button id="images-clear" type="button" class="btn">
                       <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> تفريغ
                     </button>
                   </div>
@@ -317,7 +314,7 @@
                 <span class="intake__title">أسقط ملفات PDF هنا</span>
                 <span class="intake__hint">يمكن اختيار عدة ملفات دفعة واحدة</span>
                 <button id="merge-browse" type="button" class="btn">
-                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                  تصفّح
                 </button>
               </div>
               <input id="merge-input" type="file" accept="application/pdf,.pdf" multiple hidden />
@@ -326,10 +323,10 @@
                 <div class="doclist__head">
                   <h3 class="doclist__title">تسلسل الدمج</h3>
                   <div class="btn-row">
-                    <button id="merge-add" type="button" class="btn btn--quiet">
+                    <button id="merge-add" type="button" class="btn">
                       <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> إضافة
                     </button>
-                    <button id="merge-clear" type="button" class="btn btn--quiet">
+                    <button id="merge-clear" type="button" class="btn">
                       <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> تفريغ
                     </button>
                   </div>
@@ -351,7 +348,7 @@
                 <span class="intake__title">أسقط ملف PDF هنا</span>
                 <span class="intake__hint">ملف واحد — تُعرض صفحاته للتعديل</span>
                 <button id="organize-browse" type="button" class="btn">
-                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                  تصفّح
                 </button>
               </div>
               <input id="organize-input" type="file" accept="application/pdf,.pdf" hidden />
@@ -360,13 +357,13 @@
                 <div class="doclist__head">
                   <h3 class="doclist__title">صفحات المستند</h3>
                   <div class="btn-row">
-                    <button id="organize-add-pdf" type="button" class="btn btn--quiet">
-                      <svg class="icon" aria-hidden="true"><use href="#icon-file"></use></svg> إدراج PDF
+                    <button id="organize-add-pdf" type="button" class="btn">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-file"></use></svg> PDF
                     </button>
-                    <button id="organize-add-img" type="button" class="btn btn--quiet">
-                      <svg class="icon" aria-hidden="true"><use href="#icon-images"></use></svg> إدراج صورة
+                    <button id="organize-add-img" type="button" class="btn">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-images"></use></svg> صورة
                     </button>
-                    <button id="organize-clear" type="button" class="btn btn--quiet">
+                    <button id="organize-clear" type="button" class="btn">
                       <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق
                     </button>
                     <input id="organize-add-pdf-input" type="file" accept="application/pdf,.pdf" multiple hidden />
@@ -391,7 +388,7 @@
                 <span class="intake__title">أسقط ملف PDF هنا</span>
                 <span class="intake__hint">ملف واحد</span>
                 <button id="split-browse" type="button" class="btn">
-                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                  تصفّح
                 </button>
               </div>
               <input id="split-input" type="file" accept="application/pdf,.pdf" hidden />
@@ -419,8 +416,8 @@
                     <p class="note" id="split-note">اكتب النطاقات مفصولة بفواصل، مثل <code>1-3, 5, 8-12</code>.</p>
                     <div class="doclist__head">
                       <h3 class="doclist__title">الملفات الناتجة</h3>
-                      <button id="split-clear" type="button" class="btn btn--quiet">
-                        <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                      <button id="split-clear" type="button" class="btn">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق
                       </button>
                     </div>
                     <div class="plan" id="split-plan"></div>
@@ -440,7 +437,7 @@
                 <span class="intake__title">أسقط ملف PDF هنا</span>
                 <span class="intake__hint">ملف واحد</span>
                 <button id="compress-browse" type="button" class="btn">
-                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                  تصفّح
                 </button>
               </div>
               <input id="compress-input" type="file" accept="application/pdf,.pdf" hidden />
@@ -469,8 +466,8 @@
                   استخدمه للمستندات الممسوحة، لا للتقارير النصية.
                 </p>
                 <div class="readout" id="compress-readout"></div>
-                <button id="compress-clear" type="button" class="btn btn--quiet">
-                  <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                <button id="compress-clear" type="button" class="btn">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق
                 </button>
               </div>
             </div>
@@ -488,7 +485,7 @@
                 <span class="intake__title">أسقط ملف PDF هنا</span>
                 <span class="intake__hint">ملف واحد</span>
                 <button id="watermark-browse" type="button" class="btn">
-                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                  تصفّح
                 </button>
               </div>
               <input id="watermark-input" type="file" accept="application/pdf,.pdf" hidden />
@@ -531,8 +528,8 @@
                   <span class="preview__label">معاينة الصفحة الأولى</span>
                   <div class="preview__stage"><canvas id="watermark-canvas" width="360" height="509"></canvas></div>
                 </div>
-                <button id="watermark-clear" type="button" class="btn btn--quiet">
-                  <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                <button id="watermark-clear" type="button" class="btn">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق
                 </button>
               </div>
             </div>
@@ -550,7 +547,7 @@
                 <span class="intake__title">أسقط ملف PDF هنا</span>
                 <span class="intake__hint">ملف واحد</span>
                 <button id="numbers-browse" type="button" class="btn">
-                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                  تصفّح
                 </button>
               </div>
               <input id="numbers-input" type="file" accept="application/pdf,.pdf" hidden />
@@ -605,8 +602,8 @@
                   <span class="preview__label">معاينة الصفحة الأولى المرقّمة</span>
                   <div class="preview__stage"><canvas id="numbers-canvas" width="360" height="509"></canvas></div>
                 </div>
-                <button id="numbers-clear" type="button" class="btn btn--quiet">
-                  <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                <button id="numbers-clear" type="button" class="btn">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق
                 </button>
               </div>
             </div>
@@ -624,7 +621,7 @@
                 <span class="intake__title">أسقط ملف PDF هنا</span>
                 <span class="intake__hint">ملف واحد</span>
                 <button id="rasterize-browse" type="button" class="btn">
-                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                  تصفّح
                 </button>
               </div>
               <input id="rasterize-input" type="file" accept="application/pdf,.pdf" hidden />
@@ -657,8 +654,8 @@
                 </div>
                 <div class="doclist__head">
                   <h3 class="doclist__title">الصفحات</h3>
-                  <button id="rasterize-clear" type="button" class="btn btn--quiet">
-                    <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                  <button id="rasterize-clear" type="button" class="btn">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق
                   </button>
                 </div>
                 <div id="rasterize-list" class="doclist doclist--pages"></div>
@@ -686,7 +683,7 @@
                     </label>
                     <label class="choice">
                       <input type="radio" name="protect-mode" value="unlock" />
-                      <span>إزالة الحماية</span>
+                      <span>إزالة</span>
                     </label>
                   </div>
                 </div>
@@ -696,7 +693,7 @@
                 <span class="intake__title">أسقط ملف PDF هنا</span>
                 <span class="intake__hint">ملف واحد — محلي</span>
                 <button id="protect-browse" type="button" class="btn">
-                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                  تصفّح
                 </button>
               </div>
               <input id="protect-input" type="file" accept="application/pdf,.pdf" hidden />
@@ -727,11 +724,10 @@
                 </label>
                 <div class="btn-row">
                   <button id="protect-run" type="button" class="btn btn--act" hidden>
-                    <svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg>
-                    <span id="protect-run-label">حماية وحفظ</span>
+                    <span id="protect-run-label">حماية</span>
                   </button>
-                  <button id="protect-clear" type="button" class="btn btn--quiet">
-                    <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                  <button id="protect-clear" type="button" class="btn">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق
                   </button>
                 </div>
               </div>
@@ -749,7 +745,7 @@
                 <span class="intake__title">أسقط ملف PDF هنا</span>
                 <span class="intake__hint">ملف واحد</span>
                 <button id="crop-browse" type="button" class="btn">
-                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                  تصفّح
                 </button>
               </div>
               <input id="crop-input" type="file" accept="application/pdf,.pdf" hidden />
@@ -775,10 +771,10 @@
                   </div>
                 </div>
                 <div class="btn-row">
-                  <button id="crop-prev" type="button" class="btn btn--quiet" disabled>الصفحة السابقة</button>
-                  <button id="crop-next" type="button" class="btn btn--quiet" disabled>الصفحة التالية</button>
-                  <button id="crop-reset" type="button" class="btn btn--quiet">إعادة المربع</button>
-                  <button id="crop-fill" type="button" class="btn btn--quiet">ملء الصفحة</button>
+                  <button id="crop-prev" type="button" class="btn" disabled>السابقة</button>
+                  <button id="crop-next" type="button" class="btn" disabled>التالية</button>
+                  <button id="crop-reset" type="button" class="btn">إعادة</button>
+                  <button id="crop-fill" type="button" class="btn">ملء</button>
                 </div>
                 <div class="preview" id="crop-preview">
                   <span class="preview__label" id="crop-preview-label">اسحب المربع أو زواياه.</span>
@@ -808,10 +804,10 @@
                 <p class="note">المحتوى خارج المربع يبقى في الملف — ليس حذفاً سرياً.</p>
                 <div class="btn-row">
                   <button id="crop-save" type="button" class="btn btn--act">
-                    <svg class="icon" aria-hidden="true"><use href="#icon-crop"></use></svg> اقتصاص وحفظ
+قص
                   </button>
-                  <button id="crop-clear" type="button" class="btn btn--quiet">
-                    <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                  <button id="crop-clear" type="button" class="btn">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق
                   </button>
                 </div>
               </div>
@@ -829,7 +825,7 @@
                 <span class="intake__title">أسقط ملف PDF هنا</span>
                 <span class="intake__hint">JPEG كما خُزّن · ملف واحد</span>
                 <button id="extract-images-browse" type="button" class="btn">
-                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                  تصفّح
                 </button>
               </div>
               <input id="extract-images-input" type="file" accept="application/pdf,.pdf" hidden />
@@ -846,8 +842,8 @@
                 <p class="note">تختلف عن «PDF → صور»: هنا لا نرسم الصفحة.</p>
                 <div class="doclist__head">
                   <h3 class="doclist__title">الصور</h3>
-                  <button id="extract-images-clear" type="button" class="btn btn--quiet">
-                    <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                  <button id="extract-images-clear" type="button" class="btn">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق
                   </button>
                 </div>
                 <div id="extract-images-list" class="doclist doclist--pages"></div>
@@ -866,7 +862,7 @@
                 <span class="intake__title">أسقط ملف PDF هنا</span>
                 <span class="intake__hint">ملف واحد — محلي</span>
                 <button id="ocr-browse" type="button" class="btn">
-                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                  تصفّح
                 </button>
               </div>
               <input id="ocr-input" type="file" accept="application/pdf,.pdf" hidden />
@@ -893,9 +889,9 @@
                     <input id="ocr-ranges" type="text" inputmode="numeric" placeholder="مثل 1-3, 5" autocomplete="off" />
                   </div>
                   <div class="field field--wide">
-                    <label class="choice">
+                    <label class="check">
                       <input id="ocr-skip-text" type="checkbox" checked />
-                      <span>تجاوز الصفحات ذات النص الرقمي</span>
+                      تجاوز الصفحات ذات النص الرقمي
                     </label>
                   </div>
                 </div>
@@ -903,10 +899,10 @@
                 <div class="readout" id="ocr-readout"></div>
                 <div class="btn-row">
                   <button id="ocr-save" type="button" class="btn btn--act">
-                    <svg class="icon" aria-hidden="true"><use href="#icon-file"></use></svg> تعرّف وحفظ
+                    تعرّف
                   </button>
-                  <button id="ocr-clear" type="button" class="btn btn--quiet">
-                    <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                  <button id="ocr-clear" type="button" class="btn">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق
                   </button>
                 </div>
               </div>
@@ -949,7 +945,6 @@
             <span class="tb__kbd-key">Enter</span>
           </kbd>
           <button class="btn btn--act" id="tb-run" type="button" disabled>
-            <svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg>
             <span id="tb-run-label">تنفيذ</span>
           </button>
         </div>
@@ -966,7 +961,7 @@
       <div class="progress__track"><div class="progress__bar" id="progress-bar"></div></div>
       <div class="progress__foot">
         <span class="progress__pct" id="progress-pct">0%</span>
-        <button class="btn btn--quiet" id="progress-cancel" type="button">إيقاف</button>
+        <button class="btn" id="progress-cancel" type="button">إيقاف</button>
       </div>
     </div>
   </div>

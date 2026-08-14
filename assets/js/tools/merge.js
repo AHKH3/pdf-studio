@@ -158,7 +158,7 @@ export const mergeTool = {
   name: "دمج",
   icon: "icon-merge",
   input: "PDF+",
-  actionLabel: "دمج وحفظ",
+  actionLabel: "دمج",
   outputName: () => "مستند-مدمج.pdf",
 
   setup() {

@@ -237,7 +237,7 @@ export async function textToPng(text, style) {
 
   const scale = 3;
   const fontSize = Math.max(16, style.size * scale);
-  const font = `600 ${fontSize}px "Zain", "Reem Kufi", system-ui, sans-serif`;
+  const font = `600 ${fontSize}px "Playfair Display", "Noto Naskh Arabic", serif`;
 
   const gauge = document.createElement("canvas").getContext("2d");
   gauge.font = font;

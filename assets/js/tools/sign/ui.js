@@ -149,20 +149,18 @@ export function buildUi(root) {
         ${icon("icon-file")}
         <span class="intake__title">أسقط ملف PDF هنا</span>
         <span class="intake__hint">ملف واحد · التوقيع يُدمج في الصفحة ولا يملأ حقول الاستمارات</span>
-        <button id="sign-browse" type="button" class="btn">
-          ${icon("icon-upload")} تصفّح الجهاز
-        </button>
+        <button id="sign-browse" type="button" class="btn">تصفّح</button>
       </div>
       <input id="sign-input" type="file" accept="application/pdf,.pdf" hidden />
 
       <div id="sign-workspace" class="scan" hidden>
         <div class="scan__stage">
           <div class="scan__pager">
-            <button id="sign-prev" type="button" class="ghost-btn ghost-btn--label">
+            <button id="sign-prev" type="button" class="btn btn--compact">
               ${icon("icon-arrow")} السابقة
             </button>
             <span class="scan__count num" id="sign-count">1 / 1</span>
-            <button id="sign-next" type="button" class="ghost-btn ghost-btn--label">
+            <button id="sign-next" type="button" class="btn btn--compact">
               التالية <svg class="icon flip" aria-hidden="true"><use href="#icon-arrow"></use></svg>
             </button>
           </div>
@@ -179,8 +177,8 @@ export function buildUi(root) {
           <div class="panel-block">
             <h3 class="panel-block__title">الأداة</h3>
             <div class="choice-grid" role="radiogroup" aria-label="نوع الختم">
-              <label class="choice"><input type="radio" name="sign-tool" value="draw" checked /><span>رسم التوقيع</span></label>
-              <label class="choice"><input type="radio" name="sign-tool" value="name" /><span>كتابة الاسم</span></label>
+              <label class="choice"><input type="radio" name="sign-tool" value="draw" checked /><span>رسم</span></label>
+              <label class="choice"><input type="radio" name="sign-tool" value="name" /><span>اسم</span></label>
               <label class="choice"><input type="radio" name="sign-tool" value="image" /><span>صورة</span></label>
               <label class="choice"><input type="radio" name="sign-tool" value="date" /><span>التاريخ</span></label>
             </div>
@@ -203,8 +201,8 @@ export function buildUi(root) {
                 <option value="3.6">سميك</option>
               </select>
             </div>
-            <button id="sign-pad-clear" type="button" class="btn btn--quiet btn--wide" style="margin-top:8px">
-              ${icon("icon-close")} امسح اللوحة
+            <button id="sign-pad-clear" type="button" class="btn btn--wide" style="margin-top:8px">
+              ${icon("icon-close")} امسح
             </button>
           </div>
 
@@ -228,7 +226,7 @@ export function buildUi(root) {
             <h3 class="panel-block__title">صورة أو شعار</h3>
             <p class="panel-block__meta" id="sign-image-meta">PNG أو JPG بخلفية شفافة أفضل للختم.</p>
             <button id="sign-image-browse" type="button" class="btn btn--wide">
-              ${icon("icon-upload")} اختيار صورة
+              ${icon("icon-upload")} صورة
             </button>
             <input id="sign-image-input" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" hidden />
           </div>
@@ -260,7 +258,7 @@ export function buildUi(root) {
               ضعها على كل الصفحات
             </label>
             <button id="sign-place" type="button" class="btn btn--wide">
-              ${icon("icon-plus")} ضع على هذه الصفحة
+              ${icon("icon-plus")} ضع
             </button>
           </div>
 
@@ -268,8 +266,8 @@ export function buildUi(root) {
             <h3 class="panel-block__title">أختام هذه الصفحة</h3>
             <div id="sign-list" class="sign-list"></div>
             <div class="btn-row" style="margin-top:10px">
-              <button id="sign-copy-all" type="button" class="btn btn--quiet">نسخ للكل</button>
-              <button id="sign-delete" type="button" class="btn btn--quiet">حذف المحدد</button>
+              <button id="sign-copy-all" type="button" class="btn">نسخ</button>
+              <button id="sign-delete" type="button" class="btn">حذف</button>
             </div>
           </div>
 
@@ -278,11 +276,9 @@ export function buildUi(root) {
               الناتج PDF مسطّح: الأختام تُرسم فوق الصفحة. هذه الأداة لا تملأ حقول AcroForm.
               مجانية، بلا حد صفحات، والملف لا يغادر الجهاز.
             </p>
-            <button id="sign-save" type="button" class="btn btn--act btn--wide">
-              ${icon("icon-download")} توقيع وحفظ
-            </button>
-            <button id="sign-clear" type="button" class="btn btn--quiet btn--wide" style="margin-top:8px">
-              ${icon("icon-close")} إغلاق الملف
+            <button id="sign-save" type="button" class="btn btn--act btn--wide">توقيع</button>
+            <button id="sign-clear" type="button" class="btn btn--wide" style="margin-top:8px">
+              ${icon("icon-close")} إغلاق
             </button>
           </div>
         </aside>

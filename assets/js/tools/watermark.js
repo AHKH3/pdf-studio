@@ -67,7 +67,7 @@ function drawPreview() {
   }
 
   preview.draw((ctx, scale) => {
-    const font = `600 ${config.size * scale}px "Zain", "Reem Kufi", system-ui, sans-serif`;
+    const font = `600 ${config.size * scale}px "Playfair Display", "Noto Naskh Arabic", serif`;
     ctx.font = font;
     ctx.direction = "rtl";
     ctx.textAlign = "center";
@@ -215,7 +215,7 @@ export const watermarkTool = {
   name: "علامة",
   icon: "icon-watermark",
   input: "PDF",
-  actionLabel: "إضافة وحفظ",
+  actionLabel: "ختم",
 
   setup() {
     preview = new PagePreview("watermark-canvas");

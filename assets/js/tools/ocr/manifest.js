@@ -11,7 +11,7 @@ export const ocrManifest = {
   name: "بحث",
   icon: "icon-file",
   input: "PDF",
-  actionLabel: "تعرّف وحفظ",
+  actionLabel: "تعرّف",
   mount,
   unmount,
   enter,

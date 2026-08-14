@@ -10,7 +10,7 @@ export const cropManifest = {
   name: "قص",
   icon: "icon-crop",
   input: "PDF",
-  actionLabel: "اقتصاص وحفظ",
+  actionLabel: "قص",
   mount,
   unmount,
   enter,

@@ -20,11 +20,11 @@ const FRAGMENT = `
         <div class="choice-grid" role="radiogroup" aria-labelledby="protect-mode-label">
           <label class="choice">
             <input type="radio" name="protect-mode" value="lock" checked />
-            <span>حماية بكلمة سر</span>
+            <span>حماية</span>
           </label>
           <label class="choice">
             <input type="radio" name="protect-mode" value="unlock" />
-            <span>إزالة الحماية</span>
+            <span>إزالة</span>
           </label>
         </div>
       </div>
@@ -34,7 +34,7 @@ const FRAGMENT = `
       <span class="intake__title">أسقط ملف PDF هنا</span>
       <span class="intake__hint">ملف واحد — المعالجة محلية بالكامل</span>
       <button id="protect-browse" type="button" class="btn">
-        <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+        تصفّح
       </button>
     </div>
     <input id="protect-input" type="file" accept="application/pdf,.pdf" hidden />
@@ -69,11 +69,10 @@ const FRAGMENT = `
       </label>
       <div class="btn-row">
         <button id="protect-run" type="button" class="btn btn--act" hidden>
-          <svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg>
-          <span id="protect-run-label">حماية وحفظ</span>
+          <span id="protect-run-label">حماية</span>
         </button>
-        <button id="protect-clear" type="button" class="btn btn--quiet">
-          <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+        <button id="protect-clear" type="button" class="btn">
+          <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق
         </button>
       </div>
     </div>
@@ -106,7 +105,7 @@ function mode() {
 }
 
 function actionLabel() {
-  return mode() === "unlock" ? "إزالة الحماية" : "حماية وحفظ";
+  return mode() === "unlock" ? "إزالة" : "حماية";
 }
 
 export function outputName() {

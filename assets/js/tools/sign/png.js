@@ -3,7 +3,7 @@
  * pdf-lib's standard fonts have no Arabic coverage (same approach as watermark).
  */
 
-const FONT = `"Zain", "Reem Kufi", system-ui, sans-serif`;
+const FONT = `"Playfair Display", "Noto Naskh Arabic", serif`;
 
 /** @param {HTMLCanvasElement} canvas */
 export async function canvasToPngBytes(canvas) {

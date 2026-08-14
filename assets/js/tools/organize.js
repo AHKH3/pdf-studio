@@ -221,7 +221,7 @@ export const organizeTool = {
   name: "ترتيب",
   icon: "icon-organize",
   input: "PDF",
-  actionLabel: "حفظ الترتيب",
+  actionLabel: "حفظ",
 
   setup() {
     list = new DocList("organize-list", {

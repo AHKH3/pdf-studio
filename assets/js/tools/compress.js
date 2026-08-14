@@ -147,7 +147,7 @@ export const compressTool = {
   name: "ضغط",
   icon: "icon-compress",
   input: "PDF",
-  actionLabel: "ضغط وحفظ",
+  actionLabel: "ضغط",
 
   setup() {
     wireIntake({

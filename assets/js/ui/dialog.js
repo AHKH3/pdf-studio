@@ -120,7 +120,7 @@ export function confirmAction(options) {
 
     const cancel = document.createElement("button");
     cancel.type = "button";
-    cancel.className = "btn btn--quiet";
+    cancel.className = "btn";
     cancel.textContent = options.cancelLabel || "رجوع";
     cancel.addEventListener("click", () => finish(false));
 
@@ -217,7 +217,7 @@ export function promptPassword(options = {}) {
 
     const cancel = document.createElement("button");
     cancel.type = "button";
-    cancel.className = "btn btn--quiet";
+    cancel.className = "btn";
     cancel.textContent = "إلغاء";
     cancel.addEventListener("click", () => finish(null));
 

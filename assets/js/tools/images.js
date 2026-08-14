@@ -164,7 +164,7 @@ export const imagesTool = {
   name: "صور → PDF",
   icon: "icon-images",
   hidden: true,
-  actionLabel: "إنشاء PDF",
+  actionLabel: "أنشئ",
   outputName: () => "مستند-الصور.pdf",
 
   setup() {

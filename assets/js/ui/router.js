@@ -107,24 +107,23 @@ function buildLegend() {
     const item = document.createElement("li");
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "legend__row";
+    button.className = "btn legend__row";
     button.dataset.route = tool.id;
-    if (tool.id === activeId) button.setAttribute("aria-current", "page");
+    if (tool.id === activeId) {
+      button.classList.add("btn--act");
+      button.setAttribute("aria-current", "page");
+    }
     if (!enabled) {
       button.setAttribute("aria-disabled", "true");
       button.classList.add("is-disabled");
     }
-
-    const svg = glyph(tool.icon);
 
     const label = document.createElement("span");
     label.className = "legend__name";
     label.textContent = tool.name;
     label.title = tool.name;
 
-    button.append(svg, label);
-    const chip = flowChip(tool);
-    if (chip) button.append(chip);
+    button.append(label);
     item.append(button);
     host.append(item);
   }

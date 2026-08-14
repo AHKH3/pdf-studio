@@ -33,7 +33,7 @@ export const protectTool = {
   name: "حماية",
   icon: "icon-lock",
   input: "PDF",
-  actionLabel: "حماية وحفظ",
+  actionLabel: "حماية",
   setup: setupTool,
   enter: enterTool,
   leave: leaveTool,

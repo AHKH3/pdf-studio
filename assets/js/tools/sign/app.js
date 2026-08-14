@@ -133,7 +133,7 @@ function renderList() {
   if (!onPage.length) {
     const empty = document.createElement("p");
     empty.className = "sign-list__empty";
-    empty.textContent = "لا أختام على هذه الصفحة بعد. أنشئ ختماً ثم اضغط «ضع على هذه الصفحة».";
+    empty.textContent = "لا أختام على هذه الصفحة بعد. أنشئ ختماً ثم اضغط «ضع».";
     host.append(empty);
     return;
   }
@@ -643,7 +643,7 @@ export function asTool() {
     name: "توقيع",
     icon: "icon-sign",
     input: "PDF",
-    actionLabel: "توقيع وحفظ",
+    actionLabel: "توقيع",
     setup() {
       const root = document.getElementById("view-sign");
       if (root) mount(root);

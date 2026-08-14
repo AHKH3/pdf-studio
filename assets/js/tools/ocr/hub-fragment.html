@@ -12,7 +12,7 @@
       <span class="intake__title">أسقط ملف PDF هنا</span>
       <span class="intake__hint">ملف واحد — التعرف يجري على جهازك، بلا إنترنت</span>
       <button id="ocr-browse" type="button" class="btn">
-        <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+        تصفّح
       </button>
     </div>
     <input id="ocr-input" type="file" accept="application/pdf,.pdf" hidden />
@@ -40,9 +40,9 @@
           <input id="ocr-ranges" type="text" inputmode="numeric" placeholder="مثل 1-3, 5" autocomplete="off" />
         </div>
         <div class="field field--wide">
-          <label class="choice">
+          <label class="check">
             <input id="ocr-skip-text" type="checkbox" checked />
-            <span>تجاوز الصفحات التي فيها نص رقمي أصلاً</span>
+            تجاوز الصفحات التي فيها نص رقمي أصلاً
           </label>
         </div>
       </div>
@@ -55,10 +55,10 @@
 
       <div class="btn-row">
         <button id="ocr-save" type="button" class="btn btn--act">
-          <svg class="icon" aria-hidden="true"><use href="#icon-file"></use></svg> تعرّف وحفظ
+تعرّف
         </button>
-        <button id="ocr-clear" type="button" class="btn btn--quiet">
-          <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+        <button id="ocr-clear" type="button" class="btn">
+          <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق
         </button>
       </div>
     </div>
