@@ -1,0 +1,66 @@
+<section id="view-ocr" class="view" aria-labelledby="ocr-title" role="region" hidden>
+  <div class="view__head">
+    <h2 class="view__title" id="ocr-title" tabindex="-1">PDF قابل للبحث</h2>
+    <p class="view__lede">
+      نتعرّف على النص العربي والإنجليزي محلياً، ونضع طبقة مخفية فوق الصفحات كما هي — للبحث والنسخ، دون تغيير شكل الورقة.
+    </p>
+  </div>
+
+  <div class="view__body">
+    <div id="ocr-drop" class="intake" data-kind="pdf">
+      <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-file"></use></svg>
+      <span class="intake__title">أسقط ملف PDF هنا</span>
+      <span class="intake__hint">ملف واحد — التعرف يجري على جهازك، بلا إنترنت</span>
+      <button id="ocr-browse" type="button" class="btn">
+        <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+      </button>
+    </div>
+    <input id="ocr-input" type="file" accept="application/pdf,.pdf" hidden />
+
+    <div id="ocr-panel" hidden>
+      <div class="fieldset">
+        <div class="field">
+          <label for="ocr-dpi">دقة التعرف</label>
+          <select id="ocr-dpi">
+            <option value="150">أسرع — 150 نقطة/بوصة</option>
+            <option value="200" selected>متوازن — 200 نقطة/بوصة</option>
+            <option value="300">أدق — 300 نقطة/بوصة</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="ocr-psm">تخطيط الصفحة</label>
+          <select id="ocr-psm">
+            <option value="3" selected>تلقائي</option>
+            <option value="4">عمود واحد</option>
+            <option value="6">كتلة نص واحدة</option>
+          </select>
+        </div>
+        <div class="field field--wide">
+          <label for="ocr-ranges">صفحات محددة (اختياري)</label>
+          <input id="ocr-ranges" type="text" inputmode="numeric" placeholder="مثل 1-3, 5" autocomplete="off" />
+        </div>
+        <div class="field field--wide">
+          <label class="choice">
+            <input id="ocr-skip-text" type="checkbox" checked />
+            <span>تجاوز الصفحات التي فيها نص رقمي أصلاً</span>
+          </label>
+        </div>
+      </div>
+
+      <p class="note">
+        المطبوع العربي الواضح جيد عادةً. خط اليد والصور الداكنة أضعف. الطبقة المخفية للكلمات لا تعتمد على السطر كاملاً حتى يبقى ترتيب العربية قابلاً للبحث. ليست بديلاً عن Acrobat OCR.
+      </p>
+
+      <div class="readout" id="ocr-readout"></div>
+
+      <div class="btn-row">
+        <button id="ocr-save" type="button" class="btn btn--act">
+          <svg class="icon" aria-hidden="true"><use href="#icon-file"></use></svg> تعرّف وحفظ
+        </button>
+        <button id="ocr-clear" type="button" class="btn btn--quiet">
+          <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

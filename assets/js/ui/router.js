@@ -1,94 +1,232 @@
-import { el } from "../dom.js";
-import { state } from "../state.js";
-
-/** @type {() => void} */
-let clearForActiveTool = () => {};
-
-export function setClearForActiveTool(fn) {
-  clearForActiveTool = fn;
-}
-
-/** @param {string} route */
-export function focusViewHeading(route) {
-  if (route === "hub") {
-    const hubTitle = el("hub-heading");
-    if (hubTitle instanceof HTMLElement) {
-      hubTitle.focus({ preventScroll: true });
-      return;
-    }
-    const brand = /** @type {HTMLButtonElement | null} */ (document.getElementById("brand-home"));
-    brand?.focus({ preventScroll: true });
-    return;
-  }
-  const view = el(`view-${route}`);
-  const target = view?.querySelector(".view-focus-target");
-  if (target instanceof HTMLElement) {
-    target.focus({ preventScroll: true });
-  }
-}
-
-export function goHome() {
-  clearForActiveTool();
-  navigate("hub");
-}
-
-/** @param {string} route */
-export function navigate(route) {
-  if (state.activeView === route) return;
-
-  const current = el(`view-${state.activeView}`);
-  const next = el(`view-${route}`);
-
-  if (current) {
-    current.classList.remove("view--active");
-    current.classList.add("view--hidden");
-    current.setAttribute("aria-hidden", "true");
-  }
-
-  if (next) {
-    next.classList.remove("view--hidden");
-    next.setAttribute("aria-hidden", "false");
-    requestAnimationFrame(() => {
-      next.classList.add("view--active");
-      focusViewHeading(route);
-    });
-  } else {
-    focusViewHeading(route);
-  }
-
-  state.activeView = route;
-  const btnHome = el("btn-home");
-  btnHome?.classList.toggle("is-visible", route !== "hub");
-  const brand = el("brand-home");
-  if (route === "hub") {
-    brand?.setAttribute("aria-current", "page");
-    btnHome?.removeAttribute("aria-current");
-  } else {
-    brand?.removeAttribute("aria-current");
-  }
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
+import { el, qsa } from "../dom.js";
+import { actionIds, captureFiles, filesForAction, hasCapture, onCaptureChange } from "./capture.js";
+import { confirmLeave, isDialogOpen } from "./dialog.js";
+import { toast } from "./feedback.js";
+import { setOperation } from "./titleblock.js";
 
 /**
- * @param {HTMLButtonElement} brandHome
- * @param {HTMLButtonElement} btnHome
+ * @typedef {object} Tool
+ * @property {string} id
+ * @property {string} name
+ * @property {string} icon
+ * @property {string} input     short label for the legend's input column
+ * @property {string} [op]      title-block operation name, defaults to name
+ * @property {string} [actionLabel]
+ * @property {boolean} [hidden] kept out of the legend
+ * @property {() => void} [setup]
+ * @property {() => void} [enter]
+ * @property {() => void} [leave]
+ * @property {() => boolean} [isDirty]
+ * @property {() => void | Promise<void>} [run]
+ * @property {() => string} [outputName]
+ * @property {(files: File[]) => void | Promise<void>} [acceptFiles]
  */
-export function initRouter(brandHome, btnHome) {
-  document.querySelectorAll(".hub-card").forEach((card) => {
-    card.setAttribute("role", "button");
-    card.setAttribute("tabindex", "0");
-    card.addEventListener("click", () => {
-      const route = card.getAttribute("data-route");
-      if (route) navigate(route);
-    });
-    card.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        const route = card.getAttribute("data-route");
-        if (route) navigate(route);
-      }
-    });
+
+/** @type {Map<string, Tool>} */
+const tools = new Map();
+let activeId = "";
+let sweepTimer = 0;
+let routing = false;
+
+const ACTION_FLOW = {
+  scan: ["صورة", "PDF"],
+  images: ["صور", "PDF"],
+  merge: ["PDF+", "PDF"],
+  split: ["PDF", "ملفات"],
+  rasterize: ["PDF", "صور"],
+  "extract-images": ["PDF", "صور"]
+};
+
+function glyph(id, className = "icon") {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", className);
+  svg.setAttribute("aria-hidden", "true");
+  const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  use.setAttribute("href", `#${id}`);
+  svg.append(use);
+  return svg;
+}
+
+function flowChip(tool) {
+  const parts = ACTION_FLOW[tool.id];
+  if (parts && !String(tool.name).includes("→")) {
+    const flow = document.createElement("span");
+    flow.className = "legend__flow";
+    const from = document.createElement("span");
+    from.textContent = parts[0];
+    const to = document.createElement("span");
+    to.textContent = parts[1];
+    flow.append(from, glyph("icon-arrow", "icon legend__chevron"), to);
+    return flow;
+  }
+  if (tool.input && !String(tool.name).includes("→")) {
+    const input = document.createElement("span");
+    input.className = "legend__input";
+    input.textContent = tool.input;
+    return input;
+  }
+  return null;
+}
+
+/** @param {Tool[]} list */
+export function registerTools(list) {
+  for (const tool of list) tools.set(tool.id, tool);
+}
+
+export function activeTool() {
+  return tools.get(activeId) ?? null;
+}
+
+export function allTools() {
+  return Array.from(tools.values());
+}
+
+function syncLegendChrome() {
+  const title = el("legend-title");
+  const lede = el("legend-lede");
+  if (title) title.textContent = "الإجراءات";
+  if (lede) lede.textContent = hasCapture() ? `${captureFiles().length} ملف` : "ارفع ملفات أولاً";
+}
+
+function buildLegend() {
+  const host = el("legend-list");
+  if (!host) return;
+  host.replaceChildren();
+  syncLegendChrome();
+
+  const allowed = new Set(actionIds());
+  if (activeId && activeId !== "start") allowed.add(activeId);
+  for (const tool of tools.values()) {
+    if (tool.isDirty?.()) allowed.add(tool.id);
+  }
+
+  for (const tool of tools.values()) {
+    if (tool.hidden) continue;
+    const enabled = allowed.has(tool.id);
+    if (!enabled) continue;
+    const item = document.createElement("li");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "legend__row";
+    button.dataset.route = tool.id;
+    if (tool.id === activeId) button.setAttribute("aria-current", "page");
+    if (!enabled) {
+      button.setAttribute("aria-disabled", "true");
+      button.classList.add("is-disabled");
+    }
+
+    const svg = glyph(tool.icon);
+
+    const label = document.createElement("span");
+    label.className = "legend__name";
+    label.textContent = tool.name;
+    label.title = tool.name;
+
+    button.append(svg, label);
+    const chip = flowChip(tool);
+    if (chip) button.append(chip);
+    item.append(button);
+    host.append(item);
+  }
+}
+
+function showRoute(id) {
+  const tool = tools.get(id);
+  if (!tool) return;
+
+  const previous = tools.get(activeId);
+  previous?.leave?.();
+
+  for (const section of qsa(".view")) {
+    const match = section.id === `view-${id}`;
+    section.classList.toggle("view--active", match);
+    /** @type {HTMLElement} */ (section).hidden = !match;
+  }
+
+  activeId = id;
+  buildLegend();
+
+  setOperation({
+    op: tool.op ?? tool.name,
+    actionLabel: tool.actionLabel ?? "تنفيذ",
+    name: tool.outputName?.() ?? "",
+    onRun: tool.run ? () => tool.run() : undefined
   });
-  btnHome.addEventListener("click", goHome);
-  brandHome.addEventListener("click", goHome);
+
+  const work = el("work");
+  if (work) {
+    work.style.setProperty("--sweep", `${work.clientWidth}px`);
+    work.classList.remove("is-changing");
+    void work.offsetWidth;
+    work.classList.add("is-changing");
+    clearTimeout(sweepTimer);
+    sweepTimer = window.setTimeout(() => work.classList.remove("is-changing"), 400);
+  }
+}
+
+async function deliverAndEnter(id) {
+  const tool = tools.get(id);
+  if (!tool) return;
+  const files = filesForAction(id);
+  if (files.length) await tool.acceptFiles?.(files);
+  tool.enter?.();
+
+  const heading = el(`view-${id}`)?.querySelector(".view__title, .start__title");
+  if (heading instanceof HTMLElement) heading.focus({ preventScroll: true });
+  el("work")?.scrollTo({ top: 0 });
+}
+
+/** @param {string} id */
+export async function route(id) {
+  const tool = tools.get(id);
+  if (!tool || id === activeId || routing) return;
+  if (isDialogOpen()) return;
+  if (el("progress")?.classList.contains("is-open")) return;
+
+  const previous = tools.get(activeId);
+  if (previous?.isDirty?.()) {
+    routing = true;
+    const ok = await confirmLeave(previous.name);
+    routing = false;
+    if (!ok) return;
+  }
+
+  showRoute(id);
+  await deliverAndEnter(id);
+}
+
+export function initRouter() {
+  onCaptureChange(buildLegend);
+  buildLegend();
+  for (const tool of tools.values()) {
+    try {
+      tool.setup?.();
+    } catch (error) {
+      console.error(`تعذّر تهيئة الأداة ${tool.id}`, error);
+    }
+  }
+
+  document.addEventListener("click", (event) => {
+    const trigger = /** @type {HTMLElement} */ (event.target).closest("[data-route]");
+    if (!(trigger instanceof HTMLElement)) return;
+    event.preventDefault();
+    if (trigger.getAttribute("aria-disabled") === "true") {
+      toast("ارفع الملفات أولاً، ثم اختر الإجراء.", "info");
+      route("start");
+      return;
+    }
+    route(trigger.dataset.route);
+  });
+
+  window.addEventListener("beforeunload", (event) => {
+    for (const tool of tools.values()) {
+      if (!tool.isDirty?.()) continue;
+      event.preventDefault();
+      event.returnValue = "";
+      return;
+    }
+  });
+
+  showRoute("start");
+  void deliverAndEnter("start");
 }

@@ -1,4 +1,7 @@
 node_modules/
 release/
 assets/vendor/*.js
+tmp/
+.tmp/
+.tmp-grid/
 .DS_Store

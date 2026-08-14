@@ -1,0 +1,98 @@
+<section id="view-crop" class="view" aria-labelledby="crop-title" role="region" hidden>
+  <div class="view__head">
+    <h2 class="view__title" id="crop-title" tabindex="-1">اقتصاص الصفحات</h2>
+    <p class="view__lede">
+      قصّ هوامش الماسحة أو إطار المحاضرة. اسحب المربع على المعاينة، ثم طبّقه على هذه الصفحة أو على الملف كله.
+    </p>
+  </div>
+
+  <div class="view__body">
+    <div id="crop-drop" class="intake" data-kind="pdf">
+      <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-crop"></use></svg>
+      <span class="intake__title">أسقط ملف PDF هنا</span>
+      <span class="intake__hint">ملف واحد — القص يجري على جهازك</span>
+      <button id="crop-browse" type="button" class="btn">
+        <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+      </button>
+    </div>
+    <input id="crop-input" type="file" accept="application/pdf,.pdf" hidden />
+
+    <div id="crop-panel" hidden>
+      <div class="fieldset">
+        <div class="field field--wide">
+          <span id="crop-scope-label">نطاق القصّ</span>
+          <div class="choice-grid" role="radiogroup" aria-labelledby="crop-scope-label">
+            <label class="choice">
+              <input id="crop-scope-current" type="radio" name="crop-scope" value="current" checked />
+              <span>هذه الصفحة</span>
+            </label>
+            <label class="choice">
+              <input id="crop-scope-all" type="radio" name="crop-scope" value="all" />
+              <span>كل الصفحات</span>
+            </label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="crop-page" id="crop-page-label">الصفحة المعروضة</label>
+          <input id="crop-page" type="number" min="1" value="1" inputmode="numeric" />
+          <span id="crop-page-total" class="num" hidden>0</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button id="crop-prev" type="button" class="btn btn--quiet" disabled>الصفحة السابقة</button>
+        <button id="crop-next" type="button" class="btn btn--quiet" disabled>الصفحة التالية</button>
+        <button id="crop-reset" type="button" class="btn btn--quiet">إعادة المربع</button>
+        <button id="crop-fill" type="button" class="btn btn--quiet">ملء الصفحة</button>
+      </div>
+
+      <div class="preview" id="crop-preview">
+        <span class="preview__label" id="crop-preview-label">اسحب المربع أو زواياه. الأسهم تحرّك، Alt+سهم يغيّر المقاس.</span>
+        <div class="preview__stage">
+          <div class="crop-stage" id="crop-stage">
+            <canvas id="crop-canvas" width="360" height="509"></canvas>
+            <div class="crop-veil" id="crop-veil">
+              <div class="crop-shade" data-shade="t"></div>
+              <div class="crop-shade" data-shade="l"></div>
+              <div class="crop-shade" data-shade="r"></div>
+              <div class="crop-shade" data-shade="b"></div>
+              <div
+                class="crop-rect"
+                id="crop-rect"
+                tabindex="0"
+                role="slider"
+                aria-labelledby="crop-preview-label"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                <span class="crop-handle" data-handle="nw"></span>
+                <span class="crop-handle" data-handle="n"></span>
+                <span class="crop-handle" data-handle="ne"></span>
+                <span class="crop-handle" data-handle="e"></span>
+                <span class="crop-handle" data-handle="se"></span>
+                <span class="crop-handle" data-handle="s"></span>
+                <span class="crop-handle" data-handle="sw"></span>
+                <span class="crop-handle" data-handle="w"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="readout" id="crop-readout" aria-live="polite"></div>
+
+      <p class="note">
+        القص يغيّر ما يظهر في العارض ومقاس الصفحة. المحتوى خارج المربع يبقى داخل الملف — مناسب لهوامش الماسحة وإعلانات الرأس، لا لحذف بيانات سرية.
+      </p>
+
+      <div class="btn-row">
+        <button id="crop-save" type="button" class="btn btn--act">
+          <svg class="icon" aria-hidden="true"><use href="#icon-crop"></use></svg> اقتصاص وحفظ
+        </button>
+        <button id="crop-clear" type="button" class="btn btn--quiet">
+          <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

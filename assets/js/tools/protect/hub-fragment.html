@@ -1,0 +1,98 @@
+<!--
+  PDF Studio — أداة الحماية / إزالة الحماية (id: protect)
+
+  أين تلصق هذا المقطع:
+  داخل <main id="work"> في index.html، كأخٍ لبقية أقسام .view
+  (مثلاً بعد view-rasterize وقبل إغلاق </main>).
+
+  ثم في assets/js/main.js:
+    import { protectTool } from "./tools/protect/manifest.js";
+    registerTools([ …, protectTool ]);
+
+  الأيقونة #icon-lock موجودة مسبقاً في الـ sprite.
+  لا تضف CSS جديداً — هذا المقطع يستخدم أصناف التطبيق الحالية.
+
+  محرّك qpdf-wasm يحتاج SharedArrayBuffer: أضف رأسي
+  Cross-Origin-Opener-Policy: same-origin و
+  Cross-Origin-Embedder-Policy: require-corp
+  على خادم Electron الثابت. التفاصيل في README.md بجانب هذا الملف.
+-->
+<section id="view-protect" class="view" aria-labelledby="protect-title" role="region" hidden>
+  <div class="view__head">
+    <h2 class="view__title" id="protect-title" tabindex="-1">حماية وإزالة الحماية</h2>
+    <p class="view__lede">أغلق الملف بكلمة سر AES-256، أو أزل الحماية إن كنت تعرفها. الملف لا يغادر جهازك.</p>
+  </div>
+
+  <div class="view__body">
+    <div class="fieldset">
+      <div class="field field--wide">
+        <span id="protect-mode-label">العملية</span>
+        <div class="choice-grid" role="radiogroup" aria-labelledby="protect-mode-label">
+          <label class="choice">
+            <input type="radio" name="protect-mode" value="lock" checked />
+            <span>حماية بكلمة سر</span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="protect-mode" value="unlock" />
+            <span>إزالة الحماية</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div id="protect-drop" class="intake" data-kind="pdf">
+      <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-lock"></use></svg>
+      <span class="intake__title">أسقط ملف PDF هنا</span>
+      <span class="intake__hint">ملف واحد — المعالجة محلية بالكامل</span>
+      <button id="protect-browse" type="button" class="btn">
+        <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+      </button>
+    </div>
+    <input id="protect-input" type="file" accept="application/pdf,.pdf" hidden />
+
+    <div id="protect-panel" hidden>
+      <div class="readout" id="protect-readout"></div>
+
+      <p class="note" id="protect-lock-note">
+        التشفير AES-256 يجري على جهازك. إن نسيت كلمة السر فلن يمكن فتح الملف لاحقاً، ولا نملك طريقة لاستعادتها.
+      </p>
+      <p class="note" id="protect-unlock-note" hidden>
+        إزالة الحماية تعمل فقط إذا أدخلت كلمة السر الصحيحة. لا نخمّنها ولا نكسر التشفير — ذلك غير ممكن عملياً على AES-256 وغير مسموح.
+      </p>
+      <p class="note" id="protect-status-note" hidden></p>
+
+      <div class="fieldset" id="protect-lock-fields">
+        <div class="field">
+          <label for="protect-pass">كلمة سر الفتح</label>
+          <input id="protect-pass" type="password" autocomplete="new-password" spellcheck="false" autocapitalize="off" dir="ltr" maxlength="127" />
+        </div>
+        <div class="field">
+          <label for="protect-pass-confirm">تأكيد كلمة السر</label>
+          <input id="protect-pass-confirm" type="password" autocomplete="new-password" spellcheck="false" autocapitalize="off" dir="ltr" maxlength="127" />
+        </div>
+      </div>
+
+      <div class="fieldset" id="protect-unlock-fields" hidden>
+        <div class="field field--wide">
+          <label for="protect-unlock-pass">كلمة السر المعروفة</label>
+          <input id="protect-unlock-pass" type="password" autocomplete="current-password" spellcheck="false" autocapitalize="off" dir="ltr" maxlength="127" />
+        </div>
+      </div>
+
+      <label class="check" id="protect-show-wrap">
+        <input id="protect-show-pass" type="checkbox" />
+        إظهار كلمة السر
+      </label>
+
+      <div class="btn-row">
+        <button id="protect-run" type="button" class="btn btn--act" hidden>
+          <svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg>
+          <span id="protect-run-label">حماية وحفظ</span>
+        </button>
+        <button id="protect-clear" type="button" class="btn btn--quiet">
+          <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,23 @@
+<!--
+  Fill & Sign — hub card snippet. NOT wired.
+  Paste into index.html inside `.start` (e.g. after the scan CTA).
+  Then add `data-route="sign"` support via the router (see README.md).
+-->
+<button type="button" class="start__cta" data-route="sign">
+  <svg class="icon" aria-hidden="true"><use href="#icon-sign"></use></svg>
+  <span class="start__cta-text">
+    <strong>وقّع المستند</strong>
+    <small>ارسم توقيعك أو اكتب اسمك أو ضع تاريخاً — الملف لا يغادر الجهاز.</small>
+  </span>
+  <svg class="icon start__cta-arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+</button>
+
+<!--
+  Sprite to paste inside the <svg class="sprite"> in index.html:
+
+  <symbol id="icon-sign" viewBox="0 0 24 24">
+    <path d="M4 20.5H20"/>
+    <path d="M14.2 4.8L18.4 9L9.5 17.9H5.3V13.7L14.2 4.8Z"/>
+    <path d="M12.7 6.3L16.9 10.5"/>
+  </symbol>
+-->

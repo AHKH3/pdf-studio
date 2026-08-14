@@ -7,9 +7,16 @@
   "author": "abdo3342",
   "main": "electron/main.cjs",
   "private": true,
+  "type": "module",
   "scripts": {
-    "postinstall": "node scripts/copy-vendor.cjs",
+    "postinstall": "node scripts/copy-vendor.cjs && node assets/js/tools/protect/copy-qpdf.mjs && node assets/js/tools/ocr/copy-runtime.mjs",
     "vendor": "node scripts/copy-vendor.cjs",
+    "vendor:qpdf": "node assets/js/tools/protect/copy-qpdf.mjs",
+    "vendor:ocr": "node assets/js/tools/ocr/copy-runtime.mjs",
+    "icons": "node scripts/generate-icon-sprite.mjs",
+    "fonts": "node scripts/fetch-fonts.mjs",
+    "check": "node scripts/check-syntax.mjs",
+    "test": "node scripts/check-syntax.mjs && node scripts/test-scan.mjs && node scripts/test-experience.mjs",
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
@@ -20,9 +27,12 @@
   "dependencies": {
     "pdf-lib": "1.17.1",
     "pdfjs-dist": "3.11.174",
-    "sortablejs": "1.15.7"
+    "qpdf-wasm": "^0.1.0",
+    "sortablejs": "1.15.7",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
+    "@hugeicons/core-free-icons": "^4.2.3",
     "electron": "^34.2.0",
     "electron-builder": "^25.1.8"
   },
@@ -31,19 +41,23 @@
     "files": [
       "electron/**/*",
       "index.html",
-      "assets/**/*",
-      "concept-*.html",
-      "showcase.html"
+      "assets/**/*"
     ],
     "directories": {
       "output": "release"
     },
     "icon": "assets/branding/app-icon-512.png",
     "win": {
-      "target": ["nsis", "portable"]
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "signAndEditExecutable": false
     },
     "linux": {
-      "target": ["AppImage"],
+      "target": [
+        "AppImage"
+      ],
       "category": "Office",
       "maintainer": "abdo3342"
     },

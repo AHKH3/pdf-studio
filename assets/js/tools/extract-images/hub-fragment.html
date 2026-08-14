@@ -1,0 +1,38 @@
+          <section id="view-extract-images" class="view" aria-labelledby="extract-images-title" role="region" hidden>
+            <div class="view__head">
+              <h2 class="view__title" id="extract-images-title" tabindex="-1">استخراج الصور المضمّنة</h2>
+              <p class="view__lede">نخرج الصور الأصلية المخزّنة داخل الملف بجودتها — الشعار والختم والصورة الفوتوغرافية — لا لقطة مرسومة لكل صفحة.</p>
+            </div>
+
+            <div class="view__body">
+              <div id="extract-images-drop" class="intake" data-kind="pdf">
+                <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-images"></use></svg>
+                <span class="intake__title">أسقط ملف PDF هنا</span>
+                <span class="intake__hint">صور XObject الأصلية · JPEG كما خُزّن · ملف واحد</span>
+                <button id="extract-images-browse" type="button" class="btn">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> تصفّح الجهاز
+                </button>
+              </div>
+              <input id="extract-images-input" type="file" accept="application/pdf,.pdf" hidden />
+
+              <div id="extract-images-panel" hidden>
+                <div class="fieldset">
+                  <div class="field">
+                    <label for="extract-images-target">مكان الحفظ</label>
+                    <select id="extract-images-target">
+                      <option value="zip">ملف مضغوط ZIP</option>
+                      <option value="folder">مجلد على الجهاز</option>
+                    </select>
+                  </div>
+                </div>
+                <p class="note">هذه الأداة تختلف عن «PDF إلى صور»: هنا لا نرسم الصفحة. JPEG يخرج كما هو في الملف، والباقي PNG من بيانات الصورة لا من لقطة الشاشة.</p>
+                <div class="doclist__head">
+                  <h3 class="doclist__title">الصور</h3>
+                  <button id="extract-images-clear" type="button" class="btn btn--quiet">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق الملف
+                  </button>
+                </div>
+                <div id="extract-images-list" class="doclist doclist--pages"></div>
+              </div>
+            </div>
+          </section>
