@@ -9,8 +9,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "postinstall": "node scripts/copy-vendor.cjs && node assets/js/tools/protect/copy-qpdf.mjs && node assets/js/tools/ocr/copy-runtime.mjs",
+    "postinstall": "node scripts/copy-vendor.cjs && node assets/js/tools/protect/copy-qpdf.mjs && node assets/js/tools/ocr/copy-runtime.mjs && node scripts/copy-upscaler.cjs",
     "vendor": "node scripts/copy-vendor.cjs",
+    "vendor:upscaler": "node scripts/copy-upscaler.cjs",
     "vendor:qpdf": "node assets/js/tools/protect/copy-qpdf.mjs",
     "vendor:ocr": "node assets/js/tools/ocr/copy-runtime.mjs",
     "icons": "node scripts/generate-icon-sprite.mjs",
@@ -25,11 +26,15 @@
     "dist:win": "electron-builder --win"
   },
   "dependencies": {
+    "@tensorflow/tfjs": "~4.11.0",
+    "@tensorflow/tfjs-backend-wasm": "~4.11.0",
+    "@upscalerjs/esrgan-slim": "^1.0.0",
     "pdf-lib": "1.17.1",
     "pdfjs-dist": "3.11.174",
     "qpdf-wasm": "^0.1.0",
     "sortablejs": "1.15.7",
-    "tesseract.js": "^7.0.0"
+    "tesseract.js": "^7.0.0",
+    "upscaler": "^1.0.0"
   },
   "devDependencies": {
     "@hugeicons/core-free-icons": "^4.2.3",

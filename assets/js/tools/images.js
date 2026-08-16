@@ -1,8 +1,9 @@
 import { MM_TO_PT, PAGE_SIZES } from "../config.js";
 import { el, yieldToUi } from "../dom.js";
 import { filesKey, humanSize, saveFile, withExtension } from "../lib/files.js";
+import { bitmapToBytes } from "../lib/bitmap.js";
 import { suggestImageOrder } from "../lib/image-order.js";
-import { toEmbeddable } from "../lib/image-embed.js";
+import { upgradeForPdf } from "../enhance/quality.js";
 import { lib } from "../pdf/core.js";
 import { confirmDiscard } from "../ui/dialog.js";
 import { endProgress, startProgress, throwIfCancelled, toast, updateProgress } from "../ui/feedback.js";
@@ -102,7 +103,7 @@ async function run() {
   const margin = Math.max(0, Number(/** @type {HTMLInputElement} */ (el("images-margin")).value) || 0) * MM_TO_PT;
 
   setState("busy");
-  startProgress({ title: "إنشاء ملف PDF", desc: "نعالج الصور واحدة تلو الأخرى." });
+  startProgress({ title: "إنشاء ملف PDF", desc: "نرفع جودة الصور ثم نركّب الملف." });
   try {
     const doc = await PDFDocument.create();
 
@@ -114,8 +115,12 @@ async function run() {
         detail: `${index + 1} / ${items.length} — ${item.file.name}`
       });
 
-      const asset = await toEmbeddable(item.file);
-      const image = asset.kind === "png" ? await doc.embedPng(asset.bytes) : await doc.embedJpg(asset.bytes);
+      const decoded = await createImageBitmap(item.file);
+      const upgraded = await upgradeForPdf(decoded);
+      decoded.close();
+      const bytes = await bitmapToBytes(upgraded, "image/jpeg", 0.92);
+      upgraded.close();
+      const image = await doc.embedJpg(bytes);
 
       let pageWidth;
       let pageHeight;

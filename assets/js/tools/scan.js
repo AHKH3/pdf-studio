@@ -1,8 +1,10 @@
 import { el, qsa } from "../dom.js";
 import { PAGE_SIZES } from "../config.js";
 import { baseName, filesKey, humanSize, saveFile, saveFolder, withExtension } from "../lib/files.js";
+import { bitmapToBytes } from "../lib/bitmap.js";
 import { lib } from "../pdf/core.js";
 import { ScanEngine } from "../scan/client.js";
+import { autoUpscaleIfSmall } from "../enhance/quality.js";
 import { endProgress, startProgress, throwIfCancelled, updateProgress } from "../ui/feedback.js";
 import { wireIntake } from "../ui/intake.js";
 import { setName, setRunEnabled, setSource, setState } from "../ui/titleblock.js";
@@ -525,8 +527,10 @@ async function renderResult(page) {
     rotate: page.rotate
   });
   const pixels = new ImageData(output.image.data, output.image.width, output.image.height);
+  let result = await createImageBitmap(pixels);
+  result = await autoUpscaleIfSmall(result);
   page.result?.close();
-  page.result = await createImageBitmap(pixels);
+  page.result = result;
   page.resultKey = stamp;
   return page.result;
 }
@@ -551,21 +555,6 @@ function focusLivePreview() {
 /* ---------------------------------------------------------------- *
  * Export
  * ---------------------------------------------------------------- */
-
-/** @param {ImageBitmap} bitmap @param {"image/jpeg"|"image/png"} mime */
-async function bitmapToBytes(bitmap, mime, quality) {
-  const buffer = document.createElement("canvas");
-  buffer.width = bitmap.width;
-  buffer.height = bitmap.height;
-  const ctx = buffer.getContext("2d", { alpha: false });
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, buffer.width, buffer.height);
-  ctx.drawImage(bitmap, 0, 0);
-  const blob = await new Promise((resolve) => buffer.toBlob(resolve, mime, quality));
-  buffer.width = 0;
-  buffer.height = 0;
-  return new Uint8Array(await blob.arrayBuffer());
-}
 
 async function run() {
   if (!pages.length) return;
