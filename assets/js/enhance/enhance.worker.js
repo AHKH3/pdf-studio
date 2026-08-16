@@ -1,11 +1,12 @@
 /**
- * Module Web Worker around the scan pipeline's `enhance` and `sharpen`.
+ * Module Web Worker around the scan pipeline's `enhance`, `sharpen` and
+ * `inkBoost`.
  * Instantiate with: new Worker(url, { type: "module" }).
  *
- * Request:  { id, op: "enhance" | "sharpen", payload: { image } }
+ * Request:  { id, op: "enhance" | "sharpen" | "inkBoost", payload: { image } }
  * Response: { id, ok: true, result: { image, size } } | { id, ok: false, error }
  */
-import { enhance, sharpen } from "../scan/pipeline.js";
+import { enhance, sharpen, inkBoost } from "../scan/pipeline.js";
 
 function readImage(value) {
   if (!value) throw new Error("missing image");
@@ -28,7 +29,10 @@ self.addEventListener("message", (event) => {
   try {
     const payload = message.payload || {};
     const image = readImage(payload.image);
-    const out = op === "enhance" ? enhance(image, "color") : op === "sharpen" ? sharpen(image) : null;
+    const out =
+      op === "enhance" ? enhance(image, "color") :
+      op === "sharpen" ? sharpen(image) :
+      op === "inkBoost" ? inkBoost(image) : null;
     if (!out) throw new Error(`unknown op: ${String(op)}`);
     self.postMessage(
       { id, ok: true, result: { image: out, size: { width: out.width, height: out.height } } },

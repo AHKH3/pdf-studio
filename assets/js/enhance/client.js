@@ -73,6 +73,19 @@ export class EnhanceEngine {
     );
   }
 
+  /**
+   * Runs the scan pipeline's `inkBoost` — deepens faded ink toward black.
+   * @param {ImageData} image
+   * @returns {Promise<{ image: { width: number; height: number; data: Uint8ClampedArray }, size: { width: number; height: number } }>}
+   */
+  inkBoost(image) {
+    return this.call(
+      "inkBoost",
+      { image: { width: image.width, height: image.height, data: image.data } },
+      [image.data.buffer]
+    );
+  }
+
   terminate() {
     this.worker?.terminate();
     this.worker = null;

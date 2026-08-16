@@ -2010,6 +2010,53 @@ export function sharpen(image, options) {
 }
 
 /**
+ * Deepens faded ink toward black while leaving the paper and photo-like
+ * regions untouched. Text on old documents is the main win: the curve only
+ * touches pixels clearly darker than their local paper level, so mid-tone
+ * folds and photographs survive.
+ * @param {RasterImage} image
+ * @param {{ gamma?: number; threshold?: number }} [options]
+ * @returns {RasterImage}
+ */
+export function inkBoost(image, options) {
+  const source = toRaster(image);
+  const config = { gamma: 1.45, threshold: 0.55, ...(options || {}) };
+  const w = source.width;
+  const h = source.height;
+  const n = w * h;
+  if (n === 0) return cloneImage(source);
+
+  const gray = lumaPlane(source);
+  const background = estimateBackground(gray, w, h);
+  const protect = photoProtectMask(gray, w, h);
+  const alpha = alphaPlane(source);
+  const out = createImage(w, h);
+  const src = source.data;
+  const dst = out.data;
+  const th = config.threshold;
+  const g = config.gamma;
+  for (let i = 0, p = 0; i < n; i++, p += 4) {
+    const bg = background[i];
+    dst[p + 3] = alpha[i];
+    if (bg < 1 || protect[i]) {
+      dst[p] = src[p];
+      dst[p + 1] = src[p + 1];
+      dst[p + 2] = src[p + 2];
+      continue;
+    }
+    for (let c = 0; c < 3; c++) {
+      const t = src[p + c] / bg;
+      if (t >= th) {
+        dst[p + c] = src[p + c];
+      } else {
+        dst[p + c] = th * Math.pow(t / th, g) * bg;
+      }
+    }
+  }
+  return out;
+}
+
+/**
  * Warp, enhance, then optionally rotate.
  * @param {RasterImage} image
  * @param {{ corners?: Quad, size?: { width: number, height: number }, mode?: string, rotate?: number }} [params]

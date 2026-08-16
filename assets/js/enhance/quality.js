@@ -53,6 +53,37 @@ async function sharpenBitmap(bitmap) {
   }
 }
 
+async function inkBoostBitmap(bitmap) {
+  try {
+    const pixels = bitmapToImageData(bitmap);
+    const output = await engine.inkBoost(pixels);
+    return imageDataToBitmap(new ImageData(output.image.data, output.image.width, output.image.height));
+  } catch {
+    return bitmap;
+  }
+}
+
+/**
+ * Ink deepens first (faded strokes go black), then a light sharpen.
+ * Returns a new bitmap or the same one when both steps are unavailable.
+ * @param {ImageBitmap} bitmap
+ * @returns {Promise<ImageBitmap>}
+ */
+async function polishBitmap(bitmap) {
+  let result = bitmap;
+  const boosted = await inkBoostBitmap(result);
+  if (boosted !== result) {
+    result.close();
+    result = boosted;
+  }
+  const sharpened = await sharpenBitmap(result);
+  if (sharpened !== result) {
+    result.close();
+    result = sharpened;
+  }
+  return result;
+}
+
 /**
  * Canvas bicubic upscale — always available, no WASM, no memory limits
  * in the practical range. Returns a new bitmap or the same one when the
@@ -99,9 +130,9 @@ export async function upscaleToTarget(bitmap) {
   if (scale && bitmap.width * bitmap.height * scale * scale <= MAX_AI_OUTPUT_PIXELS) {
     const ai = await upscaleBitmap(bitmap, scale);
     if (ai !== bitmap) {
-      const sharpened = await sharpenBitmap(ai);
-      if (sharpened !== ai) ai.close();
-      return sharpened;
+      const polished = await polishBitmap(ai);
+      if (polished !== ai) ai.close();
+      return polished;
     }
   }
 
@@ -119,9 +150,9 @@ export async function upscaleToTarget(bitmap) {
       bicubic = second;
     }
   }
-  const sharpened = await sharpenBitmap(bicubic);
-  if (sharpened !== bicubic) bicubic.close();
-  return sharpened;
+  const polished = await polishBitmap(bicubic);
+  if (polished !== bicubic) bicubic.close();
+  return polished;
 }
 
 /**
