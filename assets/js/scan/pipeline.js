@@ -1986,6 +1986,30 @@ export function rotateImage(image, degrees) {
 }
 
 /**
+ * Light unsharp pass designed to run after an AI upscale: the model tends
+ * to soften ink edges, and this restores crispness without halos.
+ * @param {RasterImage} image
+ * @param {{ amount?: number; radius?: number }} [options]
+ * @returns {RasterImage}
+ */
+export function sharpen(image, options) {
+  const source = toRaster(image);
+  const config = { amount: 0.35, radius: 1, ...(options || {}) };
+  const w = source.width;
+  const h = source.height;
+  const n = w * h;
+  if (n === 0) return cloneImage(source);
+  const out = cloneImage(source);
+  const channel = new Uint8ClampedArray(n);
+  for (let c = 0; c < 3; c++) {
+    for (let i = 0, p = c; i < n; i++, p += 4) channel[i] = out.data[p];
+    unsharpPlane(channel, w, h, config.amount, config.radius);
+    for (let i = 0, p = c; i < n; i++, p += 4) out.data[p] = channel[i];
+  }
+  return out;
+}
+
+/**
  * Warp, enhance, then optionally rotate.
  * @param {RasterImage} image
  * @param {{ corners?: Quad, size?: { width: number, height: number }, mode?: string, rotate?: number }} [params]

@@ -33,10 +33,20 @@ const copies = [
   [
     "@upscalerjs/esrgan-slim/models/x4/group1-shard1of1.bin",
     path.join("models", "x4", "group1-shard1of1.bin")
+  ],
+  [
+    "@upscalerjs/esrgan-slim/dist/umd/models/esrgan-slim/src/x3/index.min.js",
+    "esrgan-slim-x3.min.js"
+  ],
+  ["@upscalerjs/esrgan-slim/models/x3/model.json", path.join("models", "x3", "model.json")],
+  [
+    "@upscalerjs/esrgan-slim/models/x3/group1-shard1of1.bin",
+    path.join("models", "x3", "group1-shard1of1.bin")
   ]
 ];
 
 fs.mkdirSync(path.join(vendor, "models", "x2"), { recursive: true });
+fs.mkdirSync(path.join(vendor, "models", "x3"), { recursive: true });
 fs.mkdirSync(path.join(vendor, "models", "x4"), { recursive: true });
 
 let ok = true;

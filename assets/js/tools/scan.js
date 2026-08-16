@@ -532,7 +532,11 @@ async function renderResult(page) {
   });
   const pixels = new ImageData(output.image.data, output.image.width, output.image.height);
   let result = await createImageBitmap(pixels);
-  result = await autoUpscaleIfSmall(result);
+  const upgraded = await autoUpscaleIfSmall(result);
+  if (upgraded !== result) {
+    result.close();
+    result = upgraded;
+  }
   page.result?.close();
   page.result = result;
   page.resultKey = stamp;

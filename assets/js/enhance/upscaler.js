@@ -1,6 +1,6 @@
 /**
- * Lazy, best-effort ESRGAN Slim upscaler (2x and 4x). TensorFlow.js and the
- * models are loaded once, on first use, from the local vendor copies —
+ * Lazy, best-effort ESRGAN Slim upscaler (2x, 3x and 4x). TensorFlow.js and
+ * the models are loaded once, on first use, from the local vendor copies —
  * nothing is fetched from the network. Multithreaded WASM is enabled when
  * crossOriginIsolated allows it (the app's local server sends COOP/COEP),
  * which cuts inference time by roughly 4x on multi-core machines.
@@ -14,6 +14,11 @@ const MODELS = {
     path: `${BASE}models/x2/model.json`,
     script: `${BASE}esrgan-slim-x2.min.js`,
     global: "ESRGANSlim2x"
+  },
+  3: {
+    path: `${BASE}models/x3/model.json`,
+    script: `${BASE}esrgan-slim-x3.min.js`,
+    global: "ESRGANSlim3x"
   },
   4: {
     path: `${BASE}models/x4/model.json`,
@@ -143,7 +148,7 @@ async function init() {
  * Upscales the bitmap when the runtime is available; otherwise returns the
  * original bitmap unchanged.
  * @param {ImageBitmap} bitmap
- * @param {2 | 4} scale
+ * @param {2 | 3 | 4} scale
  * @returns {Promise<ImageBitmap>}
  */
 export async function upscaleBitmap(bitmap, scale) {

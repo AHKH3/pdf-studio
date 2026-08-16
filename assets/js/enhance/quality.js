@@ -1,37 +1,81 @@
 /**
- * Automatic image quality upgrade before PDF conversion:
- * 1. Every image gets the scan pipeline's "color" enhancement
- *    (illumination correction + contrast stretch + unsharp) in a worker.
- * 2. Small extracted documents additionally get an ESRGAN Slim upscale:
- *    - input <  550K pixels → 4x (tiny crops, old paper, faded ink)
- *    - input < 2.2M pixels  → 2x (zoomed crops still lose detail)
- *    Larger images keep their native resolution — the model is expensive
- *    and the gain is invisible on paper.
+ * Automatic image quality upgrade before PDF conversion, targeting a fixed
+ * quality bar: every extracted document reaches ~A4 at 300 DPI on its long
+ * side (3508px), regardless of how small or blurry the source photo is.
  *
- * Thresholds are measured against WASM memory limits on the reference
- * machine: 700x850 4x ran in ~7s, 800x1248 4x exhausted memory, and
- * 1100x1700 2x ran in ~18s (threaded WASM).
+ * Flow (images tool):
+ *   1. enhance ("color") in a worker — illumination, contrast, unsharp
+ *   2. scale-chain upscale to the target (4x → 3x → 2x as needed)
+ *   3. final light sharpen in a worker (the model softens ink edges)
+ *
+ * Flow (scan tool): processDocument already enhances; steps 2-3 apply.
+ *
+ * The chain is greedy: the largest model that keeps the output at or above
+ * the target wins, and a 3x pass fixes small overshoots without ever
+ * downscaling. One extra factor of ~1.4 (target × 1.2 cap) is tolerated to
+ * avoid an extra inference pass.
  */
 
 import { EnhanceEngine } from "./client.js";
 import { upscaleBitmap } from "./upscaler.js";
 import { bitmapToImageData, imageDataToBitmap } from "../lib/bitmap.js";
 
-/** Input pixel count below which a 4x upscale is safe and worth the wait. */
-export const UPSCALE_4X_MAX_PIXELS = 550000;
-/** Input pixel count below which a 2x upscale is worth the wait. */
-export const UPSCALE_2X_MAX_PIXELS = 2200000;
-
-function scaleFor(width, height) {
-  const pixels = width * height;
-  if (pixels < UPSCALE_4X_MAX_PIXELS) return 4;
-  if (pixels < UPSCALE_2X_MAX_PIXELS) return 2;
-  return 0;
-}
+/** A4 long side at 300 DPI. */
+export const TARGET_LONG_SIDE = 3508;
+/**
+ * Above this input size the WASM heap overflows during inference
+ * (measured: 1100x1700 2x crashed, 800x1248 3x succeeded). Larger
+ * documents already print at 200+ DPI, so they stay native.
+ */
+const MAX_INPUT_PIXELS = 1000000;
 
 const engine = new EnhanceEngine();
 
 /**
+ * One greedy pass: pick the largest model that lands at or above the
+ * target. Chained passes are impossible anyway — the intermediate output
+ * exceeds the WASM input limit.
+ */
+function scaleFor(side) {
+  if (side >= TARGET_LONG_SIDE) return 0;
+  const needed = TARGET_LONG_SIDE / side;
+  if (needed >= 3.5) return 4;
+  if (needed >= 2.5) return 3;
+  return 2;
+}
+
+async function sharpenBitmap(bitmap) {
+  const pixels = bitmapToImageData(bitmap);
+  const output = await engine.sharpen(pixels);
+  return imageDataToBitmap(new ImageData(output.image.data, output.image.width, output.image.height));
+}
+
+/**
+ * Upscales toward TARGET_LONG_SIDE with one greedy pass. Returns the
+ * original bitmap when it already reaches the target. Callers own the
+ * input bitmap; only internally produced bitmaps are closed here.
+ * @param {ImageBitmap} bitmap
+ * @returns {Promise<ImageBitmap>}
+ */
+export async function upscaleToTarget(bitmap) {
+  const scale = scaleFor(Math.max(bitmap.width, bitmap.height));
+  if (!scale) return bitmap;
+
+  if (bitmap.width * bitmap.height > MAX_INPUT_PIXELS) return bitmap;
+  const upscaled = await upscaleBitmap(bitmap, scale);
+  if (upscaled === bitmap) return bitmap; // engine unavailable — give up cleanly
+
+  let result = upscaled;
+  const sharpened = await sharpenBitmap(result);
+  if (sharpened !== result) {
+    result.close();
+    result = sharpened;
+  }
+  return result;
+}
+
+/**
+ * Full upgrade for the images flow: enhance → upscale to target → sharpen.
  * @param {ImageBitmap} bitmap
  * @returns {Promise<ImageBitmap>} upgraded bitmap (may be a new object)
  */
@@ -41,26 +85,20 @@ export async function upgradeForPdf(bitmap) {
   let result = await imageDataToBitmap(
     new ImageData(output.image.data, output.image.width, output.image.height)
   );
-  const scale = scaleFor(result.width, result.height);
-  if (scale) {
-    const upscaled = await upscaleBitmap(result, scale);
-    if (upscaled !== result) {
-      result.close();
-      result = upscaled;
-    }
+  const upgraded = await upscaleToTarget(result);
+  if (upgraded !== result) {
+    result.close();
+    result = upgraded;
   }
   return result;
 }
 
 /**
  * Upscale-only helper for flows that already ran their own enhancement
- * (the scan tool's processDocument). Returns the same bitmap unchanged
- * when it is already large or the upscaler is unavailable.
+ * (the scan tool's processDocument).
  * @param {ImageBitmap} bitmap
  * @returns {Promise<ImageBitmap>}
  */
 export async function autoUpscaleIfSmall(bitmap) {
-  const scale = scaleFor(bitmap.width, bitmap.height);
-  if (!scale) return bitmap;
-  return upscaleBitmap(bitmap, scale);
+  return upscaleToTarget(bitmap);
 }

@@ -60,6 +60,19 @@ export class EnhanceEngine {
     );
   }
 
+  /**
+   * Runs the scan pipeline's post-upscale `sharpen` on the pixels.
+   * @param {ImageData} image
+   * @returns {Promise<{ image: { width: number; height: number; data: Uint8ClampedArray }, size: { width: number; height: number } }>}
+   */
+  sharpen(image) {
+    return this.call(
+      "sharpen",
+      { image: { width: image.width, height: image.height, data: image.data } },
+      [image.data.buffer]
+    );
+  }
+
   terminate() {
     this.worker?.terminate();
     this.worker = null;

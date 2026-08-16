@@ -1,11 +1,11 @@
 /**
- * Module Web Worker around the scan pipeline's `enhance`.
+ * Module Web Worker around the scan pipeline's `enhance` and `sharpen`.
  * Instantiate with: new Worker(url, { type: "module" }).
  *
- * Request:  { id, op: "enhance", payload: { image } }
+ * Request:  { id, op: "enhance" | "sharpen", payload: { image } }
  * Response: { id, ok: true, result: { image, size } } | { id, ok: false, error }
  */
-import { enhance } from "../scan/pipeline.js";
+import { enhance, sharpen } from "../scan/pipeline.js";
 
 function readImage(value) {
   if (!value) throw new Error("missing image");
@@ -27,16 +27,13 @@ self.addEventListener("message", (event) => {
   const { id, op } = message;
   try {
     const payload = message.payload || {};
-    if (op === "enhance") {
-      const image = readImage(payload.image);
-      const out = enhance(image, "color");
-      self.postMessage(
-        { id, ok: true, result: { image: out, size: { width: out.width, height: out.height } } },
-        [out.data.buffer]
-      );
-      return;
-    }
-    throw new Error(`unknown op: ${String(op)}`);
+    const image = readImage(payload.image);
+    const out = op === "enhance" ? enhance(image, "color") : op === "sharpen" ? sharpen(image) : null;
+    if (!out) throw new Error(`unknown op: ${String(op)}`);
+    self.postMessage(
+      { id, ok: true, result: { image: out, size: { width: out.width, height: out.height } } },
+      [out.data.buffer]
+    );
   } catch (error) {
     self.postMessage({ id, ok: false, error: error && error.message ? error.message : String(error) });
   }
