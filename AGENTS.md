@@ -4,6 +4,16 @@ PDF Studio (`أدوات PDF عربية`) is an **Electron desktop application** 
 
 Standard commands live in `package.json` scripts (`start`, `pack`, `dist:*`, `vendor`). There is no dev server, no lint config, and no automated test suite in this repo.
 
+## دستور مجلد الشغل — إلزامي على كل وكيل
+
+هذا المشروع تابع لدستور مجلد الشغل. المرجع الأعلى: `C:/Users/abdel/dev/AGENTS.md` — اقرأه فورًا (هوية المستخدم، القواعد الكاملة، فهرس المشاريع). أي تعليمات محلية هنا لا تخالفه.
+
+1. قبل تنفيذ أي ميزة أو تغيير كبير: اقرأ `docs/PROJECT.md` أو `README.md` وحدّد هل الطلب داخل النطاق المعلن.
+2. طلب خارج النطاق: أوضحه للمستخدم (وقت/تعقيد/خطر كسر الموجود) ولا تنفّذ شيئًا قبل تأكيد صريح.
+3. ممنوع إضافة ميزات "مساعدة" غير مطلوبة أو تعديل مجالات محظورة/مجمّدة.
+4. إذا أصرّ المستخدم: سجّل القرار في `docs/DECISIONS.md` (تاريخ + طلب + قرار + تأثير) ثم أعد الفهرسة.
+5. لا تعدّل القرارات المسجلة أو تعريف النطاق أو الدستور بدون إذن صريح.
+
 ## Cursor Cloud specific instructions
 
 - Running the app: `DISPLAY=:1 npm start` (runs `electron .`). A display is required; use the provided X display `:1`. Do the render/GUI testing through the Desktop pane.
