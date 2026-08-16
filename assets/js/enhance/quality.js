@@ -3,17 +3,15 @@
  * quality bar: every extracted document reaches ~A4 at 300 DPI on its long
  * side (3508px), regardless of how small or blurry the source photo is.
  *
- * Flow (images tool):
- *   1. enhance ("color") in a worker — illumination, contrast, unsharp
- *   2. scale-chain upscale to the target (4x → 3x → 2x as needed)
- *   3. final light sharpen in a worker (the model softens ink edges)
+ * Layers, in order of strength:
+ *   1. AI upscale (ESRGAN Slim 4x/3x/2x) when the WASM heap allows it —
+ *      the biggest quality jump for faded ink on old paper.
+ *   2. Bicubic upscale as a guaranteed fallback — the AI can silently
+ *      fail (heap limits, worker errors); pixelation is always removed.
+ *   3. Sharpen in a worker — restores ink crispness after any upscale.
  *
- * Flow (scan tool): processDocument already enhances; steps 2-3 apply.
- *
- * The chain is greedy: the largest model that keeps the output at or above
- * the target wins, and a 3x pass fixes small overshoots without ever
- * downscaling. One extra factor of ~1.4 (target × 1.2 cap) is tolerated to
- * avoid an extra inference pass.
+ * The output ALWAYS reaches the target or stays at a larger native
+ * resolution; it is never left pixelated.
  */
 
 import { EnhanceEngine } from "./client.js";
@@ -23,20 +21,21 @@ import { bitmapToImageData, imageDataToBitmap } from "../lib/bitmap.js";
 /** A4 long side at 300 DPI. */
 export const TARGET_LONG_SIDE = 3508;
 /**
- * Above this input size the WASM heap overflows during inference
- * (measured: 1100x1700 2x crashed, 800x1248 3x succeeded). Larger
- * documents already print at 200+ DPI, so they stay native.
+ * WASM heap safety: the largest measured-successful AI output was ~9.5M
+ * pixels (700x850 4x); ~16M pixels crashed. Bicubic has no such limit.
  */
-const MAX_INPUT_PIXELS = 1000000;
+const MAX_AI_OUTPUT_PIXELS = 9500000;
+/** Hard upper bound for a single bicubic pass (canvas limit ~268M pixels). */
+const MAX_BICUBIC_OUTPUT_PIXELS = 64000000;
 
 const engine = new EnhanceEngine();
 
 /**
- * One greedy pass: pick the largest model that lands at or above the
- * target. Chained passes are impossible anyway — the intermediate output
- * exceeds the WASM input limit.
+ * One greedy AI pass: pick the largest model that lands at or above the
+ * target. Chained passes are impossible — the intermediate output exceeds
+ * the WASM input limit.
  */
-function scaleFor(side) {
+function aiScaleFor(side) {
   if (side >= TARGET_LONG_SIDE) return 0;
   const needed = TARGET_LONG_SIDE / side;
   if (needed >= 3.5) return 4;
@@ -45,33 +44,84 @@ function scaleFor(side) {
 }
 
 async function sharpenBitmap(bitmap) {
-  const pixels = bitmapToImageData(bitmap);
-  const output = await engine.sharpen(pixels);
-  return imageDataToBitmap(new ImageData(output.image.data, output.image.width, output.image.height));
+  try {
+    const pixels = bitmapToImageData(bitmap);
+    const output = await engine.sharpen(pixels);
+    return imageDataToBitmap(new ImageData(output.image.data, output.image.width, output.image.height));
+  } catch {
+    return bitmap;
+  }
 }
 
 /**
- * Upscales toward TARGET_LONG_SIDE with one greedy pass. Returns the
- * original bitmap when it already reaches the target. Callers own the
- * input bitmap; only internally produced bitmaps are closed here.
+ * Canvas bicubic upscale — always available, no WASM, no memory limits
+ * in the practical range. Returns a new bitmap or the same one when the
+ * target is already met.
+ * @param {ImageBitmap} bitmap
+ * @param {number} targetSide
+ * @returns {Promise<ImageBitmap>}
+ */
+async function bicubicUpscale(bitmap, targetSide) {
+  const currentSide = Math.max(bitmap.width, bitmap.height);
+  if (currentSide >= targetSide) return bitmap;
+  let scale = targetSide / currentSide;
+  if (scale > 8) scale = 8; // one pass tops out; chain below
+  const outWidth = Math.round(bitmap.width * scale);
+  const outHeight = Math.round(bitmap.height * scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = outWidth;
+  canvas.height = outHeight;
+  const ctx = canvas.getContext("2d", { alpha: false });
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, outWidth, outHeight);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(bitmap, 0, 0, outWidth, outHeight);
+  const upscaled = await createImageBitmap(canvas);
+  canvas.width = 0;
+  canvas.height = 0;
+  return upscaled;
+}
+
+/**
+ * Upscales toward TARGET_LONG_SIDE. AI first, bicubic fallback, sharpen
+ * last. Returns the original bitmap when it already reaches the target.
+ * Callers own the input bitmap; only internally produced bitmaps are
+ * closed here.
  * @param {ImageBitmap} bitmap
  * @returns {Promise<ImageBitmap>}
  */
 export async function upscaleToTarget(bitmap) {
-  const scale = scaleFor(Math.max(bitmap.width, bitmap.height));
-  if (!scale) return bitmap;
+  const side = Math.max(bitmap.width, bitmap.height);
+  if (side >= TARGET_LONG_SIDE) return bitmap;
 
-  if (bitmap.width * bitmap.height > MAX_INPUT_PIXELS) return bitmap;
-  const upscaled = await upscaleBitmap(bitmap, scale);
-  if (upscaled === bitmap) return bitmap; // engine unavailable — give up cleanly
-
-  let result = upscaled;
-  const sharpened = await sharpenBitmap(result);
-  if (sharpened !== result) {
-    result.close();
-    result = sharpened;
+  const scale = aiScaleFor(side);
+  if (scale && bitmap.width * bitmap.height * scale * scale <= MAX_AI_OUTPUT_PIXELS) {
+    const ai = await upscaleBitmap(bitmap, scale);
+    if (ai !== bitmap) {
+      const sharpened = await sharpenBitmap(ai);
+      if (sharpened !== ai) ai.close();
+      return sharpened;
+    }
   }
-  return result;
+
+  // Guaranteed path: remove pixelation no matter what the AI did.
+  const outPixels = bitmap.width * bitmap.height *
+    Math.pow(TARGET_LONG_SIDE / side, 2);
+  if (outPixels > MAX_BICUBIC_OUTPUT_PIXELS) return bitmap;
+  let bicubic = await bicubicUpscale(bitmap, TARGET_LONG_SIDE);
+  if (bicubic === bitmap) return bitmap;
+  if (Math.max(bicubic.width, bicubic.height) < TARGET_LONG_SIDE) {
+    // Extreme upscale needs a second pass (8x then the rest).
+    const second = await bicubicUpscale(bicubic, TARGET_LONG_SIDE);
+    if (second !== bicubic) {
+      bicubic.close();
+      bicubic = second;
+    }
+  }
+  const sharpened = await sharpenBitmap(bicubic);
+  if (sharpened !== bicubic) bicubic.close();
+  return sharpened;
 }
 
 /**

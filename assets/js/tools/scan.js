@@ -61,6 +61,7 @@ let lastPointer = null;
 /** @type {HTMLCanvasElement | null} */
 let canvas = null;
 let renderQueued = false;
+let showingResult = false;
 
 const current = () => pages[index] ?? null;
 
@@ -141,6 +142,18 @@ function draw() {
   const box = layout();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (!page || !box) return;
+
+  if (showingResult && page.result) {
+    // Result preview: draw the upgraded export image, fitted.
+    const fit = Math.min(canvas.width / page.result.width, canvas.height / page.result.height) * 0.96;
+    const w = page.result.width * fit;
+    const h = page.result.height * fit;
+    ctx.imageSmoothingQuality = "high";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(page.result, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+    return;
+  }
 
   ctx.imageSmoothingQuality = "high";
   const drawW = box.sourceW * box.fit;
@@ -540,24 +553,51 @@ async function renderResult(page) {
   page.result?.close();
   page.result = result;
   page.resultKey = stamp;
+  setSource({
+    label: page.name,
+    pages: String(pages.length),
+    size: `${result.width}×${result.height}`
+  });
   return page.result;
 }
 
 function syncPreviewButton() {
   const button = el("scan-preview");
   if (!button) return;
-  button.classList.add("btn--act");
+  button.classList.toggle("btn--act", !showingResult);
   const label = button.querySelector(".btn__label");
-  if (label) label.textContent = "معاينة";
-  button.setAttribute("aria-pressed", "true");
+  if (label) label.textContent = showingResult ? "العودة للأصل" : "شاهد النتيجة";
+  button.setAttribute("aria-pressed", String(!showingResult));
   const hint = el("scan-hint");
   if (hint) {
-    hint.textContent = "اسحب الأركان على الصورة الأصلية. التدوير والألوان تظهر فوراً.";
+    hint.textContent = showingResult
+      ? "هذه الجودة النهائية المحسّنة التي ستُصدَّر. اضغط «العودة للأصل» لضبط الأركان."
+      : "اسحب الأركان على الصورة الأصلية. اضغط «شاهد النتيجة» لمعاينة الجودة المحسّنة.";
   }
 }
 
 function focusLivePreview() {
   canvas?.focus({ preventScroll: true });
+}
+
+async function toggleResultPreview() {
+  const page = current();
+  if (!page) return;
+  if (!showingResult) {
+    startProgress({ title: "معاينة الناتج", desc: "نحسّن الجودة الآن.", cancellable: false });
+    try {
+      await renderResult(page);
+    } catch (error) {
+      reportFailure(error, "تعذّرت معاينة الناتج.");
+    } finally {
+      endProgress();
+    }
+    showingResult = true;
+  } else {
+    showingResult = false;
+  }
+  syncPreviewButton();
+  scheduleDraw();
 }
 
 /* ---------------------------------------------------------------- *
@@ -569,7 +609,7 @@ async function run() {
   const format = /** @type {HTMLSelectElement} */ (el("scan-output")).value;
 
   setState("busy");
-  startProgress({ title: "معالجة المستند", desc: "تسوية المنظور، ثم تحسين الإضاءة." });
+  startProgress({ title: "معالجة المستند", desc: "تسوية المنظور، ثم رفع الجودة إلى دقة A4." });
   try {
     if (format === "pdf") {
       const { PDFDocument } = lib();
@@ -662,7 +702,7 @@ export const scanTool = {
     el("scan-remove")?.addEventListener("click", removeCurrent);
     el("scan-redetect")?.addEventListener("click", redetect);
     el("scan-full")?.addEventListener("click", useFullFrame);
-    el("scan-preview")?.addEventListener("click", focusLivePreview);
+    el("scan-preview")?.addEventListener("click", () => void toggleResultPreview());
 
     el("scan-prev")?.addEventListener("click", () => {
       if (index > 0) {
