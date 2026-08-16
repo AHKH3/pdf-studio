@@ -8,6 +8,10 @@ const vendor = path.join(root, "assets", "vendor", "upscaler");
 const copies = [
   ["@tensorflow/tfjs/dist/tf.min.js", "tf.min.js"],
   ["@tensorflow/tfjs-backend-wasm/dist/tf-backend-wasm.es2017.min.js", "tf-backend-wasm.js"],
+  [
+    "@tensorflow/tfjs-backend-wasm/wasm-out/tfjs-backend-wasm-threaded-simd.worker.js",
+    "tfjs-backend-wasm-threaded-simd.worker.js"
+  ],
   ["@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm", "tfjs-backend-wasm.wasm"],
   ["@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm-simd.wasm", "tfjs-backend-wasm-simd.wasm"],
   ["@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm-threaded-simd.wasm", "tfjs-backend-wasm-threaded-simd.wasm"],
@@ -20,10 +24,20 @@ const copies = [
   [
     "@upscalerjs/esrgan-slim/models/x2/group1-shard1of1.bin",
     path.join("models", "x2", "group1-shard1of1.bin")
+  ],
+  [
+    "@upscalerjs/esrgan-slim/dist/umd/models/esrgan-slim/src/x4/index.min.js",
+    "esrgan-slim-x4.min.js"
+  ],
+  ["@upscalerjs/esrgan-slim/models/x4/model.json", path.join("models", "x4", "model.json")],
+  [
+    "@upscalerjs/esrgan-slim/models/x4/group1-shard1of1.bin",
+    path.join("models", "x4", "group1-shard1of1.bin")
   ]
 ];
 
 fs.mkdirSync(path.join(vendor, "models", "x2"), { recursive: true });
+fs.mkdirSync(path.join(vendor, "models", "x4"), { recursive: true });
 
 let ok = true;
 for (const [rel, destRel] of copies) {

@@ -28,7 +28,11 @@ import { pad, reportFailure, reportSave, uid } from "./shared.js";
  * @property {string} resultKey      invalidation stamp for the cached result
  */
 
-const WORK_MAX = 2400;
+/**
+ * Extracted documents are zoomed crops, so every source pixel counts:
+ * work at a higher ceiling to preserve ink detail for the upscaler.
+ */
+const WORK_MAX = 3600;
 const DISPLAY_MAX = 1400;
 const HANDLE_HIT = 28;
 const EDGE_HIT = 16;
