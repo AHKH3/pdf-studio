@@ -33,7 +33,8 @@ const session = {
   /** @type {any[][]} */
   history: [],
   historyBatch: false,
-  syncing: false
+  syncing: false,
+  zoom: 1
 };
 
 function hasTitleblock() {
@@ -192,6 +193,8 @@ function refresh(overlay = true) {
   session.board?.syncTool();
   showPanels();
   syncInspectorFromSelection();
+  renderLayers();
+  updateZoomLabel();
   if (session.ui?.count) {
     session.ui.count.textContent = `${session.pageIndex + 1} / ${session.pages || 1}`;
   }
@@ -201,6 +204,53 @@ function refresh(overlay = true) {
   if (session.ui?.remove) session.ui.remove.disabled = !session.selectedId;
   if (session.ui?.undo) session.ui.undo.disabled = session.history.length === 0;
   syncChrome();
+}
+
+function renderLayers() {
+  const host = session.ui?.layers;
+  if (!host) return;
+  host.replaceChildren();
+  const currentPageObjects = session.objects.filter((obj) => obj.pageIndex === session.pageIndex);
+  for (const obj of currentPageObjects) {
+    const row = document.createElement("div");
+    row.className = `edit-layer-row${obj.id === session.selectedId ? " is-selected" : ""}`;
+    row.dataset.id = obj.id;
+    const iconMap = { text: "icon-file", ink: "icon-sign", shape: "icon-crop", image: "icon-images", select: "icon-quad" };
+    const labelMap = { text: obj.text ? `نص: ${String(obj.text).slice(0, 18)}` : "نص", ink: "قلم", shape: obj.type === "shape" ? "شكل" : "شكل", image: obj.label || "صورة" };
+    const icon = iconMap[obj.type] || "icon-file";
+    const label = labelMap[obj.type] || obj.type;
+    row.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${icon}"></use></svg><span class="edit-layer-row__name">${label}</span><button class="edit-layer-row__del" aria-label="حذف" data-del="${obj.id}"><svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg></button>`;
+    row.addEventListener("click", (e) => {
+      const del = e.target.closest("[data-del]");
+      if (del) {
+        e.stopPropagation();
+        session.selectedId = obj.id;
+        deleteSelected();
+        return;
+      }
+      session.selectedId = obj.id;
+      refresh(false);
+    });
+    host.append(row);
+  }
+}
+
+function updateZoomLabel() {
+  if (session.ui?.zoomLabel) session.ui.zoomLabel.textContent = `${Math.round(session.zoom * 100)}%`;
+  if (session.ui?.board) session.ui.board.style.transform = `scale(${session.zoom})`;
+  if (session.ui?.board) session.ui.board.style.transformOrigin = "top center";
+}
+
+function setZoom(value) {
+  session.zoom = Math.max(0.5, Math.min(2.5, value));
+  const board = session.ui?.board;
+  const wrap = session.ui?.wrap;
+  if (board && wrap) {
+    board.style.zoom = String(session.zoom);
+    // fallback for transform
+    board.style.transform = `scale(${session.zoom})`;
+  }
+  updateZoomLabel();
 }
 
 function syncInspectorFromSelection() {
@@ -643,6 +693,11 @@ export function mount(rootEl) {
     },
     { signal }
   );
+
+  session.ui.zoomIn?.addEventListener("click", () => setZoom(session.zoom + 0.15), { signal });
+  session.ui.zoomOut?.addEventListener("click", () => setZoom(session.zoom - 0.15), { signal });
+  session.ui.zoomFit?.addEventListener("click", () => setZoom(1), { signal });
+  setZoom(1);
 }
 
 export function unmount() {
