@@ -2,7 +2,7 @@
  * Parses every first-party source file. Cheap standing in for a linter: it
  * catches the typos that would otherwise only surface as a blank window.
  */
-import { readFile, readdir } from "node:fs/promises";
+import { readFile, readdir, open } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -167,6 +167,26 @@ async function checkIds() {
   return missing;
 }
 
+/**
+ * electron-builder's Go parser rejects a UTF-8 BOM in package.json
+ * (ERR_ELECTRON_BUILDER_CANNOT_EXECUTE), so no shipped text file may carry one.
+ */
+async function checkBom() {
+  const offenders = [];
+  for (const name of ["package.json", "package-lock.json", ".gitignore", "index.html"]) {
+    const handle = await open(path.join(ROOT, name), "r").catch(() => null);
+    if (!handle) continue;
+    try {
+      const bytes = Buffer.alloc(3);
+      await handle.read(bytes, 0, 3, 0);
+      if (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) offenders.push(name);
+    } finally {
+      await handle.close();
+    }
+  }
+  return offenders;
+}
+
 async function main() {
   const files = await walk(ROOT);
   let failed = 0;
@@ -198,6 +218,15 @@ async function main() {
     for (const item of brokenImports) console.error(`  ${item}`);
   } else {
     console.log("imports: renderer graph resolves");
+  }
+
+  const bomFiles = await checkBom();
+  if (bomFiles.length) {
+    failed += 1;
+    console.error("\nutf-8 BOM (breaks electron-builder):");
+    for (const name of bomFiles) console.error(`  ${name}`);
+  } else {
+    console.log("bom: package.json and friends are clean");
   }
 
   process.exit(failed ? 1 : 0);
