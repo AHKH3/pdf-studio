@@ -262,8 +262,45 @@ const CSS = `
   font-size: 0.76rem;
   color: var(--text-muted);
   text-align: center;
-  padding: var(--space-3);
+  padding: 12px;
 }
+.edit-swatches { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.edit-swatch {
+  width: 22px; height: 22px; padding: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(15,23,42,0.14);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.edit-swatch:hover { transform: scale(1.15); }
+.edit-swatch.is-active { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px var(--accent-soft); }
+.edit-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.edit-chip {
+  min-width: 34px; height: 26px; padding: 0 8px;
+  font-family: var(--data); font-size: 0.72rem; font-weight: 700;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.edit-chip:hover { border-color: var(--accent); color: var(--accent); }
+.edit-chip.is-active { background: var(--accent); border-color: var(--accent-deep); color: #fff; }
+.edit-presets { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+.edit-preset {
+  height: 32px; padding: 0 8px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 0.74rem; font-weight: 600;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.edit-preset:hover { border-color: var(--accent); color: var(--ink); }
+.edit-preset i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; border: 1px solid rgba(15,23,42,0.15); flex: none; }
 .edit-layer-row {
   display: grid;
   grid-template-columns: auto minmax(0,1fr) auto;
@@ -322,6 +359,16 @@ function icon(href) {
   return `<svg class="icon" aria-hidden="true"><use href="#${href}"></use></svg>`;
 }
 
+export const INK_COLORS = ["#111827", "#1E3A8A", "#DC2626", "#059669", "#D97706", "#7C3AED", "#DB2777"];
+export const FILL_COLORS = ["#FDE68A", "#BBF7D0", "#BFDBFE", "#FBCFE8", "#FECACA", "#E5E7EB", "#FFFFFF"];
+export const TEXT_SIZES = [12, 14, 16, 18, 24, 32, 48];
+
+function swatches(forId, colors) {
+  return `<div class="edit-swatches">${colors
+    .map((c) => `<button type="button" class="edit-swatch" data-swatch="${c}" data-for="${forId}" style="background:${c}" aria-label="لون ${c}"></button>`)
+    .join("")}</div>`;
+}
+
 function choice(name, value, label, iconHref, checked = false) {
   const ic = iconHref ? icon(iconHref) : "";
   return `<label class="choice"><input type="radio" name="${name}" value="${value}"${checked ? " checked" : ""} /><span>${ic}<span>${label}</span></span></label>`;
@@ -349,7 +396,7 @@ export function buildUi(root) {
       <div id="edit-workspace" class="edit-workspace" hidden>
         <div class="edit-stage">
           <div class="edit-stage__bar">
-            <div class="scan__pager" style="margin:0">
+            <div class="scan__pager">
               <button id="edit-prev" type="button" class="btn btn--compact">
                 ${icon("icon-arrow")} السابقة
               </button>
@@ -360,7 +407,7 @@ export function buildUi(root) {
             </div>
             <div class="edit-stage__zoom">
               <button id="edit-zoom-out" type="button" class="btn btn--compact" aria-label="تصغير">${icon("icon-rotate")} -</button>
-              <span class="num" id="edit-zoom-label" style="min-width:3.5ch;text-align:center;font-size:0.78rem">100%</span>
+              <span class="num edit-zoom-label" id="edit-zoom-label">100%</span>
               <button id="edit-zoom-in" type="button" class="btn btn--compact" aria-label="تكبير">${icon("icon-plus")} +</button>
               <button id="edit-zoom-fit" type="button" class="btn btn--compact">${icon("icon-crop")} ملء</button>
             </div>
@@ -387,10 +434,10 @@ export function buildUi(root) {
               ${choice("edit-tool", "triangle", "مثلث", "icon-alert")}
               ${choice("edit-tool", "image", "صورة", "icon-images")}
             </div>
-            <div class="btn-row" style="margin-top:10px">
-              <button id="edit-undo" type="button" class="btn" style="flex:1" aria-label="تراجع">${icon("icon-rotate")} تراجع</button>
-              <button id="edit-redo" type="button" class="btn" style="flex:1" aria-label="إعادة">${icon("icon-rotate")} إعادة</button>
-              <button id="edit-delete" type="button" class="btn" style="flex:1" aria-label="حذف المحدد">${icon("icon-trash")} حذف</button>
+            <div class="btn-row">
+              <button id="edit-undo" type="button" class="btn" aria-label="تراجع">${icon("icon-rotate")} تراجع</button>
+              <button id="edit-redo" type="button" class="btn" aria-label="إعادة">${icon("icon-rotate")} إعادة</button>
+              <button id="edit-delete" type="button" class="btn" aria-label="حذف المحدد">${icon("icon-trash")} حذف</button>
             </div>
           </div>
 
@@ -405,7 +452,7 @@ export function buildUi(root) {
               <label for="edit-text">المحتوى</label>
               <textarea id="edit-text" rows="3" maxlength="2000" placeholder="اكتب هنا — يظهر فوراً على الصفحة"></textarea>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="grid-2col">
               <div class="field">
                 <label for="edit-text-size">الحجم</label>
                 <input id="edit-text-size" type="number" min="10" max="96" value="18" />
@@ -415,11 +462,15 @@ export function buildUi(root) {
                 <input id="edit-text-color" type="color" value="#1E3A8A" />
               </div>
             </div>
-            <label class="check" style="margin-top:6px">
+            ${swatches("edit-text-color", INK_COLORS)}
+            <div class="edit-chips" role="group" aria-label="مقاسات جاهزة">
+              ${TEXT_SIZES.map((s) => `<button type="button" class="edit-chip" data-size-chip="${s}" data-for="edit-text-size">${s}</button>`).join("")}
+            </div>
+            <label class="check">
               <input id="edit-text-bold" type="checkbox" />
               عريض
             </label>
-            <div class="field field--wide" style="margin-top:8px">
+            <div class="field field--wide">
               <span id="edit-align-label">المحاذاة</span>
               <div class="choice-grid" role="radiogroup" aria-labelledby="edit-align-label">
                 ${choice("edit-align", "right", "يمين", null, true)}
@@ -431,7 +482,7 @@ export function buildUi(root) {
 
           <div class="panel-block" data-edit-panel="pen" hidden>
             <h3 class="panel-block__title">القلم الحر</h3>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="grid-2col">
               <div class="field">
                 <label for="edit-pen-color">اللون</label>
                 <input id="edit-pen-color" type="color" value="#1E3A8A" />
@@ -446,16 +497,23 @@ export function buildUi(root) {
                 </select>
               </div>
             </div>
-            <p class="panel-block__meta" style="margin-top:8px">اسحب على الصفحة للرسم. كل شوط رسم يُحفظ كطبقة.</p>
+            ${swatches("edit-pen-color", INK_COLORS)}
+            <p class="panel-block__meta">اسحب على الصفحة للرسم. كل شوط رسم يُحفظ كطبقة.</p>
           </div>
 
           <div class="panel-block" data-edit-panel="shape" hidden>
             <h3 class="panel-block__title">الشكل</h3>
+            <div class="edit-presets" role="group" aria-label="أنماط جاهزة">
+              <button type="button" class="edit-preset" data-shape-preset="highlight"><i style="background:#FDE68A"></i> تظليل</button>
+              <button type="button" class="edit-preset" data-shape-preset="frame"><i style="background:#fff;border-color:#DC2626"></i> إطار</button>
+              <button type="button" class="edit-preset" data-shape-preset="fill"><i style="background:#BFDBFE"></i> تعبئة</button>
+              <button type="button" class="edit-preset" data-shape-preset="cover"><i style="background:#fff"></i> تغطية</button>
+            </div>
             <label class="check">
               <input id="edit-fill-on" type="checkbox" checked />
               تعبئة
             </label>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+            <div class="grid-2col">
               <div class="field">
                 <label for="edit-fill-color">لون التعبئة</label>
                 <input id="edit-fill-color" type="color" value="#8AA4E0" />
@@ -465,7 +523,9 @@ export function buildUi(root) {
                 <input id="edit-stroke-color" type="color" value="#1E3A8A" />
               </div>
             </div>
-            <div class="field" style="margin-top:8px">
+            ${swatches("edit-fill-color", FILL_COLORS)}
+            ${swatches("edit-stroke-color", INK_COLORS)}
+            <div class="field">
               <label for="edit-stroke-width">سُمك الحد</label>
               <input id="edit-stroke-width" type="number" min="0" max="24" step="0.5" value="1.5" />
             </div>
@@ -479,15 +539,15 @@ export function buildUi(root) {
             </button>
           </div>
 
-          <div class="panel-block" style="background:var(--surface-2);border-style:dashed">
-            <p class="note" style="margin:0;background:transparent;border:0;padding:0;box-shadow:none">
+          <div class="panel-block panel-block--dashed">
+            <p class="note note--bare">
               <strong>الناتج PDF مسطّح:</strong> العناصر تُرسم فوق الصفحة الأصلية. لا يُعدَّل النص داخل الملف نفسه — إن أردت تعديل نص موجود، غطّه بمستطيل أبيض ثم أضف نصاً جديداً فوقه.
             </p>
           </div>
 
-          <div class="panel-block" style="padding:0;border:0;background:transparent;box-shadow:none">
-            <button id="edit-save" type="button" class="btn btn--act btn--wide" style="height:44px;font-size:0.92rem">حفظ التحرير — دمج الطبقات</button>
-            <button id="edit-clear" type="button" class="btn btn--wide" style="margin-top:8px">
+          <div class="panel-block panel-block--bare">
+            <button id="edit-save" type="button" class="btn btn--act btn--wide">حفظ التحرير — دمج الطبقات</button>
+            <button id="edit-clear" type="button" class="btn btn--wide">
               ${icon("icon-close")} إغلاق المستند
             </button>
           </div>

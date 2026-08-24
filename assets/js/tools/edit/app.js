@@ -321,6 +321,98 @@ function syncInspectorFromSelection() {
   } finally {
     session.syncing = false;
   }
+  updateStyleChips();
+}
+
+const STYLE_KEY = "pdfstudio.edit.style.v1";
+
+function loadStylePrefs() {
+  try {
+    return JSON.parse(localStorage.getItem(STYLE_KEY) || "{}") || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveStylePrefs() {
+  const ui = session.ui;
+  if (!ui) return;
+  try {
+    const picked = session.root?.querySelector('input[name="edit-tool"]:checked');
+    localStorage.setItem(
+      STYLE_KEY,
+      JSON.stringify({
+        tool: /** @type {HTMLInputElement | null} */ (picked)?.value || "select",
+        textSize: ui.textSize.value,
+        textColor: ui.textColor.value,
+        bold: ui.textBold.checked,
+        align: activeAlign(),
+        penColor: ui.penColor.value,
+        penWeight: ui.penWeight.value,
+        fillOn: ui.fillOn.checked,
+        fill: ui.fillColor.value,
+        stroke: ui.strokeColor.value,
+        strokeWidth: ui.strokeWidth.value
+      })
+    );
+  } catch {
+    /* التخزين غير متاح */
+  }
+}
+
+function applySavedStyle() {
+  const ui = session.ui;
+  const saved = loadStylePrefs();
+  if (!ui || !saved) return;
+  if (saved.tool) {
+    const radio = session.root?.querySelector(`input[name="edit-tool"][value="${saved.tool}"]`);
+    if (radio instanceof HTMLInputElement) radio.checked = true;
+  }
+  if (saved.textSize) ui.textSize.value = String(saved.textSize);
+  if (saved.textColor) ui.textColor.value = saved.textColor;
+  if (typeof saved.bold === "boolean") ui.textBold.checked = saved.bold;
+  if (saved.align) {
+    for (const input of session.root?.querySelectorAll('input[name="edit-align"]') ?? []) {
+      /** @type {HTMLInputElement} */ (input).checked = input.value === saved.align;
+    }
+  }
+  if (saved.penColor) ui.penColor.value = saved.penColor;
+  if (saved.penWeight) ui.penWeight.value = String(saved.penWeight);
+  if (typeof saved.fillOn === "boolean") ui.fillOn.checked = saved.fillOn;
+  if (saved.fill) ui.fillColor.value = saved.fill;
+  if (saved.stroke) ui.strokeColor.value = saved.stroke;
+  if (saved.strokeWidth !== undefined) ui.strokeWidth.value = String(saved.strokeWidth);
+}
+
+const SHAPE_PRESETS = {
+  highlight: { fillOn: true, fill: "#FDE68A", stroke: "#FDE68A", strokeWidth: 0 },
+  frame: { fillOn: false, fill: "#BFDBFE", stroke: "#DC2626", strokeWidth: 2 },
+  fill: { fillOn: true, fill: "#BFDBFE", stroke: "#1E3A8A", strokeWidth: 1.5 },
+  cover: { fillOn: true, fill: "#FFFFFF", stroke: "#FFFFFF", strokeWidth: 0 }
+};
+
+function updateStyleChips() {
+  const root = session.root;
+  const ui = session.ui;
+  if (!root || !ui) return;
+  for (const swatch of root.querySelectorAll("[data-swatch]")) {
+    const input = document.getElementById(/** @type {HTMLElement} */ (swatch).dataset.for || "");
+    swatch.classList.toggle(
+      "is-active",
+      input instanceof HTMLInputElement && input.value.toLowerCase() === /** @type {HTMLElement} */ (swatch).dataset.swatch?.toLowerCase()
+    );
+  }
+  for (const chip of root.querySelectorAll("[data-size-chip]")) {
+    chip.classList.toggle("is-active", ui.textSize.value === /** @type {HTMLElement} */ (chip).dataset.sizeChip);
+  }
+}
+
+function setStyleInput(inputId, value, eventName) {
+  const input = document.getElementById(inputId);
+  if (!(input instanceof HTMLInputElement)) return;
+  input.value = value;
+  input.dispatchEvent(new Event(eventName, { bubbles: true }));
+  updateStyleChips();
 }
 
 function applyInspectorToSelection() {
@@ -700,6 +792,7 @@ export function mount(rootEl) {
   });
 
   wireIntake(signal);
+  applySavedStyle();
   showPanels();
   refresh();
 
@@ -710,9 +803,41 @@ export function mount(rootEl) {
       if (target instanceof HTMLInputElement && target.name === "edit-tool") {
         session.board?.syncTool();
         showPanels();
+        saveStylePrefs();
         return;
       }
       applyInspectorToSelection();
+      saveStylePrefs();
+    },
+    { signal }
+  );
+
+  rootEl.addEventListener(
+    "click",
+    (event) => {
+      const swatch = /** @type {HTMLElement} */ (event.target).closest?.("[data-swatch]");
+      if (swatch?.dataset.for && swatch.dataset.swatch) {
+        setStyleInput(swatch.dataset.for, swatch.dataset.swatch, "input");
+        return;
+      }
+      const chip = /** @type {HTMLElement} */ (event.target).closest?.("[data-size-chip]");
+      if (chip?.dataset.for && chip.dataset.sizeChip) {
+        setStyleInput(chip.dataset.for, chip.dataset.sizeChip, "input");
+        return;
+      }
+      const preset = /** @type {HTMLElement} */ (event.target).closest?.("[data-shape-preset]");
+      const style = preset?.dataset.shapePreset ? SHAPE_PRESETS[preset.dataset.shapePreset] : null;
+      const ui = session.ui;
+      if (!style || !ui) return;
+      ui.fillOn.checked = style.fillOn;
+      ui.fillColor.value = style.fill;
+      ui.strokeColor.value = style.stroke;
+      ui.strokeWidth.value = String(style.strokeWidth);
+      ui.fillOn.dispatchEvent(new Event("change", { bubbles: true }));
+      ui.fillColor.dispatchEvent(new Event("input", { bubbles: true }));
+      ui.strokeColor.dispatchEvent(new Event("input", { bubbles: true }));
+      ui.strokeWidth.dispatchEvent(new Event("input", { bubbles: true }));
+      saveStylePrefs();
     },
     { signal }
   );

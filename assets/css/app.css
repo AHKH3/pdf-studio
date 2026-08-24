@@ -1064,6 +1064,13 @@ code { font-family: var(--data); font-variant-numeric: tabular-nums; font-size:0
   margin: 0;
 }
 
+/* ---------- كلاسات مساعدة لشبكات لوحات الأدوات ---------- */
+.grid-2col { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:var(--space-3); }
+.panel-block--bare { padding:0; border-bottom:0; background:transparent; box-shadow:none; }
+.panel-block--dashed { background:var(--surface-2); border-style:dashed; }
+.note--bare { background:transparent; border:0; padding:0; box-shadow:none; margin-bottom:0; }
+.btn--lg { height:44px; font-size:0.92rem; }
+
 /* responsive */
 @media (max-width: 1080px) {
   .scan { grid-template-columns: minmax(0,1fr); }

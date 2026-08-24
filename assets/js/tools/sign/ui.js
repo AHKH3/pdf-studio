@@ -80,9 +80,9 @@ const CSS = `
   border-radius: var(--radius);
 }
 .sign-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  display: grid;
+  align-content: start;
+  row-gap: var(--space-2);
   max-height: 180px;
   overflow: auto;
 }
@@ -121,7 +121,7 @@ const CSS = `
   height: 12px;
   display: inline-block;
   border-radius: 50%;
-  margin-inline-start: 6px;
+  margin-inline-start: var(--space-2);
   border: 1px solid var(--rule);
   vertical-align: middle;
 }
@@ -201,12 +201,12 @@ export function buildUi(root) {
             <h3 class="panel-block__title">لوحة الرسم</h3>
             <p class="panel-block__meta">ارسم بإصبعك أو بالفأرة. الخلفية شفافة عند الحفظ.</p>
             <canvas id="sign-pad" class="sign-pad" width="268" height="156" aria-label="لوحة رسم التوقيع"></canvas>
-            <div class="choice-grid" role="radiogroup" aria-label="لون الحبر" style="margin-top:10px">
+            <div class="choice-grid" role="radiogroup" aria-label="لون الحبر">
               <label class="choice"><input type="radio" name="sign-ink" value="#141c17" checked /><span>أسود</span></label>
               <label class="choice"><input type="radio" name="sign-ink" value="#1d3f8f" /><span>أزرق</span></label>
               <label class="choice"><input type="radio" name="sign-ink" value="#c33418" /><span>أحمر</span></label>
             </div>
-            <div class="field" style="margin-top:10px">
+            <div class="field">
               <label for="sign-weight">سُمك الخط</label>
               <select id="sign-weight">
                 <option value="1.6">رفيع</option>
@@ -214,7 +214,7 @@ export function buildUi(root) {
                 <option value="3.6">سميك</option>
               </select>
             </div>
-            <button id="sign-pad-clear" type="button" class="btn btn--wide" style="margin-top:8px">
+            <button id="sign-pad-clear" type="button" class="btn btn--wide">
               ${icon("icon-close")} امسح
             </button>
           </div>
@@ -278,19 +278,19 @@ export function buildUi(root) {
           <div class="panel-block">
             <h3 class="panel-block__title">أختام هذه الصفحة</h3>
             <div id="sign-list" class="sign-list"></div>
-            <div class="btn-row" style="margin-top:10px">
+            <div class="btn-row">
               <button id="sign-copy-all" type="button" class="btn">نسخ</button>
               <button id="sign-delete" type="button" class="btn">حذف</button>
             </div>
           </div>
 
           <div class="panel-block">
-            <p class="note" style="margin-bottom:12px">
+            <p class="note">
               الناتج PDF مسطّح: الأختام تُرسم فوق الصفحة. هذه الأداة لا تملأ حقول AcroForm.
               مجانية، بلا حد صفحات، والملف لا يغادر الجهاز.
             </p>
             <button id="sign-save" type="button" class="btn btn--act btn--wide">توقيع</button>
-            <button id="sign-clear" type="button" class="btn btn--wide" style="margin-top:8px">
+            <button id="sign-clear" type="button" class="btn btn--wide">
               ${icon("icon-close")} إغلاق
             </button>
           </div>
