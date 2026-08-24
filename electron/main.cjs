@@ -1,6 +1,11 @@
 "use strict";
 const { app, BrowserWindow, shell, nativeImage, ipcMain, dialog, Menu } = require("electron");
-const { autoUpdater } = require("electron-updater");
+let autoUpdater = null;
+try {
+  ({ autoUpdater } = require("electron-updater"));
+} catch {
+  /* electron-updater is missing in dev or a broken install — the app still runs */
+}
 const path = require("path");
 const http = require("http");
 const fs = require("fs");
@@ -268,7 +273,7 @@ function shutdownServer() {
 const UPDATE_CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000;
 
 function wireAutoUpdater() {
-  if (!app.isPackaged) return;
+  if (!app.isPackaged || !autoUpdater) return;
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 

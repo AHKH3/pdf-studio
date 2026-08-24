@@ -1,7 +1,7 @@
 {
   "name": "pdf-studio",
   "productName": "PDF Studio",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "أدوات PDF عربية — تطبيق سطح مكتب",
   "homepage": "https://github.com/AHKH3/pdf-studio",
   "author": "abdo3342",
@@ -27,6 +27,7 @@
     "@tensorflow/tfjs": "~4.11.0",
     "@tensorflow/tfjs-backend-wasm": "~4.11.0",
     "@upscalerjs/esrgan-slim": "^1.0.0",
+    "electron-updater": "^6.8.9",
     "pdf-lib": "1.17.1",
     "pdfjs-dist": "3.11.174",
     "qpdf-wasm": "^0.1.0",
@@ -37,8 +38,7 @@
   "devDependencies": {
     "@hugeicons/core-free-icons": "^4.2.3",
     "electron": "^34.2.0",
-    "electron-builder": "^25.1.8",
-    "electron-updater": "^6.8.9"
+    "electron-builder": "^25.1.8"
   },
   "build": {
     "appId": "app.pdfstudio.desktop",
