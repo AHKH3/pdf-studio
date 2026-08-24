@@ -1,6 +1,7 @@
 import { el, qsa } from "../dom.js";
 import { PAGE_SIZES } from "../config.js";
 import { baseName, filesKey, saveFile, saveFolder, withExtension } from "../lib/files.js";
+import { ensureDecodableImage } from "../lib/heic.js";
 import { bitmapToBytes } from "../lib/bitmap.js";
 import { lib } from "../pdf/core.js";
 import { ScanEngine } from "../scan/client.js";
@@ -409,7 +410,8 @@ async function add(files) {
       throwIfCancelled();
       updateProgress({ percent: (order / files.length) * 100, detail: file.name });
 
-      const decoded = await createImageBitmap(file);
+      const decodable = await ensureDecodableImage(file);
+      const decoded = await createImageBitmap(decodable);
       const workScale = Math.min(1, WORK_MAX / Math.max(decoded.width, decoded.height));
       const width = Math.max(1, Math.round(decoded.width * workScale));
       const height = Math.max(1, Math.round(decoded.height * workScale));

@@ -9,7 +9,8 @@ const copies = [
   ["pdf-lib/dist/pdf-lib.min.js", "pdf-lib.min.js"],
   ["sortablejs/Sortable.min.js", "Sortable.min.js"],
   ["pdfjs-dist/legacy/build/pdf.js", "pdf.js"],
-  ["pdfjs-dist/legacy/build/pdf.worker.js", "pdf.worker.js"]
+  ["pdfjs-dist/legacy/build/pdf.worker.js", "pdf.worker.js"],
+  ["heic2any/dist/heic2any.min.js", "heic2any.js"]
 ];
 
 fs.mkdirSync(vendor, { recursive: true });

@@ -22,7 +22,13 @@ export function isPdfFile(file) {
 }
 
 /** @param {File} file */
+export function isHeicFile(file) {
+  return file.type === "image/heic" || file.type === "image/heif" || /\.(heic|heif)$/i.test(file.name);
+}
+
+/** @param {File} file */
 export function isImageFile(file) {
+  if (isHeicFile(file)) return true;
   return file.type.startsWith("image/") || /\.(png|jpe?g|webp|gif|bmp|avif)$/i.test(file.name);
 }
 
@@ -49,13 +55,14 @@ export function filesKey(files) {
 
 /** @param {File} file */
 export function imageMime(file) {
-  if (file.type) return file.type;
+  if (file.type && file.type !== "image/heic" && file.type !== "image/heif") return file.type;
   const name = file.name.toLowerCase();
   if (name.endsWith(".png")) return "image/png";
   if (name.endsWith(".webp")) return "image/webp";
   if (name.endsWith(".gif")) return "image/gif";
   if (name.endsWith(".bmp")) return "image/bmp";
   if (name.endsWith(".avif")) return "image/avif";
+  if (name.endsWith(".heic") || name.endsWith(".heif")) return "image/jpeg";
   return "image/jpeg";
 }
 

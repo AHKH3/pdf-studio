@@ -1,5 +1,6 @@
 import { el } from "../dom.js";
-import { isImageFile, isPdfFile } from "../lib/files.js";
+import { isHeicFile, isImageFile, isPdfFile } from "../lib/files.js";
+import { ensureDecodableImages } from "../lib/heic.js";
 import { toast } from "./feedback.js";
 
 const FILTERS = {
@@ -45,7 +46,20 @@ export function wireIntake(config) {
       toast(skipped > 1 ? `${REJECTION[config.accept]} (${skipped})` : REJECTION[config.accept], "info");
     }
     if (!good.length) return;
-    await config.onFiles(good);
+
+    // فك HEIC/HEIF قبل التسليم — إن فشل، أظهر رسالة واضحة
+    let decodable = good;
+    const hasHeic = good.some(isHeicFile);
+    if (hasHeic) {
+      try {
+        decodable = await ensureDecodableImages(good);
+      } catch (error) {
+        toast(error instanceof Error ? error.message : "تعذّر فك صورة HEIC.", "error");
+        return;
+      }
+    }
+
+    await config.onFiles(decodable);
   };
 
   const open = () => input.click();
@@ -111,7 +125,20 @@ export function wirePicker(inputId, buttonId, onFiles) {
   button.addEventListener("click", () => input.click());
   input.addEventListener("change", async () => {
     const files = Array.from(input.files || []);
-    if (files.length) await onFiles(files);
+    if (files.length) {
+      const hasHeic = files.some(isHeicFile);
+      let payload = files;
+      if (hasHeic) {
+        try {
+          payload = await ensureDecodableImages(files);
+        } catch (error) {
+          toast(error instanceof Error ? error.message : "تعذّر فك صورة HEIC.", "error");
+          input.value = "";
+          return;
+        }
+      }
+      await onFiles(payload);
+    }
     input.value = "";
   });
 }

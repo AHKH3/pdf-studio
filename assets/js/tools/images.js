@@ -1,6 +1,7 @@
 import { MM_TO_PT, PAGE_SIZES } from "../config.js";
 import { el, yieldToUi } from "../dom.js";
 import { filesKey, humanSize, saveFile, withExtension } from "../lib/files.js";
+import { ensureDecodableImage } from "../lib/heic.js";
 import { bitmapToBytes } from "../lib/bitmap.js";
 import { suggestImageOrder } from "../lib/image-order.js";
 import { upgradeForPdf } from "../enhance/quality.js";
@@ -115,7 +116,8 @@ async function run() {
         detail: `${index + 1} / ${items.length} — ${item.file.name}`
       });
 
-      const decoded = await createImageBitmap(item.file);
+      const decodable = await ensureDecodableImage(item.file);
+      const decoded = await createImageBitmap(decodable);
       const upgraded = await upgradeForPdf(decoded);
       decoded.close();
       const bytes = await bitmapToBytes(upgraded, "image/jpeg", 0.92);
