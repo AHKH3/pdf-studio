@@ -1,6 +1,6 @@
 import { el, qsa } from "../dom.js";
 import { PAGE_SIZES } from "../config.js";
-import { baseName, filesKey, humanSize, saveFile, saveFolder, withExtension } from "../lib/files.js";
+import { baseName, filesKey, saveFile, saveFolder, withExtension } from "../lib/files.js";
 import { bitmapToBytes } from "../lib/bitmap.js";
 import { lib } from "../pdf/core.js";
 import { ScanEngine } from "../scan/client.js";

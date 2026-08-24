@@ -113,10 +113,6 @@ function buildLegend() {
       button.classList.add("btn--act");
       button.setAttribute("aria-current", "page");
     }
-    if (!enabled) {
-      button.setAttribute("aria-disabled", "true");
-      button.classList.add("is-disabled");
-    }
 
     const label = document.createElement("span");
     label.className = "legend__name";

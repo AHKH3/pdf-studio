@@ -109,7 +109,7 @@ async function run() {
 
     for (const [index, item] of items.entries()) {
       throwIfCancelled();
-      if (index % 1 === 0) await yieldToUi();
+      if (index % 4 === 0) await yieldToUi();
       updateProgress({
         percent: (index / items.length) * 100,
         detail: `${index + 1} / ${items.length} — ${item.file.name}`

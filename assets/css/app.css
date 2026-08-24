@@ -104,7 +104,6 @@
   --space-5: 32px;
   --space-6: 40px;
   --space-7: 48px;
-  --rail: 232px;
   --radius-xs: 2px;
   --radius-sm: 4px;
   --radius: 6px;
@@ -508,66 +507,6 @@ html.is-desktop[data-platform="linux"] .win-controls {
   white-space: nowrap;
 }
 
-.mark__sub {
-  font-family: var(--ui);
-  font-size: var(--t-xs);
-  font-weight: 500;
-  color: var(--ink-3);
-  line-height: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.stamp {
-  margin-inline-start: auto;
-  display: grid;
-  grid-template-columns: 6px auto;
-  grid-template-rows: auto auto;
-  column-gap: 8px;
-  row-gap: 0;
-  align-items: center;
-  min-width: 0;
-  flex: 0 1 auto;
-  text-align: start;
-  padding: 3px 8px 3px 6px;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  color: var(--ink-2);
-  background: var(--sheet);
-}
-
-.stamp::before {
-  content: "";
-  grid-column: 1;
-  grid-row: 1 / 3;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--stamp);
-  box-shadow: 0 0 0 3px var(--stamp-soft);
-}
-
-.stamp__line,
-.stamp__meta {
-  grid-column: 2;
-  display: block;
-}
-
-.stamp__line {
-  font-family: var(--ui);
-  font-size: var(--t-xs);
-  font-weight: 550;
-  line-height: 1.25;
-  color: var(--ink);
-}
-
-.stamp__meta {
-  font-size: var(--t-2xs);
-  line-height: 1.3;
-  color: var(--ink-3);
-}
-
 #theme-toggle {
   flex: none;
   position: relative;
@@ -653,10 +592,6 @@ html.is-desktop[data-platform="linux"] .win-controls {
 }
 
 .legend:not(:has(.legend__list > li)) {
-  display: none;
-}
-
-.legend__head {
   display: none;
 }
 
@@ -941,12 +876,6 @@ html.is-desktop[data-platform="linux"] .win-controls {
   border-color: rgba(76, 174, 124, 0.35);
 }
 
-.flow__caption {
-  font-size: var(--t-xs);
-  font-weight: 550;
-  color: var(--ink-2);
-}
-
 .flow__arrow {
   display: grid;
   place-items: center;
@@ -961,14 +890,6 @@ html.is-desktop[data-platform="linux"] .win-controls {
 
 [dir="ltr"] .flow__arrow .icon {
   transform: scaleX(-1);
-}
-
-.start__note {
-  margin: var(--space-2) 0 0;
-  font-family: var(--ui);
-  font-size: var(--t-xs);
-  color: var(--ink-3);
-  line-height: 1.4;
 }
 
 .start:has(#hub-panel:not([hidden])) {
@@ -1092,7 +1013,6 @@ html.is-desktop[data-platform="linux"] .win-controls {
 /* ---------- controls: two origami faces only ---------- */
 
 .btn,
-.ghost-btn,
 .choice input[type="radio"] + span {
   display: inline-flex;
   align-items: center;
@@ -1129,27 +1049,23 @@ html.is-desktop[data-platform="linux"] .win-controls {
 }
 
 .btn .icon,
-.ghost-btn .icon,
 .choice .tone {
   display: none;
 }
 
 .btn:hover:not(:disabled),
-.ghost-btn:hover:not(:disabled),
 .choice:hover input[type="radio"] + span {
   color: var(--ink);
   filter: brightness(1.05);
 }
 
 .btn:active:not(:disabled),
-.ghost-btn:active:not(:disabled),
 .choice:active input[type="radio"] + span {
   filter: brightness(0.94);
   transform: translateY(1px);
 }
 
-.btn:disabled,
-.ghost-btn:disabled {
+.btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
@@ -1157,7 +1073,6 @@ html.is-desktop[data-platform="linux"] .win-controls {
 }
 
 .btn:focus-visible,
-.ghost-btn:focus-visible,
 .choice input[type="radio"]:focus-visible + span {
   border-radius: 3px;
 }
@@ -1200,7 +1115,6 @@ html.is-desktop[data-platform="linux"] .win-controls {
 .btn--compact,
 .legend__row,
 .scan__pager .btn,
-.scan__pager .ghost-btn,
 .tb__run .btn--act {
   min-height: 2.5rem;
   min-width: 7.25rem;
@@ -1630,11 +1544,6 @@ html.is-desktop[data-platform="linux"] .win-controls {
   font-size: var(--t-xs);
   color: var(--ink-2);
   direction: ltr;
-}
-
-.plan__error {
-  color: var(--danger);
-  font-size: var(--t-sm);
 }
 
 .readout {
@@ -2383,14 +2292,6 @@ html[data-platform="darwin"] .tb__kbd-mod::before {
     gap: var(--space-2);
   }
 
-  .stamp {
-    display: none;
-  }
-
-  .mark__sub {
-    display: none;
-  }
-
   .start {
     padding: var(--space-4) var(--space-3);
     gap: var(--space-4);
@@ -2483,8 +2384,6 @@ html[data-platform="darwin"] .tb__kbd-mod::before {
   .btn:active:not(:disabled),
   .btn--act:hover:not(:disabled),
   .btn--act:active:not(:disabled),
-  .ghost-btn:hover:not(:disabled),
-  .ghost-btn:active:not(:disabled),
   .choice:hover input[type="radio"] + span,
   .choice:active input[type="radio"] + span,
   .mark:active {
