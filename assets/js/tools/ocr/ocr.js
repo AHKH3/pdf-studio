@@ -172,6 +172,8 @@ export async function run() {
 
   setState("busy");
   startProgress({ title: "تعرف ضوئي", desc: "نقرأ الصفحات محلياً بالعربية والإنجليزية." });
+  /** @type {any} */
+  let source = null;
   try {
     let recognized = 0;
     let skipped = 0;
@@ -193,7 +195,7 @@ export async function run() {
       preserve_interword_spaces: "1"
     });
 
-    const source = await openDocument(doc.bytes, doc.password);
+    source = await openDocument(doc.bytes, doc.password);
     const target = await loadWritable(doc.bytes);
     const pages = target.getPages();
 
@@ -231,6 +233,7 @@ export async function run() {
     }
 
     await source.destroy();
+    source = null;
     throwIfCancelled();
     updateProgress({ percent: 97, desc: "نكتب الملف.", detail: "" });
     const bytes = await target.save();
@@ -251,6 +254,8 @@ export async function run() {
       /copy-runtime|tesseract|tessdata|traineddata/i.test(detail) ? detail : "تعذّر التعرف الضوئي.";
     reportFailure(error, fallback);
   } finally {
+    // Cancel throws mid-loop; the document must close on every exit path.
+    await source?.destroy?.().catch(() => {});
     setWorkerLogger(() => {});
     endProgress();
   }

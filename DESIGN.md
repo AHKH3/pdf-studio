@@ -1,37 +1,44 @@
 ---
 name: PDF Studio
-description: Arabic-first local PDF workbench. Cream folded paper, vermilion origami square, no violet.
+description: Arabic-first local PDF workbench. Lined inlay stock, ballpoint ink, one printed red stripe. No photographs.
 colors:
-  accent: "#E22A28"
-  accent-hover: "#CE2224"
-  accent-hi: "#E44C43"
-  accent-deep: "#B81016"
-  accent-soft: "rgba(226, 42, 40, 0.12)"
-  accent-contrast: "#FFFBF1"
-  bg: "#ECE0D0"
-  surface-1: "#F7EEE2"
-  surface-2: "#EDE1D1"
-  surface-3: "#E3D4C2"
-  text-primary: "#1C1814"
-  text-secondary: "#3F382F"
-  text-muted: "#6A5E52"
-  border-subtle: "rgba(28, 24, 20, 0.12)"
-  border-strong: "rgba(28, 24, 20, 0.18)"
-  danger: "#9B1218"
-  warning: "#775F47"
-  success: "#217A4B"
-  night-bg: "#111113"
-  night-surface: "#1C1C20"
-  night-text: "#F3F0EA"
-  night-accent: "#C4332E"
+  accent: "#C41A1A"
+  accent-hover: "#A81616"
+  accent-hi: "#D32F2F"
+  accent-deep: "#8E1212"
+  accent-soft: "rgba(196, 26, 26, 0.10)"
+  accent-contrast: "#FCFBF7"
+  ink: "#1E3A8A"
+  ink-2: "#2B4C7E"
+  ink-faded: "#6B86C5"
+  bg: "#F4F4F2"
+  surface-1: "#FCFBF7"
+  surface-2: "#ECECE8"
+  surface-3: "#E2E2DC"
+  text-primary: "#1E3A8A"
+  text-secondary: "#2B4C7E"
+  text-muted: "#6B86C5"
+  rule: "#B8B8B4"
+  rule-strong: "#A6A6A6"
+  border-subtle: "rgba(30, 58, 138, 0.16)"
+  border-strong: "rgba(30, 58, 138, 0.28)"
+  danger: "#8E1212"
+  warning: "#6B5A2A"
+  success: "#1F6B45"
+  night-bg: "#12141C"
+  night-surface: "#1A1E2A"
+  night-rule: "#3A4258"
+  night-text: "#C5D0F0"
+  night-ink: "#8AA4E0"
+  night-accent: "#E24A4A"
 typography:
   display:
-    fontFamily: "Playfair Display, Amiri, serif"
-    fontSize: "clamp(1.875rem, 4vw, 2.375rem)"
+    fontFamily: "Noto Naskh Arabic, serif"
+    fontSize: "clamp(1.35rem, 4.6vmin, 2rem)"
     fontWeight: 700
     lineHeight: 1.35
   headline:
-    fontFamily: "Playfair Display, Amiri, serif"
+    fontFamily: "Noto Naskh Arabic, serif"
     fontSize: "1.5rem"
     fontWeight: 700
     lineHeight: 1.35
@@ -42,22 +49,22 @@ typography:
     letterSpacing: "0.01em"
     lineHeight: 1
   copy:
-    fontFamily: "Playfair Display, Noto Naskh Arabic, serif"
+    fontFamily: "Noto Naskh Arabic, serif"
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.7
   body:
-    fontFamily: "Playfair Display, Noto Naskh Arabic, serif"
+    fontFamily: "Noto Naskh Arabic, serif"
     fontSize: "0.875rem"
     fontWeight: 400
     lineHeight: 1.55
   label:
-    fontFamily: "Playfair Display, Noto Naskh Arabic, serif"
+    fontFamily: "Noto Naskh Arabic, serif"
     fontSize: "0.75rem"
     fontWeight: 550
     lineHeight: 1.3
   micro:
-    fontFamily: "Playfair Display, Noto Naskh Arabic, serif"
+    fontFamily: "Noto Naskh Arabic, serif"
     fontSize: "0.6875rem"
     fontWeight: 400
     lineHeight: 1.3
@@ -69,21 +76,22 @@ typography:
 rounded:
   xs: "2px"
   sm: "4px"
-  control: "6px"
+  control: "4px"
+  panel: "6px"
+  sheet: "6px"
   pill: "999px"
-  panel: "8px"
-  sheet: "8px"
 spacing:
   gap: "8px"
   pad: "16px"
-  rail: "232px"
   titlebar: "40px"
+  status: "52px"
+  rule-period: "28px"
 components:
   button-primary:
     backgroundColor: "{colors.accent}"
     textColor: "{colors.accent-contrast}"
     rounded: "{rounded.control}"
-    padding: "7px 18px"
+    padding: "8px 18px"
     typography: "{typography.micro}"
   button-primary-hover:
     backgroundColor: "{colors.accent-hover}"
@@ -91,29 +99,28 @@ components:
     rounded: "{rounded.control}"
   button-secondary:
     backgroundColor: "{colors.surface-1}"
-    textColor: "{colors.text-secondary}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.control}"
-    padding: "7px 14px"
-    border: "1px solid {colors.border-strong}"
+    padding: "8px 16px"
   button-ghost:
     backgroundColor: "transparent"
-    textColor: "{colors.text-muted}"
+    textColor: "{colors.ink-faded}"
     rounded: "{rounded.control}"
     padding: "6px"
-    size: "30px"
+    size: "28px"
   button-danger:
     backgroundColor: "transparent"
     textColor: "{colors.danger}"
     rounded: "{rounded.control}"
   input:
-    backgroundColor: "{colors.bg}"
-    textColor: "{colors.text-primary}"
+    backgroundColor: "{colors.surface-1}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.control}"
     padding: "7px 9px"
     height: "32px"
   nav-current:
-    backgroundColor: "{colors.accent-soft}"
-    textColor: "{colors.text-primary}"
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
     rounded: "{rounded.control}"
     padding: "8px"
 ---
@@ -122,135 +129,177 @@ components:
 
 ## Overview
 
-**Creative North Star: «طيّ الورقة» — The Orizuru Sheet**
+**Creative North Star: «ورقة مسطّرة وحبر أزرق» — Lined inlay, ballpoint ink**
 
-PDF Studio sits on a photographed sheet of cream folded paper. The empty state is a photographed vermilion origami square. Primary actions use the red folded-paper button face; secondary actions use the cream folded-paper button face. There is no violet and no gold. Window chrome stays flush (40px hidden titlebar + overlay). Quiet controls stay hairline. Shadows exist on the origami faces and on floating layers (dialogs, toasts). Motion stays short: 120/160/200ms.
+PDF Studio is a sheet of ruled inlay stock with writing in ballpoint blue. The only printed color besides the ink is one TDK-red stripe: the thing the user is about to run. There are no photographs, no paper textures, no origami, no cassette object. Lines, fills, and 1px hairlines are CSS (or SVG for icons). Arabic is the native language of the chrome.
 
-Arabic is native: Amiri headings, Noto Naskh Arabic UI, Playfair Display for any Latin. The existing SVG sprite stays. Dark mode (`data-theme="blueprint"`, a JavaScript lock) uses the dark fold photograph, dark origami square, and dark button photographs.
+This file replaces the previous Orizuru / photographed-fold world. It is the brief for implementation. Product behavior, routes, copy, and element IDs stay as they are in `index.html` today.
 
-Scan is the first feature: corners stay on the original image. Rotate and colour filters preview live in that same window. Warped extraction is export-only, never mixed with corner drag.
+**Apply (for the implementing agent):**
+- Restyle only. Do not add pages, tools, steppers, a side rail, or a card grid of operations.
+- Keep every existing control ID (`hub-drop`, `hub-browse`, `hub-input`, `theme-toggle`, `tb-run` / `.btn--act`, tool view IDs).
+- Touch visual chrome: `assets/css/app.css` and the two `<img class="sheet-photo">` nodes in `index.html` (delete them). Do not rewrite tool JS.
+- Delete photographic materials from CSS: `--paper`, `--paper-head`, `--paper-foot`, `--btn-red`, `--btn-cream` must not be `url(...)`. Map them to flat color + the lined gradient below.
+- Update the HTML direction-contract comment to this north star (seed `b42e33ef`, chosen `vernacular-ephemera-cassette-j-card`).
+- Self-hosted fonts only: Noto Naskh Arabic (all Arabic), Playfair Display (Latin wordmark and figures). Do not add font files or a CDN. Do not use Amiri in this world.
+- `data-theme="blueprint"` remains the dark-mode attribute; JavaScript owns the name.
 
 **Key Characteristics:**
-- Cream fold photograph as the stage; vermilion origami photograph as the drop square.
-- After files, a top action strip of allowed tools only. No permanent side rail.
-- Primary button: red folded-paper photograph, cream label. Secondary button: cream folded-paper photograph, ink label.
-- Quiet buttons stay transparent with hairlines. No violet. No gold.
+- Stage = CSS lined paper (`repeating-linear-gradient`), not an image.
+- Drop = a rectangle with a 1px ballpoint hairline on that paper. No photo, no square origami.
+- Primary = flat TDK red fill. Secondary = off-white fill + 1px ballpoint hairline.
+- After files, allowed tools appear in the titlebar as a ballpoint list; the current tool is a 2px red underline, not a filled chip.
 - RTL-first. No letter-spacing on Arabic.
 
 ## Colors
 
-Neutrals sampled from the cream fold photograph. Accent sampled from the origami square. Two button faces, not a purple stamp.
+Restrained: inlay neutrals + ballpoint ink + one red. Red is never the page fill.
 
 ### Primary
-- **Accent** (`#E22A28` light, `#E44C43` dark): origami red. Marks the current tool, focus, and the primary run face.
+- **Ink** (`#1E3A8A` light, `#8AA4E0` dark): body text, icons, secondary strokes, drop border. This is the writing color.
+- **Accent** (`#C41A1A` light, `#E24A4A` dark): تنفيذ, current-tool underline, busy progress hairline, focus outline. The only saturated mark besides ink.
 
 ### Semantic
-- **Success** (`#217A4B` / `#4CAE7C`): done state.
-- **Warning** (`#775F47` / `#E3A93D`): busy / in-progress, from the paper's darkest fold.
-- **Danger** (`#9B1218` / `#E5685F`): errors and destructive hover. Darker than the origami red so it is not the primary button.
+- **Success** (`#1F6B45` / `#4CAE7C`): done.
+- **Warning** (`#6B5A2A` / `#C4A24A`): busy / in progress. Must not compete with accent red.
+- **Danger** (`#8E1212` / `#E5685F`): errors and destructive hover. Darker than accent so حذف is not تنفيذ.
 
 ### Neutral
-- **Background** (`#ECE0D0` / `#2A221C`): cream fold stage.
-- **Surface 1** (`#F7EEE2` / `#332C23`): titlebar, strip, status bar.
-- **Surface 2** (`#EDE1D1` / `#3D3429`): secondary hover.
-- **Surface 3** (`#E3D4C2` / `#4A4033`): press wells.
-- **Text** (`#1C1814` / `#3F382F` / `#6A5E52`): ink, secondary, muted.
-- **Border** (`rgba(28,24,20,0.12)` / `0.18`): hairline and strong.
+- **Background / stage** (`#F4F4F2` / `#12141C`): inlay stock. Cool off-white, not cream fold `#ECE0D0`.
+- **Surface 1** (`#FCFBF7` / `#1A1E2A`): titlebar, status bar, secondary button face.
+- **Surface 2 / 3** (`#ECECE8`, `#E2E2DC` / darker navy): hover and press wells.
+- **Rule** (`#B8B8B4` / `#3A4258`): the printed notebook lines and quiet dividers.
+- **Faded ink** (`#6B86C5` / muted night ink): hints, idle status, ghost labels.
 
-**The One Red Rule.** Origami red marks the thing the user is about to do. Selected rows use red-soft with primary text. Secondary is cream paper, never purple.
+**The One Red Rule.** Red is the run and the current tool underline. It is not backgrounds, not drop fills, not secondary buttons, not icons at rest.
+
+**The Lined Stock Rule.** Horizontal rules are a CSS repeating gradient, period 28px, 1px rule on 27px stock. Same gradient on `body`, `.board`, `.sheet`. Titlebar and status bar use Surface 1 with a 1px ink hairline (`border-bottom` / `border-top`), not a cropped photo of the paper.
+
+Light paper CSS (normative):
+
+```css
+--paper: repeating-linear-gradient(
+  to bottom,
+  #F4F4F2 0 27px,
+  #B8B8B4 27px 28px
+);
+```
+
+Dark paper CSS (normative):
+
+```css
+--paper: repeating-linear-gradient(
+  to bottom,
+  #12141C 0 27px,
+  #3A4258 27px 28px
+);
+```
+
+`background-size: auto; background-repeat: repeat; background-position: 0 0;` — never `cover` on this gradient.
+
+Map existing custom properties: `--bg` and `--sheet` to stock; `--ink` / `--text-primary` to ballpoint; `--accent` to TDK red; `--rule` to `#B8B8B4`.
 
 ## Typography
 
-**Display Font:** Amiri for Arabic headings. Playfair Display for every Latin string, including the wordmark.
-**Body Font:** Noto Naskh Arabic for all Arabic UI — buttons, labels, lists, ledes, notes.
-**Latin Font:** Playfair Display only. No other English face.
+**Arabic:** Noto Naskh Arabic for every Arabic string (titles, buttons, labels, ledes, empty state). Weight does the hierarchy. This is the ballpoint.
 
-**Character:** Classical Naskh sitting on photographed paper. Amiri is the title; Naskh is the instrument; Playfair is the Latin.
+**Latin:** Playfair Display for `PDF Studio` (`lang="en"`) and for tabular figures (counts, sizes). No other Latin face.
+
+**Do not** fake handwriting, comic lettering, or a script face. Do not apply `letter-spacing` to Arabic. Wordmark tracking stays `0.01em`.
 
 ### Hierarchy
-- **Display** (Amiri 700, clamp(30–38px) / `--t-2xl`): start title only. Latin in the same line is Playfair.
-- **Headline** (Amiri 700, 24px / `--t-xl`): tool view titles.
-- **Wordmark** (Playfair Display 600, 1rem): "PDF Studio" with `lang="en"`.
-- **Copy** (Noto Naskh Arabic 400, 16px, 1.7): ledes and notes. Max ~62ch.
-- **Body** (Noto Naskh Arabic 400, 14px, 1.55): controls, lists, legend, buttons.
-- **Label** (Noto Naskh Arabic 550, 12px): field labels, status labels, panel titles.
-- **Data** (Playfair Display, tabular-nums): page counts, sizes, scan pager, Latin figures.
-
-**The No Tracking Rule.** Never apply letter-spacing to Arabic. Tracking is allowed only on the Latin wordmark (`0.01em`).
+- **Display** (Noto Naskh 700, clamp ~1.35–2rem): `#start-title` / drop headline «أسقط الملفات» only, in ink, no text-shadow.
+- **Headline** (Noto Naskh 700, 1.5rem): tool view titles.
+- **Wordmark** (Playfair 600, 1rem): PDF Studio.
+- **Copy** (Noto Naskh 400, 16px / 1.7): ledes and notes.
+- **Body** (Noto Naskh 400, 14px): lists, legend, chrome.
+- **Label / micro** (Noto Naskh 550 / 400, 12px / 11px): field labels, status cells, buttons.
+- **Data** (Playfair + Noto, tabular-nums, LTR): numbers.
 
 ## Layout
 
-Flush three-row grid: 40px Electron titlebar, body, 52px status bar. The body is a two-column grid: permanent tool rail (232px, inline-start) then the paper work stage. Native overlay insets the titlebar via `env(titlebar-area-*)`. Linux gets custom min/max/close; Windows overlay and macOS traffic lights stay native. Electron keeps `contextIsolation` and `sandbox`.
+Do not change information architecture. The window is already the instrument.
 
-The rail holds «الإجراءات» with a file count, then every tool. Before files the rows are dimmed (`aria-disabled`, still focusable); clicking one returns to the start stage with an «ارفع الملفات أولاً» toast. After files, allowed tools light up with input/output badges.
+Flush three-row grid:
+1. **Titlebar** 40px (`.sheet__head`): mark + `PDF Studio`, then `#legend-list` (allowed tools only, after files), then theme toggle, then Linux window buttons. Native overlay via `env(titlebar-area-*)`.
+2. **Work** (`.sheet__body` / `#work`): one column. Empty start = centered drop. After files = file list on the same lined stage. Tool views keep their current inner structure (scan canvas, options, etc.) restyled to ink/hairline, not redesigned.
+3. **Status** 52px (`.titleblock`): hidden on empty start (`:has(#view-start.view--active)` stays). Cells: الأداة، الملف، صفحات، الحجم، حفظ باسم، الحالة + تنفيذ. `safe-area-inset-bottom` unchanged.
 
-At `900px` the rail collapses to icon-only (56px). At `640px` it becomes a horizontal strip above the work stage and the status bar drops numeric and state cells.
+No permanent side rail. No iLovePDF tool-card grid. Breakpoints already in CSS (`900px`, `640px`) stay; restyle faces, do not invent a new shell.
 
-**The Keep-the-Instrument Rule.** New tools inherit this topology. Do not introduce a card grid of operations or a left-aligned LTR shell.
+**The Keep-the-Instrument Rule.** New chrome inherits this topology. Density may tighten; regions may not swap.
 
 ## Elevation & Depth
 
-Mostly flat and tonal. Hairlines do the work. Shadows are reserved for floating layers only: dialogs, progress card, toasts.
+Flat. The paper is the window. No drop-shadow on the drop rectangle, no photo lift, no inset paper highlight.
 
 ### Shadow Vocabulary
-- **Sheet:** none — the window is the surface.
-- **Lift** (`0 8px 24px rgba(33,30,22,0.14)`): toasts.
-- **Panel** (`0 16px 48px rgba(33,30,22,0.2)`): progress / dialog card. Dark: `0 16px 48px rgba(0,0,0,0.55)`.
+- **Sheet / drop / buttons:** none.
+- **Lift** (`0 8px 24px rgba(30, 58, 138, 0.12)`): toasts only.
+- **Panel** (`0 16px 48px rgba(18, 20, 28, 0.22)`): progress and dialogs. Dark: `0 16px 48px rgba(0, 0, 0, 0.55)`.
 
-**The Offset-Blur Rule.** Shadows always have offset and blur. No neon halo, no hard `4px 4px 0` stamp, no crop-mark ticks.
+**The Offset-Blur Rule.** If a shadow exists, it has offset and blur. No neon halo, no hard `4px 4px 0` stamp.
+
+Remove `--shadow-head` and `--shadow-foot` from titlebar and status (those existed to sell the fold photograph). Replace with 1px hairlines.
 
 ## Shapes
 
-- Tight chips and checkboxes: 4px (`--radius-sm`).
-- Fields, nav rows, buttons, inputs: 6px (`--radius`).
-- Panels, intake, cards, toasts, dialogs: 8px (`--radius-md`).
-- Window chrome (titlebar, native/Linux window buttons) stays tight.
-- Status uses a 7px semantic dot.
+- Checkboxes / tight wells: 4px.
+- Buttons, inputs, drop, legend rows: 4px (`--radius` / control). Tighter than the old 6–8px origami faces.
+- Dialogs / toasts / progress: 6px.
+- No pill buttons (`999px` reserved for the 7px status dot only).
+- Drop is a **rectangle** (current square-ish size `min(26rem, 68vmin)` may stay) with `border: 1px solid var(--ink)`, transparent fill so the lines show through.
 
 ## Components
 
 ### Buttons
-- **Shape:** 8px radius. Primary and secondary faces are photographed folded paper, not flat fills.
-- **Primary (`.btn--act`):** red folded-paper photograph (`assets/textures/btn-red.jpeg`; dark: `btn-red-dark.jpeg`), cream 12px label. Hover brightens the photo. Disabled `opacity: 0.45` on the same face.
-- **Secondary (`.btn`):** cream folded-paper photograph (`assets/textures/btn-cream.jpeg`; dark: charcoal `btn-cream-dark.jpeg`), ink label. Not purple.
-- **Quiet / ghost:** transparent with a light hairline; no origami face. Titlebar ghost is a 30px square.
-- **Danger:** danger color on a quiet face; not the red origami primary.
-- **Focus:** 2px origami-red outline, 3px offset, 4px red-soft halo. Visible for keyboard.
+- **Shape:** 4px. Flat. `background-image: none` on every `.btn`, `.btn--act`, `.btn--sheet`, `.theme-toggle`.
+- **Primary (`.btn--act`):** fill `#C41A1A`, label `#FCFBF7`, 11–12px Noto Naskh 700. No text-shadow. Hover `#A81616`. Disabled `opacity: 0.45` on the same flat face.
+- **Secondary (`.btn`, `.btn--sheet`, theme toggle):** fill `#FCFBF7`, 1px solid `#1E3A8A`, label ink. Hover fill `#ECECE8`. Theme toggle is a 28px square of the same language, not a cream photo.
+- **Ghost:** transparent, 1px hairline or none; ink-faded.
+- **Danger:** ink-less; danger color on a quiet face — never the red primary.
+- **Focus:** 2px accent outline, 2px offset, 3px `accent-soft` halo. Visible for keyboard.
 
 ### Inputs / Fields
-- Paper fill, 6px radius, strong hairline. Focus: 2px origami-red outline, 2px offset, 4px red-soft halo. Number fields use Playfair Display, LTR, end-aligned. Checkboxes are 15px, 4px radius, red when checked.
+- Surface-1 fill, 4px, 1px `border-strong`. Focus: 2px ink or accent outline (accent when the field commits a run option). Number fields: Playfair, LTR, end-aligned. Checkboxes 15px, 4px, accent when checked.
 
-### Navigation
-- Rail titled **الأدوات**, one vertical list without grouping chrome. Coloured square icon wells stay route-tinted when current. Disabled rows dim to 55% with muted wells but stay focusable. Icon-only under `900px`; horizontal strip under `640px`.
+### Navigation (titlebar legend)
+- Horizontal list of tool names in ink. Current: 2px `#C41A1A` underline, no filled background (or the lightest `accent-soft` if hit-area needs it). Disabled-before-files: 55% opacity, still focusable. Do not introduce colored icon wells that read as a rainbow.
 
 ### Status bar (`.titleblock`)
-- Bottom execute strip: الأداة، الملف، صفحات، الحجم، حفظ باسم، الحالة + Ctrl/⌘ Enter + run. Semantic state dot. Busy shows a thin origami-red progress hairline. `safe-area-inset-bottom` padding. State colour: muted idle, warning busy, success done, danger error.
+- Surface-1 + top 1px ink hairline. Cells separated by 1px rule. Semantic dot 7px. Busy: 2px accent hairline on the top edge (keep the existing `::before` animation, recolor to accent). Execute sits at the inline-end in RTL.
 
-### Intake
-- Empty state: photographed vermilion origami square (`assets/textures/drop-sheet.webp`; dark: `drop-sheet-dark.webp`) on the fold stage (`assets/textures/fold-stage.webp`; dark: `fold-stage-dark.webp`). Hover brightens the photo. No crease SVG.
+### Intake / empty drop (`#hub-drop.intake--sheet`)
+- Remove both `sheet-photo` images.
+- Transparent lined paper showing through; 1px ink border; no box-shadow.
+- Copy in ink (`--ink`), not cream-on-red: glyph, «أسقط الملفات», «أسقط صوراً أو PDF», hint, «تصفّح» as secondary button.
+- Hover / drag-over: border stays ink or shifts to accent; optional `accent-soft` wash. No brightness-on-photo filter.
+- Other `.intake` wells (scan, merge, …): same language — dashed or solid 1px ink on lined paper, not a grey dashed SaaS bucket.
+
+### File list
+- Rows sit on the rules like notebook entries: transparent or surface-1, 1px rule border, ink names. No cream cards.
 
 ### Scan editor
-- Canvas is always the original/display image with draggable corners. Rotate (90°) and colour modes apply instantly via canvas transform/filter in that same window. Corner detection never shows the warped page, export still runs `engine.process`. Live chip (`#scan-preview`) stays on; it does not swap the editor to the extracted result.
+- Behavior unchanged (corners on the original, live rotate/filters). Chrome around the canvas: ink hairlines, lined stage, same buttons as above.
 
 ### Progress / toasts
-- Dim of the window. Card 8px radius, panel shadow, 3px origami-red track. Toasts sit at the inline-end corner; done uses a success icon, error uses danger.
+- Dim the window. Card 6px, panel shadow, 3px accent track. Toasts inline-end. Success / danger icons from the existing sprite, recolored to semantic tokens.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** keep the top action strip + work + status-bar topology.
-- **Do** self-host Amiri, Noto Naskh Arabic, and Playfair Display as local woff2.
-- **Do** use origami red for the thing the user is about to do.
-- **Do** respect `prefers-reduced-motion` (durations collapse to `0.001ms`).
-- **Do** keep `data-theme="blueprint"` as the dark-mode attribute; JavaScript owns the name.
+- **Do** keep drop → titlebar tools → status run, and every existing ID.
+- **Do** draw the stage with the 28px repeating-linear-gradient above.
+- **Do** use ballpoint `#1E3A8A` for writing and TDK `#C41A1A` for run.
+- **Do** self-host Noto Naskh Arabic and Playfair Display; Arabic never gets tracking.
+- **Do** respect `prefers-reduced-motion` (durations already collapse to `0.001ms`).
+- **Do** keep `data-theme="blueprint"` as the dark-mode lock.
 
 ### Don't:
-- **Don't** load fonts from Google Fonts CDN.
-- **Don't** draw crop marks, tiled grids, or ISO drafting frames.
-- **Don't** use process magenta, sage, terracotta, aurora/glass, Bootstrap blue, or violet.
-- **Don't** letter-space Arabic labels.
-- **Don't** put a coloured `border-inline` thicker than 1px on rows, notes, or cards.
-- **Don't** put Amiri on buttons, data, or field labels — those stay Noto Naskh. Latin on those roles is Playfair Display.
-- **Don't** invent a purple or gold button. Secondary is cream folded paper; primary is red folded paper.
-- **Don't** use pill (999px) buttons.
-- **Don't** restyle dark mode as a blueprint or a magenta proofing monitor; it is the dark folded-paper photographs.
+- **Don't** use any raster from `assets/textures/` (fold-stage, drop-sheet, btn-red, btn-cream, or dark variants) in the UI.
+- **Don't** generate or embed new photos, paper grain, cassette shells, tape reels, origami, or gold foils.
+- **Don't** keep Playfair or Amiri on Arabic buttons, labels, or the empty-state title.
+- **Don't** letter-space Arabic, use pill CTAs, or a coloured `border-inline` thicker than 1px on rows.
+- **Don't** ship cream-fold `#ECE0D0`, origami vermilion photography, violet, process teal (iLovePDF), or a midnight transit drench.
+- **Don't** add Google Fonts, a side rail, marketing badges, or a tool-card dashboard.
+- **Don't** treat this as a new product or a new set of screens — it is a reskin of `index.html` as it exists.

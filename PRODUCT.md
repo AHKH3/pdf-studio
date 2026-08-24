@@ -51,20 +51,18 @@ call, no queue, no size ceiling other than the machine's own memory, no paywall.
 
 ## Capabilities and Constraints
 
-Shipping today: images → PDF, merge PDFs, page organiser (insert / delete / rotate / reorder),
-text watermark, page numbering, PDF → images.
-
-Committed for this cycle: document extraction from an existing photograph (perspective correction
-plus enhancement), split, compress, ZIP export for multi-image output.
+Shipping today: document scan (perspective correction + enhancement + upscale), images → PDF,
+merge PDFs, page organiser (insert / delete / rotate / reorder), split (ranges / every-N / extract),
+compress, text watermark, page numbering, PDF → images, sign (draw/name/image/date + flatten),
+protect / unlock (AES-256 via qpdf-wasm), crop, extract embedded images, OCR (Arabic + English
+via local Tesseract.js WASM).
 
 Constraints:
 - 100% local. No cloud service, no telemetry, no paid tier — the app is free.
 - No live camera capture. The scanning feature operates on image files the user already has.
 - Electron security posture must stay `contextIsolation: true`, `sandbox: true`, `nodeIntegration:
   false`, with a narrow preload.
-- pdf-lib cannot encrypt; password protection needs a different local library or is deferred.
-- Known production defects to fix: UI freezes while thumbnailing large PDFs, unbounded memory use,
-  fonts loaded from a Google CDN (breaks offline), dead CSS, no tests.
+- pdf-lib standard fonts lack Arabic; Arabic overlays (watermark, numbering) are drawn as PNG images.
 
 ## Brand Commitments
 

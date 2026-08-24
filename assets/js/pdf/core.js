@@ -1,5 +1,6 @@
 import { PDFJS_WORKER_SRC, THUMB_CACHE_LIMIT, THUMB_MAX_PX } from "../config.js";
 import { encryptedError } from "../lib/errors.js";
+import { yieldToUi } from "../dom.js";
 
 /** @type {any} */
 let pdfjs = null;
@@ -175,8 +176,11 @@ export class PageThumbnails {
     if (inFlight) return inFlight;
 
     // One page at a time: parallel renders on the main thread cause the freeze
-    // this replaces.
+    // this replaces. A UI yield between renders keeps fast scrolling from
+    // stacking a render backlog that blocks the main thread.
     const task = this.queue.then(async () => {
+      if (this.disposed) return "";
+      await yieldToUi();
       if (this.disposed) return "";
       const doc = await this.document();
       const page = await doc.getPage(pageNumber);

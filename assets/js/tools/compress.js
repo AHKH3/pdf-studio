@@ -99,8 +99,10 @@ async function run() {
 
   setState("busy");
   startProgress({ title: "ضغط المستند", desc: "نعيد رسم كل صفحة بدقة أقل." });
+  /** @type {any} */
+  let source = null;
   try {
-    const source = await openDocument(doc.bytes, doc.password);
+    source = await openDocument(doc.bytes, doc.password);
     const target = await PDFDocument.create();
 
     for (let number = 1; number <= source.numPages; number += 1) {
@@ -120,6 +122,7 @@ async function run() {
     }
 
     await source.destroy();
+    source = null;
     throwIfCancelled();
     updateProgress({ percent: 97, desc: "نكتب الملف.", detail: "" });
     const bytes = await target.save();
@@ -137,6 +140,8 @@ async function run() {
   } catch (error) {
     reportFailure(error, "تعذّر الضغط.");
   } finally {
+    // Cancel throws mid-loop; the document must close on every exit path.
+    await source?.destroy?.().catch(() => {});
     endProgress();
   }
 }
