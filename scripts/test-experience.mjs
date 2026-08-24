@@ -5,7 +5,7 @@
 import { friendlyMessage, isEncryptedError, isPasswordError } from "../assets/js/lib/errors.js";
 import { humanSize } from "../assets/js/lib/files.js";
 import { pad, parseRanges, rangesToIndexes, uniqueIndexes } from "../assets/js/lib/ranges.js";
-import { createZip } from "../assets/js/lib/zip.js";
+import { createZip, createZipWriter } from "../assets/js/lib/zip.js";
 
 let failures = 0;
 let checks = 0;
@@ -57,6 +57,32 @@ group("createZip", () => {
   check("stores uncompressed size", view.getUint32(22, true) === payload.length);
   const storedName = zip.slice(30, 30 + nameBytes.length);
   check("round-trips an Arabic file name", Buffer.from(storedName).equals(Buffer.from(nameBytes)));
+});
+
+group("createZipWriter", () => {
+  const writer = createZipWriter();
+  const first = new Uint8Array([9, 8, 7]);
+  const second = new Uint8Array(60000).fill(5);
+  writer.add("أولاً-١.bin", first);
+  writer.add("second.bin", second);
+  const zip = writer.finish();
+  const view = new DataView(zip.buffer, zip.byteOffset, zip.byteLength);
+  check("starts with a local file header", view.getUint32(0, true) === 0x04034b50);
+  check("ends with the central directory record", view.getUint32(zip.length - 22, true) === 0x06054b50);
+  check("records both entries", view.getUint16(zip.length - 22 + 10, true) === 2);
+  check("stores the streamed size", zip.length > second.length);
+  const eocd = zip.length - 22;
+  const centralSize = view.getUint32(eocd + 12, true);
+  const centralStart = view.getUint32(eocd + 16, true);
+  check(
+    "central directory sits after local entries",
+    centralStart + centralSize + 22 === zip.length
+  );
+  const single = createZip([
+    { name: "أولاً-١.bin", data: first },
+    { name: "second.bin", data: second }
+  ]);
+  check("matches one-shot createZip output", Buffer.from(single).equals(Buffer.from(zip)));
 });
 
 group("errors", () => {

@@ -1,6 +1,6 @@
 import { LARGE_DOCUMENT_PAGES } from "../config.js";
 import { el, yieldToUi } from "../dom.js";
-import { baseName, humanSize, isDesktop, saveFile, saveFolder, saveZip } from "../lib/files.js";
+import { baseName, humanSize, isDesktop, saveFile, saveFolder, withExtension } from "../lib/files.js";
 import { PageThumbnails, openDocument, renderPageToBlob } from "../pdf/core.js";
 import { ACTIONS, DocList } from "../ui/doclist.js";
 import { confirmAction, confirmDiscard, confirmReplace } from "../ui/dialog.js";
@@ -8,6 +8,7 @@ import { endProgress, startProgress, throwIfCancelled, toast, updateProgress } f
 import { wireIntake } from "../ui/intake.js";
 import { setName, setRunEnabled, setSource, setState } from "../ui/titleblock.js";
 import { confirmLarge, pad, readPdfFile, reportFailure, reportSave } from "./shared.js";
+import { createZipWriter } from "../lib/zip.js";
 
 /** @type {{ name: string; bytes: Uint8Array; pages: number; size: number; password: string } | null} */
 let doc = null;
@@ -149,13 +150,21 @@ async function run() {
   const kind = format();
   const extension = kind === "jpeg" ? "jpg" : "png";
   const digits = String(doc.pages).length;
+  // Decided before the loop: the folder path must collect every file for one
+  // IPC call; the ZIP path streams page-by-page so only one rendered image
+  // is alive at a time.
+  const useFolder = target() === "folder" && isDesktop;
+  const zip = useFolder ? null : createZipWriter();
+  /** @type {Array<{ name: string; data: Uint8Array }>} */
+  const files = [];
+  let count = 0;
 
   setState("busy");
   startProgress({ title: "تحويل الصفحات إلى صور", desc: `${doc.pages} صفحة بدقة ×${scaleFactor()}.` });
+  /** @type {any} */
+  let source = null;
   try {
-    const source = await openDocument(doc.bytes, doc.password);
-    /** @type {Array<{ name: string; data: Uint8Array }>} */
-    const files = [];
+    source = await openDocument(doc.bytes, doc.password);
 
     for (let number = 1; number <= source.numPages; number += 1) {
       throwIfCancelled();
@@ -164,29 +173,39 @@ async function run() {
       const page = await source.getPage(number);
       const blob = await renderPageToBlob(page, scaleFactor(), `image/${kind}`, kind === "jpeg" ? 0.92 : undefined);
       page.cleanup();
-      files.push({
-        name: `${baseName(doc.name)}-${pad(number, digits)}.${extension}`,
-        data: new Uint8Array(await blob.arrayBuffer())
-      });
+      const data = new Uint8Array(await blob.arrayBuffer());
+      count = number;
+      if (zip) zip.add(`${baseName(doc.name)}-${pad(number, digits)}.${extension}`, data);
+      else files.push({ name: `${baseName(doc.name)}-${pad(number, digits)}.${extension}`, data });
     }
 
     await source.destroy();
+    source = null;
     throwIfCancelled();
-    updateProgress({ percent: 97, desc: "نجهّز ملف ZIP.", detail: `${files.length} صورة` });
-    await yieldToUi();
-    endProgress();
 
     const folderName = el("tb-name").value || `${baseName(doc.name)}-صور`;
-    const useFolder = target() === "folder" && isDesktop;
-    const written = useFolder ? await saveFolder(files, folderName) : await saveZip(files, folderName);
+    let written;
+    if (useFolder) {
+      updateProgress({ percent: 97, desc: "نحفظ الصور في المجلد.", detail: `${count} صورة` });
+      await yieldToUi();
+      endProgress();
+      written = await saveFolder(files, folderName);
+    } else {
+      updateProgress({ percent: 97, desc: "نجهّز ملف ZIP.", detail: `${count} صورة` });
+      await yieldToUi();
+      endProgress();
+      written = await saveFile(zip.finish(), withExtension(folderName, "zip"), "zip");
+    }
     if (written) saved = true;
     reportSave(
       written,
-      useFolder ? `تم تصدير ${files.length} صورة إلى مجلد.` : `تم تصدير ${files.length} صورة في ملف ZIP.`
+      useFolder ? `تم تصدير ${count} صورة إلى مجلد.` : `تم تصدير ${count} صورة في ملف ZIP.`
     );
   } catch (error) {
     reportFailure(error, "تعذّر التحويل.");
   } finally {
+    // Cancel throws mid-loop; the document must close on every exit path.
+    await source?.destroy?.().catch(() => {});
     endProgress();
   }
 }
