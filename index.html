@@ -104,49 +104,26 @@
         <main class="work" id="work">
           <section id="view-start" class="view view--active" aria-labelledby="start-title" role="region">
             <div class="start">
-              <!-- Hero: empty state -->
-              <div id="hub-drop" class="hero-intake" data-kind="any" aria-label="أسقط الملفات أو تصفّح — على جهازك" tabindex="0" role="button">
-                <div class="hero-intake__card">
-                  <div class="hero-intake__badge">
-                    <svg class="icon" aria-hidden="true"><use href="#icon-lock"></use></svg>
-                    محلي 100% · لا يغادر جهازك
+              <!-- Field: لا يوجد مربع — الشاشة كلها هي مكان الإسقاط -->
+              <div id="hub-drop" class="field-drop" data-kind="any" aria-label="أسقط الملفات" tabindex="0" role="button">
+                <div class="field-drop__glow" aria-hidden="true"></div>
+                <div class="field-drop__center">
+                  <div class="field-drop__iconwrap" aria-hidden="true">
+                    <svg class="icon field-drop__icon" aria-hidden="true"><use href="#icon-upload"></use></svg>
                   </div>
-                  <div class="hero-intake__iconwrap" aria-hidden="true">
-                    <svg class="icon hero-intake__icon" aria-hidden="true"><use href="#icon-upload"></use></svg>
-                  </div>
-                  <h1 class="hero-intake__title" id="start-title" tabindex="-1">أسقط ملفاتك هنا</h1>
-                  <p class="hero-intake__subtitle">اسحب وأفلت الصور أو ملفات PDF — المعالجة كلها على جهازك</p>
-                  <div class="hero-intake__formats" aria-label="الصيغ المدعومة">
-                    <span class="format-pill"><svg class="icon" aria-hidden="true"><use href="#icon-file"></use></svg> PDF</span>
-                    <span class="format-pill"><svg class="icon" aria-hidden="true"><use href="#icon-images"></use></svg> JPG</span>
-                    <span class="format-pill">PNG</span>
-                    <span class="format-pill">WEBP</span>
-                    <span class="format-pill">HEIC</span>
-                  </div>
-                  <button id="hub-browse" type="button" class="btn btn--act btn--lg hero-intake__cta">
+                  <h1 id="start-title" class="field-drop__title" tabindex="-1">أسقط الملفات هنا</h1>
+                  <button id="hub-browse" type="button" class="btn btn--act field-drop__cta">
                     <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg>
                     تصفّح الملفات
                   </button>
-                  <p class="hero-intake__hint">متعدد · مختلط · اسحب مجلدًا كاملًا · حتى مئات الملفات</p>
-                </div>
-                <div class="hero-intake__features" aria-label="أهم الأدوات">
-                  <div class="feature-mini"><svg class="icon" aria-hidden="true"><use href="#icon-merge"></use></svg><span>دمج</span></div>
-                  <div class="feature-mini"><svg class="icon" aria-hidden="true"><use href="#icon-split"></use></svg><span>تقسيم</span></div>
-                  <div class="feature-mini"><svg class="icon" aria-hidden="true"><use href="#icon-compress"></use></svg><span>ضغط</span></div>
-                  <div class="feature-mini"><svg class="icon" aria-hidden="true"><use href="#icon-scan"></use></svg><span>مسح ضوئي</span></div>
-                  <div class="feature-mini"><svg class="icon" aria-hidden="true"><use href="#icon-watermark"></use></svg><span>علامة</span></div>
-                  <div class="feature-mini"><svg class="icon" aria-hidden="true"><use href="#icon-organize"></use></svg><span>ترتيب</span></div>
                 </div>
               </div>
               <input id="hub-input" type="file" accept="image/*,application/pdf,.pdf,.heic,.heif" multiple hidden />
 
-              <!-- Files: has-files state -->
+              <!-- Files: has-files state — بلا شروحات -->
               <div id="hub-panel" class="files-panel" hidden>
                 <div class="files-panel__head">
-                  <div class="files-panel__titlewrap">
-                    <h2 class="files-panel__title" id="hub-mix">الملفات</h2>
-                    <p class="files-panel__subtitle">اسحب لإعادة الترتيب · اختر أداة من الشريط العلوي للمتابعة</p>
-                  </div>
+                  <h2 class="files-panel__title" id="hub-mix">الملفات</h2>
                   <div class="files-panel__actions">
                     <button id="hub-add" type="button" class="btn">
                       <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> إضافة
@@ -160,12 +137,6 @@
                   </div>
                 </div>
                 <div id="hub-list" class="doclist files-panel__list"></div>
-                <div class="files-panel__foot">
-                  <div class="files-panel__hint">
-                    <svg class="icon" aria-hidden="true"><use href="#icon-arrow"></use></svg>
-                    تلميح: الأدوات في الأعلى تُفعَّل تلقائيًا حسب ملفاتك
-                  </div>
-                </div>
                 <div id="hub-actions" hidden></div>
               </div>
             </div>

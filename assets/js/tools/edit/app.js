@@ -215,11 +215,17 @@ function renderLayers() {
     const row = document.createElement("div");
     row.className = `edit-layer-row${obj.id === session.selectedId ? " is-selected" : ""}`;
     row.dataset.id = obj.id;
-    const iconMap = { text: "icon-file", ink: "icon-sign", shape: "icon-crop", image: "icon-images", select: "icon-quad" };
-    const labelMap = { text: obj.text ? `نص: ${String(obj.text).slice(0, 18)}` : "نص", ink: "قلم", shape: obj.type === "shape" ? "شكل" : "شكل", image: obj.label || "صورة" };
+    row.draggable = true;
+    const iconMap = { text: "icon-file", ink: "icon-sign", shape: "icon-crop", image: "icon-images" };
+    const labelMap = {
+      text: obj.text ? `نص: ${String(obj.text).trim().slice(0, 20) || "نص"}` : "نص فارغ",
+      ink: "رسم حر",
+      shape: obj.kind === "ellipse" ? "دائرة" : obj.kind === "triangle" ? "مثلث" : "مستطيل",
+      image: obj.label ? `صورة: ${obj.label.slice(0, 16)}` : "صورة"
+    };
     const icon = iconMap[obj.type] || "icon-file";
     const label = labelMap[obj.type] || obj.type;
-    row.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${icon}"></use></svg><span class="edit-layer-row__name">${label}</span><button class="edit-layer-row__del" aria-label="حذف" data-del="${obj.id}"><svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg></button>`;
+    row.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#icon-grip"></use></svg><svg class="icon" aria-hidden="true"><use href="#${icon}"></use></svg><span class="edit-layer-row__name">${label}</span><button class="edit-layer-row__del" aria-label="حذف" data-del="${obj.id}"><svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg></button>`;
     row.addEventListener("click", (e) => {
       const del = e.target.closest("[data-del]");
       if (del) {
@@ -231,24 +237,41 @@ function renderLayers() {
       session.selectedId = obj.id;
       refresh(false);
     });
+    row.addEventListener("dragstart", (e) => {
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", obj.id);
+      row.style.opacity = "0.5";
+    });
+    row.addEventListener("dragend", () => { row.style.opacity = ""; });
+    row.addEventListener("dragover", (e) => e.preventDefault());
+    row.addEventListener("drop", (e) => {
+      e.preventDefault();
+      const draggedId = e.dataTransfer.getData("text/plain");
+      if (!draggedId || draggedId === obj.id) return;
+      const draggedIndex = session.objects.findIndex((o) => o.id === draggedId && o.pageIndex === session.pageIndex);
+      const targetIndex = session.objects.findIndex((o) => o.id === obj.id && o.pageIndex === session.pageIndex);
+      if (draggedIndex < 0 || targetIndex < 0) return;
+      const [dragged] = session.objects.splice(draggedIndex, 1);
+      const newTarget = session.objects.findIndex((o) => o.id === obj.id && o.pageIndex === session.pageIndex);
+      session.objects.splice(newTarget, 0, dragged);
+      session.saved = false;
+      pushHistory();
+      refresh();
+    });
     host.append(row);
   }
 }
 
 function updateZoomLabel() {
   if (session.ui?.zoomLabel) session.ui.zoomLabel.textContent = `${Math.round(session.zoom * 100)}%`;
-  if (session.ui?.board) session.ui.board.style.transform = `scale(${session.zoom})`;
-  if (session.ui?.board) session.ui.board.style.transformOrigin = "top center";
 }
 
 function setZoom(value) {
   session.zoom = Math.max(0.5, Math.min(2.5, value));
   const board = session.ui?.board;
-  const wrap = session.ui?.wrap;
-  if (board && wrap) {
-    board.style.zoom = String(session.zoom);
-    // fallback for transform
+  if (board) {
     board.style.transform = `scale(${session.zoom})`;
+    board.style.transformOrigin = "top center";
   }
   updateZoomLabel();
 }
@@ -308,13 +331,17 @@ function applyInspectorToSelection() {
 }
 
 function createObject(partial) {
+  if (!session.board || !session.board.visualWidth || !session.board.visualHeight) {
+    toast("انتظر اكتمال تحميل الصفحة.", "info");
+    return;
+  }
   const obj = {
     id: uid("edit"),
     rotation: 0,
     ...partial
   };
   pruneEmptyText(session.selectedId, obj.id);
-  if (session.board) clampBox(obj, session.board.visualWidth || 400, session.board.visualHeight || 400);
+  clampBox(obj, session.board.visualWidth, session.board.visualHeight);
   if (obj.type === "image") obj.aspect = obj.width / Math.max(1, obj.height);
   breakChange();
   session.objects.push(obj);
