@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="PDF Studio — ارفع صوراً أو PDF، ثم اختر إجراءً. كل شيء على جهازك." />
+  <meta name="description" content="PDF Studio — أسقط صوراً أو PDF، ثم اختر إجراءً. كل شيء على جهازك." />
   <meta name="color-scheme" content="light dark" />
   <title>PDF Studio — استوديو المستندات</title>
   <link rel="icon" type="image/png" sizes="192x192" href="assets/branding/app-icon-192.png" />
@@ -13,14 +13,20 @@
 
 <body>
 <!--
-  DIRECTION CONTRACT — Orizuru sheet
-  THESIS: Empty window is one photographed origami square on photographed fold-paper; files unlock a top action strip. Refuses SaaS tool-card grids and a permanent side rail.
-  OWN-WORLD: cream folded-paper photograph as the stage; vermilion origami photograph as the drop sheet. Dark mode uses the dark fold, dark square, and dark button photographs. Primary is the red folded-paper button; secondary is the cream (light) or charcoal (dark) folded-paper button. Sumi ink. No violet, no gold, no crease SVG.
-  STORY: Drop files on the sheet. Only allowed actions appear. Run from the status crease. Nothing leaves the machine.
-  FIRST VIEWPORT: 40px titlebar (cropped fold-paper strip, PDF Studio, theme square); fold-paper stage; centered origami photo; after files the allowed actions sit in the titlebar, not a second strip; 52px status bar with every cell and disabled تنفيذ.
-  FORM: orizuru crane sequence fused to the Operate shell; seed e0a103d9; challenger paper-folds-pleats-deployable-orizuru-crane-sequence.
-  FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+  DIRECTION CONTRACT — Lumen Glow v2 (evolved Aurora 58677f4)
+  THESIS: نفس روح Aurora الأصلية — أبيض نقي / أسود نقي + جلو هادئ واحد Indigo. لا بيج، لا ورق، لا صور. زجاج خفيف blur(20px) + هالتان Indigo ضبابيتان فقط.
+  TOKENS: --bg #FFFFFF / #050507, --surface-1 rgba(255,255,255,0.72/0.06), --accent #4F46E5/#6366F1, --accent-glow 0.28/0.35. Cairo/Inter.
+  STORY: Aurora v1 كانت قوس قزح وblur ثقيل. Lumen v2 تهدّئ: هالة واحدة، blur أخف، بطاقات 28px/20px، حركة -4px لا -8px.
+  SOURCES: docs/design-aurora-legacy.md (الأصل حرفيًا) + docs/design-system-lumen.md (المطوّر).
+  FIRST VIEWPORT: هالة هادئة خلف pill nav عائم؛ هيرو واحد centered بعنوان كبير + زر تصفّح وحيد؛ الأدوات تظهر كـ pills في الشريط العلوي بعد الإسقاط.
+  FORM: evolution not rejection — نفس الجلو البسيط منضج.
 -->
+  <div class="aurora" aria-hidden="true">
+    <div class="aurora__blob aurora__blob--1"></div>
+    <div class="aurora__blob aurora__blob--2"></div>
+  </div>
+  <div class="glass-noise" aria-hidden="true"></div>
+
   <a class="skip-link" href="#work">تخطٍّ إلى مساحة العمل</a>
 
   <svg class="sprite" aria-hidden="true">
@@ -54,6 +60,7 @@
     <symbol id="icon-quad" viewBox="0 0 24 24"><path d="M18.5 8C18.814 9.11421 19 10.4992 19 12C19 13.5008 18.814 14.8858 18.5 16M5.5 8C5.18604 9.11421 5 10.4992 5 12C5 13.5008 5.18604 14.8858 5.5 16M8 5.5C9.11421 5.18604 10.4992 5 12 5C13.5008 5 14.8858 5.18604 16 5.5M8 18.5C9.11421 18.814 10.4992 19 12 19C13.5008 19 14.8858 18.814 16 18.5"/><path d="M4.60982 7.96157C4.80302 8 5.03534 8 5.5 8C5.96466 8 6.19698 8 6.39018 7.96157C7.18356 7.80376 7.80376 7.18356 7.96157 6.39018C8 6.19698 8 5.96466 8 5.5C8 5.03534 8 4.80302 7.96157 4.60982C7.80376 3.81644 7.18356 3.19624 6.39018 3.03843C6.19698 3 5.96466 3 5.5 3C5.03534 3 4.80302 3 4.60982 3.03843C3.81644 3.19624 3.19624 3.81644 3.03843 4.60982C3 4.80302 3 5.03534 3 5.5C3 5.96466 3 6.19698 3.03843 6.39018C3.19624 7.18356 3.81644 7.80376 4.60982 7.96157Z"/><path d="M17.6098 7.96157C17.803 8 18.0353 8 18.5 8C18.9647 8 19.197 8 19.3902 7.96157C20.1836 7.80376 20.8038 7.18356 20.9616 6.39018C21 6.19698 21 5.96466 21 5.5C21 5.03534 21 4.80302 20.9616 4.60982C20.8038 3.81644 20.1836 3.19624 19.3902 3.03843C19.197 3 18.9647 3 18.5 3C18.0353 3 17.803 3 17.6098 3.03843C16.8164 3.19624 16.1962 3.81644 16.0384 4.60982C16 4.80302 16 5.03534 16 5.5C16 5.96466 16 6.19698 16.0384 6.39018C16.1962 7.18356 16.8164 7.80376 17.6098 7.96157Z"/><path d="M4.60982 20.9616C4.80302 21 5.03534 21 5.5 21C5.96466 21 6.19698 21 6.39018 20.9616C7.18356 20.8038 7.80376 20.1836 7.96157 19.3902C8 19.197 8 18.9647 8 18.5C8 18.0353 8 17.803 7.96157 17.6098C7.80376 16.8164 7.18356 16.1962 6.39018 16.0384C6.19698 16 5.96466 16 5.5 16C5.03534 16 4.80302 16 4.60982 16.0384C3.81644 16.1962 3.19624 16.8164 3.03843 17.6098C3 17.803 3 18.0353 3 18.5C3 18.9647 3 19.197 3.03843 19.3902C3.19624 20.1836 3.81644 20.8038 4.60982 20.9616Z"/><path d="M17.6098 20.9616C17.803 21 18.0353 21 18.5 21C18.9647 21 19.197 21 19.3902 20.9616C20.1836 20.8038 20.8038 20.1836 20.9616 19.3902C21 19.197 21 18.9647 21 18.5C21 18.0353 21 17.803 20.9616 17.6098C20.8038 16.8164 20.1836 16.1962 19.3902 16.0384C19.197 16 18.9647 16 18.5 16C18.0353 16 17.803 16 17.6098 16.0384C16.8164 16.1962 16.1962 16.8164 16.0384 17.6098C16 17.803 16 18.0353 16 18.5C16 18.9647 16 19.197 16.0384 19.3902C16.1962 20.1836 16.8164 20.8038 17.6098 20.9616Z"/></symbol>
     <symbol id="icon-lock" viewBox="0 0 24 24"><path d="M12 16.5V14.5"/><path d="M4.2678 18.8447C4.49268 20.515 5.87612 21.8235 7.55965 21.9009C8.97627 21.966 10.4153 22 12 22C13.5847 22 15.0237 21.966 16.4403 21.9009C18.1239 21.8235 19.5073 20.515 19.7322 18.8447C19.8789 17.7547 20 16.6376 20 15.5C20 14.3624 19.8789 13.2453 19.7322 12.1553C19.5073 10.485 18.1239 9.17649 16.4403 9.09909C15.0237 9.03397 13.5847 9 12 9C10.4153 9 8.97627 9.03397 7.55965 9.09909C5.87612 9.17649 4.49268 10.485 4.2678 12.1553C4.12104 13.2453 3.99999 14.3624 3.99999 15.5C3.99999 16.6376 4.12104 17.7547 4.2678 18.8447Z"/><path d="M7.5 9V6.5C7.5 4.01472 9.51472 2 12 2C14.4853 2 16.5 4.01472 16.5 6.5V9"/></symbol>
     <symbol id="icon-sign" viewBox="0 0 24 24"><path d="M4 20.5H20"/><path d="M14.2 4.8L18.4 9L9.5 17.9H5.3V13.7L14.2 4.8Z"/><path d="M12.7 6.3L16.9 10.5"/></symbol>
+    <symbol id="icon-edit" viewBox="0 0 24 24"><path d="M16.4249 4.60509L17.4149 3.6151C18.2351 2.79497 19.5648 2.79497 20.3849 3.6151C21.205 4.43524 21.205 5.76493 20.3849 6.58507L19.3949 7.57506M16.4249 4.60509L9.76558 11.2644C9.25807 11.772 8.89804 12.4078 8.72397 13.1041L8 16L10.8959 15.276C11.5922 15.102 12.228 14.7419 12.7356 14.2344L19.3949 7.57506M16.4249 4.60509L19.3949 7.57506"/><path d="M18.9999 13.5C18.9999 16.7875 18.9999 18.4312 18.092 19.5376C17.9258 19.7401 17.7401 19.9258 17.5375 20.092C16.4312 21 14.7874 21 11.4999 21H11C7.22876 21 5.34316 21 4.17159 19.8284C3.00003 18.6569 3 16.7712 3 13V12.5C3 9.21252 3 7.56879 3.90794 6.46244C4.07417 6.2599 4.2599 6.07417 4.46244 5.90794C5.56879 5 7.21252 5 10.5 5"/></symbol>
     <symbol id="icon-win-min" viewBox="0 0 12 12"><path d="M2.5 6H9.5"/></symbol>
     <symbol id="icon-win-max" viewBox="0 0 12 12"><rect x="2.75" y="2.75" width="6.5" height="6.5" rx="0.6"/></symbol>
   </svg>
@@ -70,7 +77,7 @@
 
         <nav class="legend titlebar-nodrag" aria-label="إجراءات المستند">
           <h2 class="legend__title sr-only" id="legend-title">الإجراءات</h2>
-          <p class="legend__lede sr-only" id="legend-lede">ارفع ملفات أولاً</p>
+          <p class="legend__lede sr-only" id="legend-lede">أسقط ملفات أولاً</p>
           <ul class="legend__list" id="legend-list"></ul>
         </nav>
 
@@ -96,13 +103,11 @@
         <main class="work" id="work">
           <section id="view-start" class="view view--active" aria-labelledby="start-title" role="region">
             <div class="start">
-              <div id="hub-drop" class="intake intake--sheet" data-kind="any">
-                <img class="sheet-photo sheet-photo--day" src="assets/textures/drop-sheet.webp" alt="" />
-                <img class="sheet-photo sheet-photo--night" src="assets/textures/drop-sheet-dark.webp" alt="" />
+              <div id="hub-drop" class="intake intake--sheet" data-kind="any" aria-label="أسقط الملفات أو تصفّح — على جهازك">
                 <div class="sheet-copy">
-                  <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-upload"></use></svg>
+                  <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-file"></use></svg>
+                  <p class="intake__local">محلي · على جهازك — لا يغادر الملف</p>
                   <h1 class="start__title" id="start-title" tabindex="-1">أسقط الملفات</h1>
-                  <p class="intake__title">أسقط صوراً أو PDF</p>
                   <p class="intake__hint">متعدد · مختلط · JPG · PNG · PDF</p>
                   <button id="hub-browse" type="button" class="btn btn--sheet">
                     تصفّح
@@ -663,6 +668,10 @@
 
           <section id="view-sign" class="view" aria-labelledby="sign-title" role="region" hidden>
             <h2 class="view__title" id="sign-title" tabindex="-1">توقيع</h2>
+          </section>
+
+          <section id="view-edit" class="view" aria-labelledby="edit-title" role="region" hidden>
+            <h2 class="view__title" id="edit-title" tabindex="-1">تحرير</h2>
           </section>
 
           <section id="view-protect" class="view" aria-labelledby="protect-title" role="region" hidden>

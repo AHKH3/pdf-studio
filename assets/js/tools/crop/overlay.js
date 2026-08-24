@@ -48,10 +48,12 @@ const STYLE_TEXT = `
 }
 #view-crop .crop-handle {
   position: absolute;
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
   background: var(--sheet);
   border: 2px solid var(--act);
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
   box-sizing: border-box;
   transform: translate(-50%, -50%);
   pointer-events: auto;

@@ -37,7 +37,8 @@ const ICON_MAP = {
   "icon-enhance": "MagicWand02Icon",
   "icon-contrast": "ContrastIcon",
   "icon-quad": "VectorSquareIcon",
-  "icon-lock": "SquareLock02Icon"
+  "icon-lock": "SquareLock02Icon",
+  "icon-edit": "PencilEdit02Icon"
 };
 
 const STRIP_ATTRS = new Set(["stroke", "strokeWidth", "strokeLinecap", "strokeLinejoin", "key"]);

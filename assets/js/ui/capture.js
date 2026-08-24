@@ -63,6 +63,7 @@ const SINGLE_PDF = [
   "numbers",
   "rasterize",
   "sign",
+  "edit",
   "protect",
   "crop",
   "extract-images",

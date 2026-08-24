@@ -85,7 +85,7 @@ function syncLegendChrome() {
   const title = el("legend-title");
   const lede = el("legend-lede");
   if (title) title.textContent = "الإجراءات";
-  if (lede) lede.textContent = hasCapture() ? `${captureFiles().length} ملف` : "ارفع ملفات أولاً";
+  if (lede) lede.textContent = hasCapture() ? `${captureFiles().length} ملف` : "أسقط ملفات أولاً";
 }
 
 function buildLegend() {
@@ -206,7 +206,7 @@ export function initRouter() {
     if (!(trigger instanceof HTMLElement)) return;
     event.preventDefault();
     if (trigger.getAttribute("aria-disabled") === "true") {
-      toast("ارفع الملفات أولاً، ثم اختر الإجراء.", "info");
+      toast("أسقط الملفات أولاً، ثم اختر الإجراء.", "info");
       route("start");
       return;
     }

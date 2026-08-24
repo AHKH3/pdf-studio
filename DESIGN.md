@@ -1,305 +1,155 @@
 ---
 name: PDF Studio
-description: Arabic-first local PDF workbench. Lined inlay stock, ballpoint ink, one printed red stripe. No photographs.
+description: Arabic-first local PDF workbench. Lumen Glow v2 — white / black + single indigo halo. Evolution of Aurora 58677f4.
 colors:
-  accent: "#C41A1A"
-  accent-hover: "#A81616"
-  accent-hi: "#D32F2F"
-  accent-deep: "#8E1212"
-  accent-soft: "rgba(196, 26, 26, 0.10)"
-  accent-contrast: "#FCFBF7"
-  ink: "#1E3A8A"
-  ink-2: "#2B4C7E"
-  ink-faded: "#6B86C5"
-  bg: "#F4F4F2"
-  surface-1: "#FCFBF7"
-  surface-2: "#ECECE8"
-  surface-3: "#E2E2DC"
-  text-primary: "#1E3A8A"
-  text-secondary: "#2B4C7E"
-  text-muted: "#6B86C5"
-  rule: "#B8B8B4"
-  rule-strong: "#A6A6A6"
-  border-subtle: "rgba(30, 58, 138, 0.16)"
-  border-strong: "rgba(30, 58, 138, 0.28)"
-  danger: "#8E1212"
-  warning: "#6B5A2A"
-  success: "#1F6B45"
-  night-bg: "#12141C"
-  night-surface: "#1A1E2A"
-  night-rule: "#3A4258"
-  night-text: "#C5D0F0"
-  night-ink: "#8AA4E0"
-  night-accent: "#E24A4A"
+  accent: "#4F46E5"
+  accent-hover: "#4338CA"
+  accent-hi: "#6366F1"
+  accent-deep: "#3730A3"
+  accent-soft: "rgba(79,70,229,0.10)"
+  accent-glow: "rgba(99,102,241,0.28)"
+  accent-contrast: "#FFFFFF"
+  ink: "#0F172A"
+  ink-2: "#475569"
+  ink-faded: "#64748B"
+  bg: "#FFFFFF"
+  bg-wash: "#F8F9FF"
+  surface-1: "rgba(255,255,255,0.72)"
+  surface-2: "rgba(255,255,255,0.88)"
+  surface-3: "#FFFFFF"
+  text-primary: "#0F172A"
+  text-secondary: "#475569"
+  text-muted: "#64748B"
+  rule: "rgba(15,23,42,0.06)"
+  rule-strong: "rgba(15,23,42,0.10)"
+  border-glow: "rgba(99,102,241,0.18)"
+  danger: "#E11D48"
+  warning: "#A16207"
+  success: "#059669"
+  night-bg: "#050507"
+  night-surface-1: "rgba(255,255,255,0.06)"
+  night-surface-2: "rgba(255,255,255,0.10)"
+  night-text: "#F8FAFC"
+  night-accent: "#6366F1"
+  night-glow: "rgba(99,102,241,0.35)"
 typography:
   display:
-    fontFamily: "Noto Naskh Arabic, serif"
-    fontSize: "clamp(1.35rem, 4.6vmin, 2rem)"
-    fontWeight: 700
-    lineHeight: 1.35
+    fontFamily: "Cairo, Noto Naskh Arabic, sans-serif"
+    fontSize: "clamp(2rem, 5vw, 3rem)"
+    fontWeight: 800
+    lineHeight: 1.15
   headline:
-    fontFamily: "Noto Naskh Arabic, serif"
-    fontSize: "1.5rem"
-    fontWeight: 700
-    lineHeight: 1.35
+    fontFamily: "Cairo, Noto Naskh Arabic, sans-serif"
+    fontSize: "1.45rem"
+    fontWeight: 800
+    lineHeight: 1.2
   wordmark:
-    fontFamily: "Playfair Display, serif"
+    fontFamily: "Inter, sans-serif"
     fontSize: "1rem"
-    fontWeight: 600
-    letterSpacing: "0.01em"
+    fontWeight: 700
+    letterSpacing: "-0.01em"
     lineHeight: 1
-  copy:
-    fontFamily: "Noto Naskh Arabic, serif"
-    fontSize: "1rem"
-    fontWeight: 400
-    lineHeight: 1.7
   body:
-    fontFamily: "Noto Naskh Arabic, serif"
-    fontSize: "0.875rem"
+    fontFamily: "Inter, Cairo, sans-serif"
+    fontSize: "0.92rem"
     fontWeight: 400
-    lineHeight: 1.55
+    lineHeight: 1.6
   label:
-    fontFamily: "Noto Naskh Arabic, serif"
-    fontSize: "0.75rem"
-    fontWeight: 550
-    lineHeight: 1.3
-  micro:
-    fontFamily: "Noto Naskh Arabic, serif"
-    fontSize: "0.6875rem"
-    fontWeight: 400
+    fontFamily: "Inter, Cairo, sans-serif"
+    fontSize: "0.78rem"
+    fontWeight: 600
     lineHeight: 1.3
   data:
-    fontFamily: "Playfair Display, Noto Naskh Arabic, serif"
-    fontSize: "0.75rem"
+    fontFamily: "Inter, monospace"
+    fontSize: "0.78rem"
     fontWeight: 400
     lineHeight: 1.3
 rounded:
-  xs: "2px"
-  sm: "4px"
-  control: "4px"
-  panel: "6px"
-  sheet: "6px"
-  pill: "999px"
+  xs: "6px"
+  sm: "10px"
+  control: "999px"
+  panel: "20px"
+  xl: "28px"
 spacing:
   gap: "8px"
   pad: "16px"
-  titlebar: "40px"
-  status: "52px"
-  rule-period: "28px"
+  titlebar: "56px"
+  status: "56px"
 components:
   button-primary:
     backgroundColor: "{colors.accent}"
-    textColor: "{colors.accent-contrast}"
-    rounded: "{rounded.control}"
-    padding: "8px 18px"
-    typography: "{typography.micro}"
-  button-primary-hover:
-    backgroundColor: "{colors.accent-hover}"
-    textColor: "{colors.accent-contrast}"
-    rounded: "{rounded.control}"
-  button-secondary:
-    backgroundColor: "{colors.surface-1}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.control}"
-    padding: "8px 16px"
+    textColor: "#FFFFFF"
+    rounded: "999px"
+    padding: "11px 20px"
+    shadow: "0 4px 14px rgba(99,102,241,0.28)"
   button-ghost:
-    backgroundColor: "transparent"
-    textColor: "{colors.ink-faded}"
-    rounded: "{rounded.control}"
-    padding: "6px"
-    size: "28px"
-  button-danger:
-    backgroundColor: "transparent"
-    textColor: "{colors.danger}"
-    rounded: "{rounded.control}"
-  input:
-    backgroundColor: "{colors.surface-1}"
+    backgroundColor: "rgba(255,255,255,0.72)"
     textColor: "{colors.ink}"
-    rounded: "{rounded.control}"
-    padding: "7px 9px"
-    height: "32px"
-  nav-current:
-    backgroundColor: "transparent"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.control}"
-    padding: "8px"
+    rounded: "999px"
+    padding: "11px 20px"
+    border: "1px solid rgba(15,23,42,0.06)"
 ---
 
-# Design System: PDF Studio
+# Design System: PDF Studio — Lumen Glow v2
 
 ## Overview
 
-**Creative North Star: «ورقة مسطّرة وحبر أزرق» — Lined inlay, ballpoint ink**
+**North Star: «جلو بسيط ناضج» — Evolution of Aurora 58677f4**
 
-PDF Studio is a sheet of ruled inlay stock with writing in ballpoint blue. The only printed color besides the ink is one TDK-red stripe: the thing the user is about to run. There are no photographs, no paper textures, no origami, no cassette object. Lines, fills, and 1px hairlines are CSS (or SVG for icons). Arabic is the native language of the chrome.
+نفس الجوهر الذي طلبته: **أبيض نقي للفاتح / أسود نقي للداكن + جلو هادئ واحد Indigo**. Lumen v2 ينضّج Aurora الأصلي لا يلغيه: يهدّئ قوس القزح، يخفّف الـ blur، ويوحّد التفاعل حول هالة واحدة.
 
-This file replaces the previous Orizuru / photographed-fold world. It is the brief for implementation. Product behavior, routes, copy, and element IDs stay as they are in `index.html` today.
-
-**Apply (for the implementing agent):**
-- Restyle only. Do not add pages, tools, steppers, a side rail, or a card grid of operations.
-- Keep every existing control ID (`hub-drop`, `hub-browse`, `hub-input`, `theme-toggle`, `tb-run` / `.btn--act`, tool view IDs).
-- Touch visual chrome: `assets/css/app.css` and the two `<img class="sheet-photo">` nodes in `index.html` (delete them). Do not rewrite tool JS.
-- Delete photographic materials from CSS: `--paper`, `--paper-head`, `--paper-foot`, `--btn-red`, `--btn-cream` must not be `url(...)`. Map them to flat color + the lined gradient below.
-- Update the HTML direction-contract comment to this north star (seed `b42e33ef`, chosen `vernacular-ephemera-cassette-j-card`).
-- Self-hosted fonts only: Noto Naskh Arabic (all Arabic), Playfair Display (Latin wordmark and figures). Do not add font files or a CDN. Do not use Amiri in this world.
-- `data-theme="blueprint"` remains the dark-mode attribute; JavaScript owns the name.
-
-**Key Characteristics:**
-- Stage = CSS lined paper (`repeating-linear-gradient`), not an image.
-- Drop = a rectangle with a 1px ballpoint hairline on that paper. No photo, no square origami.
-- Primary = flat TDK red fill. Secondary = off-white fill + 1px ballpoint hairline.
-- After files, allowed tools appear in the titlebar as a ballpoint list; the current tool is a 2px red underline, not a filled chip.
-- RTL-first. No letter-spacing on Arabic.
+- **مرجع الأصل:** `docs/design-aurora-legacy.md` — توثيق حرفي لكوميت `58677f4` (الصفحة الواحدة الأولى، الزجاج + Aurora بثلاث هالات).
+- **المرجع المطوّر:** `docs/design-system-lumen.md` — المواصفة التنفيذية الكاملة.
 
 ## Colors
 
-Restrained: inlay neutrals + ballpoint ink + one red. Red is never the page fill.
-
-### Primary
-- **Ink** (`#1E3A8A` light, `#8AA4E0` dark): body text, icons, secondary strokes, drop border. This is the writing color.
-- **Accent** (`#C41A1A` light, `#E24A4A` dark): تنفيذ, current-tool underline, busy progress hairline, focus outline. The only saturated mark besides ink.
-
-### Semantic
-- **Success** (`#1F6B45` / `#4CAE7C`): done.
-- **Warning** (`#6B5A2A` / `#C4A24A`): busy / in progress. Must not compete with accent red.
-- **Danger** (`#8E1212` / `#E5685F`): errors and destructive hover. Darker than accent so حذف is not تنفيذ.
-
-### Neutral
-- **Background / stage** (`#F4F4F2` / `#12141C`): inlay stock. Cool off-white, not cream fold `#ECE0D0`.
-- **Surface 1** (`#FCFBF7` / `#1A1E2A`): titlebar, status bar, secondary button face.
-- **Surface 2 / 3** (`#ECECE8`, `#E2E2DC` / darker navy): hover and press wells.
-- **Rule** (`#B8B8B4` / `#3A4258`): the printed notebook lines and quiet dividers.
-- **Faded ink** (`#6B86C5` / muted night ink): hints, idle status, ghost labels.
-
-**The One Red Rule.** Red is the run and the current tool underline. It is not backgrounds, not drop fills, not secondary buttons, not icons at rest.
-
-**The Lined Stock Rule.** Horizontal rules are a CSS repeating gradient, period 28px, 1px rule on 27px stock. Same gradient on `body`, `.board`, `.sheet`. Titlebar and status bar use Surface 1 with a 1px ink hairline (`border-bottom` / `border-top`), not a cropped photo of the paper.
-
-Light paper CSS (normative):
-
-```css
---paper: repeating-linear-gradient(
-  to bottom,
-  #F4F4F2 0 27px,
-  #B8B8B4 27px 28px
-);
-```
-
-Dark paper CSS (normative):
-
-```css
---paper: repeating-linear-gradient(
-  to bottom,
-  #12141C 0 27px,
-  #3A4258 27px 28px
-);
-```
-
-`background-size: auto; background-repeat: repeat; background-position: 0 0;` — never `cover` on this gradient.
-
-Map existing custom properties: `--bg` and `--sheet` to stock; `--ink` / `--text-primary` to ballpoint; `--accent` to TDK red; `--rule` to `#B8B8B4`.
+- **فاتح:** `--bg #FFFFFF` يغسل إلى `#F8F9FF`، زجاج `rgba(255,255,255,0.72)` بـ `blur 20px saturate 160%`، نص `slate-900 #0F172A`.
+- **داكن:** `--bg #050507`، زجاج `rgba(255,255,255,0.06)`، نص `slate-50 #F8FAFC`.
+- **اللمعة الوحيدة:** `Indigo #4F46E5` فاتح / `#6366F1` داكن، وهالة `--accent-glow 0.28 / 0.35`. لا بنفسجي-وردي-تيل معًا بعد الآن.
+- كل التباينات `AA+` حتى فوق الهالة.
 
 ## Typography
 
-**Arabic:** Noto Naskh Arabic for every Arabic string (titles, buttons, labels, ledes, empty state). Weight does the hierarchy. This is the ballpoint.
-
-**Latin:** Playfair Display for `PDF Studio` (`lang="en"`) and for tabular figures (counts, sizes). No other Latin face.
-
-**Do not** fake handwriting, comic lettering, or a script face. Do not apply `letter-spacing` to Arabic. Wordmark tracking stays `0.01em`.
-
-### Hierarchy
-- **Display** (Noto Naskh 700, clamp ~1.35–2rem): `#start-title` / drop headline «أسقط الملفات» only, in ink, no text-shadow.
-- **Headline** (Noto Naskh 700, 1.5rem): tool view titles.
-- **Wordmark** (Playfair 600, 1rem): PDF Studio.
-- **Copy** (Noto Naskh 400, 16px / 1.7): ledes and notes.
-- **Body** (Noto Naskh 400, 14px): lists, legend, chrome.
-- **Label / micro** (Noto Naskh 550 / 400, 12px / 11px): field labels, status cells, buttons.
-- **Data** (Playfair + Noto, tabular-nums, LTR): numbers.
+- عناوين: `Cairo 800` (يفضّل) يسقط إلى `Noto Naskh Arabic` المضمّن محليًا.
+- واجهة ونص: `Inter` يسقط إلى النظام.
+- سلم: `display clamp(2rem,5vw,3rem)` للهيرو فقط، `title 1.45rem` للأدوات، `body 0.92rem / 1.6` للعربي.
 
 ## Layout
 
-Do not change information architecture. The window is already the instrument.
-
-Flush three-row grid:
-1. **Titlebar** 40px (`.sheet__head`): mark + `PDF Studio`, then `#legend-list` (allowed tools only, after files), then theme toggle, then Linux window buttons. Native overlay via `env(titlebar-area-*)`.
-2. **Work** (`.sheet__body` / `#work`): one column. Empty start = centered drop. After files = file list on the same lined stage. Tool views keep their current inner structure (scan canvas, options, etc.) restyled to ink/hairline, not redesigned.
-3. **Status** 52px (`.titleblock`): hidden on empty start (`:has(#view-start.view--active)` stays). Cells: الأداة، الملف، صفحات، الحجم، حفظ باسم، الحالة + تنفيذ. `safe-area-inset-bottom` unchanged.
-
-No permanent side rail. No iLovePDF tool-card grid. Breakpoints already in CSS (`900px`, `640px`) stay; restyle faces, do not invent a new shell.
-
-**The Keep-the-Instrument Rule.** New chrome inherits this topology. Density may tighten; regions may not swap.
-
-## Elevation & Depth
-
-Flat. The paper is the window. No drop-shadow on the drop rectangle, no photo lift, no inset paper highlight.
-
-### Shadow Vocabulary
-- **Sheet / drop / buttons:** none.
-- **Lift** (`0 8px 24px rgba(30, 58, 138, 0.12)`): toasts only.
-- **Panel** (`0 16px 48px rgba(18, 20, 28, 0.22)`): progress and dialogs. Dark: `0 16px 48px rgba(0, 0, 0, 0.55)`.
-
-**The Offset-Blur Rule.** If a shadow exists, it has offset and blur. No neon halo, no hard `4px 4px 0` stamp.
-
-Remove `--shadow-head` and `--shadow-foot` from titlebar and status (those existed to sell the fold photograph). Replace with 1px hairlines.
-
-## Shapes
-
-- Checkboxes / tight wells: 4px.
-- Buttons, inputs, drop, legend rows: 4px (`--radius` / control). Tighter than the old 6–8px origami faces.
-- Dialogs / toasts / progress: 6px.
-- No pill buttons (`999px` reserved for the 7px status dot only).
-- Drop is a **rectangle** (current square-ish size `min(26rem, 68vmin)` may stay) with `border: 1px solid var(--ink)`, transparent fill so the lines show through.
+- **خلفية:** هالتان ثابتتان Indigo ضبابيتان (`blur 80–90px`, `opacity 0.16 فاتح / 0.44 داكن`) + طبقة `glass-noise` شفافة — أخف من ثلاث هالات الأصل.
+- **شريط علوي:** `pill 999px` عائم `sticky top 14px`، عرض `min(calc(100% - 32px),1120px)`، زجاج `blur 20px`، ظل `0 4px 20px`.
+- **مساحة العمل:** عرض `1120px` متوسط، بطاقة زجاج واحدة `radius 28/20` لا لوحات متناثرة.
+- **شبكة البداية:** بعد الإسقاط، قائمة ملفات `flex wrap 260px` على زجاج واحد — لا شبكة 320px الثقيلة.
+- **شريط حالة:** سفلي `sticky` بارتفاع `56px`، `blur 16px`، زر تنفيذ وحيد `pill accent`، خط تقدم `2px accent`.
 
 ## Components
 
+### Aurora v2
+هالتان فقط بلون واحد بدل ثلاث. `animation drift 28–34s` هادئة، `filter blur 80px`. في الفاتح `opacity 0.16`.
+
+### Intake
+`dashed 1.5px var(--border-strong)` على `surface-1`، `hover` يتحول لـ `solid accent` + `accent-soft` + `shadow-glow` ويرتفع `1px`. الهيرو `#hub-drop` بطاقة `560px` بظل مرتفع وهالة علوية `420px blur 18px`.
+
 ### Buttons
-- **Shape:** 4px. Flat. `background-image: none` on every `.btn`, `.btn--act`, `.btn--sheet`, `.theme-toggle`.
-- **Primary (`.btn--act`):** fill `#C41A1A`, label `#FCFBF7`, 11–12px Noto Naskh 700. No text-shadow. Hover `#A81616`. Disabled `opacity: 0.45` on the same flat face.
-- **Secondary (`.btn`, `.btn--sheet`, theme toggle):** fill `#FCFBF7`, 1px solid `#1E3A8A`, label ink. Hover fill `#ECECE8`. Theme toggle is a 28px square of the same language, not a cream photo.
-- **Ghost:** transparent, 1px hairline or none; ink-faded.
-- **Danger:** ink-less; danger color on a quiet face — never the red primary.
-- **Focus:** 2px accent outline, 2px offset, 3px `accent-soft` halo. Visible for keyboard.
+`pill 999px` بارتفاع `40px` (`32px compact`). الأساسي `accent` بظل جلو، الباقي `ghost surface-1`. `focus` حلقة مزدوجة `accent-soft + glow`. لا دوران، لا `scale` مبالغ.
 
-### Inputs / Fields
-- Surface-1 fill, 4px, 1px `border-strong`. Focus: 2px ink or accent outline (accent when the field commits a run option). Number fields: Playfair, LTR, end-aligned. Checkboxes 15px, 4px, accent when checked.
+### Hub Card (إن وجد)
+`28px / 20px`, `padding 22px`, `blur 20px`, `hover -4px` + `border-glow + shadow-glow`, أيقونة `48px` تتحول لـ `accent` أبيض عند Hover. `radial-gradient at --mx --my` يبقى لكن `600px / 0.10` أهدأ.
 
-### Navigation (titlebar legend)
-- Horizontal list of tool names in ink. Current: 2px `#C41A1A` underline, no filled background (or the lightest `accent-soft` if hit-area needs it). Disabled-before-files: 55% opacity, still focusable. Do not introduce colored icon wells that read as a rainbow.
+### Doc Row
+`grid 36px 56px 1fr auto`, `32px` للرقم بخلفية `accent-soft`, مصغّرة `56×68`, `border-soft` تتحول لـ `accent + 3px soft` عند التحديد.
 
-### Status bar (`.titleblock`)
-- Surface-1 + top 1px ink hairline. Cells separated by 1px rule. Semantic dot 7px. Busy: 2px accent hairline on the top edge (keep the existing `::before` animation, recolor to accent). Execute sits at the inline-end in RTL.
+## Don't
 
-### Intake / empty drop (`#hub-drop.intake--sheet`)
-- Remove both `sheet-photo` images.
-- Transparent lined paper showing through; 1px ink border; no box-shadow.
-- Copy in ink (`--ink`), not cream-on-red: glyph, «أسقط الملفات», «أسقط صوراً أو PDF», hint, «تصفّح» as secondary button.
-- Hover / drag-over: border stays ink or shifts to accent; optional `accent-soft` wash. No brightness-on-photo filter.
-- Other `.intake` wells (scan, merge, …): same language — dashed or solid 1px ink on lined paper, not a grey dashed SaaS bucket.
+- لا بيج/ورق/صور/خطوط مسطرة — الأصل Aurora لم يكن كذلك.
+- لا قوس قزح (أربع ألوان هالة) — هالة واحدة فقط.
+- لا `blur 32px saturate 180%` ثقيل — `20px/160%` كحد أقصى.
+- لا أزرار مربعة ثقيلة أو شريط جانبي — pill + قائمة عمودية خطية.
+- لا نص مغسول على الزجاج — `slate-900` على `rgba(255,255,255,0.72)` يضمن AA.
 
-### File list
-- Rows sit on the rules like notebook entries: transparent or surface-1, 1px rule border, ink names. No cream cards.
+## Files
 
-### Scan editor
-- Behavior unchanged (corners on the original, live rotate/filters). Chrome around the canvas: ink hairlines, lined stage, same buttons as above.
-
-### Progress / toasts
-- Dim the window. Card 6px, panel shadow, 3px accent track. Toasts inline-end. Success / danger icons from the existing sprite, recolored to semantic tokens.
-
-## Do's and Don'ts
-
-### Do:
-- **Do** keep drop → titlebar tools → status run, and every existing ID.
-- **Do** draw the stage with the 28px repeating-linear-gradient above.
-- **Do** use ballpoint `#1E3A8A` for writing and TDK `#C41A1A` for run.
-- **Do** self-host Noto Naskh Arabic and Playfair Display; Arabic never gets tracking.
-- **Do** respect `prefers-reduced-motion` (durations already collapse to `0.001ms`).
-- **Do** keep `data-theme="blueprint"` as the dark-mode lock.
-
-### Don't:
-- **Don't** use any raster from `assets/textures/` (fold-stage, drop-sheet, btn-red, btn-cream, or dark variants) in the UI.
-- **Don't** generate or embed new photos, paper grain, cassette shells, tape reels, origami, or gold foils.
-- **Don't** keep Playfair or Amiri on Arabic buttons, labels, or the empty-state title.
-- **Don't** letter-space Arabic, use pill CTAs, or a coloured `border-inline` thicker than 1px on rows.
-- **Don't** ship cream-fold `#ECE0D0`, origami vermilion photography, violet, process teal (iLovePDF), or a midnight transit drench.
-- **Don't** add Google Fonts, a side rail, marketing badges, or a tool-card dashboard.
-- **Don't** treat this as a new product or a new set of screens — it is a reskin of `index.html` as it exists.
+- `docs/design-aurora-legacy.md` — الأصل كما كان.
+- `docs/design-system-lumen.md` — النظام المطوّر (مرجع التنفيذ).
+- `assets/css/app.css` — التطبيق (Lumen v2).
+- `index.html` — `aurora` + `glass-noise` + الهيرو المحدث.

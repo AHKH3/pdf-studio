@@ -30,8 +30,12 @@ export function wireIntake(config) {
 
   const accept = FILTERS[config.accept];
   const view = drop.closest(".view");
-  const title = drop.querySelector(".intake__title");
-  if (title) drop.setAttribute("aria-label", title.textContent || "");
+  if (!drop.getAttribute("aria-label")) {
+    const title =
+      drop.querySelector(".intake__title") ||
+      drop.querySelector(".start__title");
+    if (title) drop.setAttribute("aria-label", title.textContent || "");
+  }
 
   const handle = async (fileList) => {
     const all = Array.from(fileList || []);

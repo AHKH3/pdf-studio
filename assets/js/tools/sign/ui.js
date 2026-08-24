@@ -9,9 +9,11 @@ const CSS = `
   position: relative;
   display: inline-block;
   max-width: 100%;
-  padding: 10px;
+  padding: 12px;
   background: var(--sheet-2);
   border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pad);
 }
 .sign-board canvas {
   display: block;
@@ -19,10 +21,11 @@ const CSS = `
   height: auto;
   background: var(--sheet);
   border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-sm);
 }
 .sign-layer {
   position: absolute;
-  inset: 10px;
+  inset: 12px;
   direction: ltr;
   touch-action: none;
 }
@@ -32,9 +35,10 @@ const CSS = `
   cursor: grab;
   touch-action: none;
   outline: 1px solid transparent;
+  transition: outline 0.15s ease;
 }
 .sign-stamp.is-selected {
-  outline: 1.5px solid var(--act);
+  outline: 2px solid var(--act);
   outline-offset: 1px;
   z-index: 2;
 }
@@ -52,10 +56,12 @@ const CSS = `
 }
 .sign-handle {
   position: absolute;
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
   background: var(--act);
-  border: 1px solid var(--sheet);
+  border: 2px solid var(--sheet);
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   z-index: 3;
 }
 .sign-handle[data-handle="nw"] { top: -6px; left: -6px; cursor: nwse-resize; }
@@ -71,6 +77,7 @@ const CSS = `
   cursor: crosshair;
   background: var(--sheet);
   border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
 }
 .sign-list {
   display: flex;
@@ -85,13 +92,19 @@ const CSS = `
   justify-content: space-between;
   gap: 8px;
   width: 100%;
-  padding: 7px 8px;
+  padding: 8px 10px;
   font: inherit;
   color: var(--ink);
   background: var(--sheet);
   border: 1px solid var(--rule);
+  border-radius: var(--radius);
   cursor: pointer;
   text-align: start;
+  transition: all var(--motion-fast) var(--ease-smooth);
+}
+.sign-list__item:hover {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
 }
 .sign-list__item.is-current {
   border-color: var(--act);
@@ -104,8 +117,8 @@ const CSS = `
   color: var(--ink-3);
 }
 .sign-color-dot {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   display: inline-block;
   border-radius: 50%;
   margin-inline-start: 6px;
