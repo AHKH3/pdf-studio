@@ -64,6 +64,11 @@
     <symbol id="icon-edit" viewBox="0 0 24 24"><path d="M16.4249 4.60509L17.4149 3.6151C18.2351 2.79497 19.5648 2.79497 20.3849 3.6151C21.205 4.43524 21.205 5.76493 20.3849 6.58507L19.3949 7.57506M16.4249 4.60509L9.76558 11.2644C9.25807 11.772 8.89804 12.4078 8.72397 13.1041L8 16L10.8959 15.276C11.5922 15.102 12.228 14.7419 12.7356 14.2344L19.3949 7.57506M16.4249 4.60509L19.3949 7.57506"/><path d="M18.9999 13.5C18.9999 16.7875 18.9999 18.4312 18.092 19.5376C17.9258 19.7401 17.7401 19.9258 17.5375 20.092C16.4312 21 14.7874 21 11.4999 21H11C7.22876 21 5.34316 21 4.17159 19.8284C3.00003 18.6569 3 16.7712 3 13V12.5C3 9.21252 3 7.56879 3.90794 6.46244C4.07417 6.2599 4.2599 6.07417 4.46244 5.90794C5.56879 5 7.21252 5 10.5 5"/></symbol>
     <symbol id="icon-win-min" viewBox="0 0 12 12"><path d="M2.5 6H9.5"/></symbol>
     <symbol id="icon-win-max" viewBox="0 0 12 12"><rect x="2.75" y="2.75" width="6.5" height="6.5" rx="0.6"/></symbol>
+    <symbol id="icon-pin" viewBox="0 0 24 24"><path d="M12 3V13"/><path d="M12 13L8 17H16L12 13Z"/><path d="M9 21H15"/><path d="M12 3C12 3 9 3 8 4C7 5 7 8 12 8C17 8 17 5 16 4C15 3 12 3 12 3Z"/></symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M2 12C2 12 6.5 7 12 7C17.5 7 22 12 22 12C22 12 17.5 17 12 17C6.5 17 2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="icon-eye-off" viewBox="0 0 24 24"><path d="M3 3L21 21"/><path d="M10.6 10.6C9.6 11.6 9.6 13.4 10.6 14.4C11.6 15.4 13.4 15.4 14.4 14.4"/><path d="M9.7 5.3C11 4.5 13 4.3 15 5.5C17 6.7 19 9 21 12C21 12 19.5 14.5 17 16.5"/><path d="M3 12C3 12 5 8.5 9 6"/></symbol>
+    <symbol id="icon-chev" viewBox="0 0 24 24"><path d="M9 6L15 12L9 18"/></symbol>
+    <symbol id="icon-expand" viewBox="0 0 24 24"><path d="M15 3H21V9"/><path d="M9 21H3V15"/><path d="M21 3L14 10"/><path d="M3 21L10 14"/></symbol>
   </svg>
 
   <div class="board">
@@ -141,19 +146,34 @@
                         </button>
                       </div>
                     </div>
-                    <div id="hub-list" class="doclist files-panel__list"></div>
-                    <p class="hub-files__hint" id="hub-hint">اسحب لإعادة الترتيب — اضغط الأداة المناسبة على اليمين.</p>
+                    <div id="hub-list" class="hub-files__grid" role="list"></div>
+                    <p class="hub-files__hint" id="hub-hint">اضغط زر المعاينة على البطاقة لرؤية الملف كاملاً — كليك يمين على الأداة لتثبيتها أو إخفائها.</p>
                   </section>
 
                   <aside class="hub-tools" aria-labelledby="hub-tools-title">
                     <div class="hub-tools__head">
                       <h3 class="hub-tools__title" id="hub-tools-title">اختر الأداة</h3>
                     </div>
-                    <div id="hub-legend" class="hub-tools__grid" role="list" aria-label="الأدوات المتاحة"></div>
+                    <section class="hub-tools__section" id="hub-tools-pinned-section" hidden aria-label="الأدوات المثبتة">
+                      <h4 class="hub-tools__section-title"><svg class="icon" aria-hidden="true"><use href="#icon-pin"></use></svg> مثبّتة</h4>
+                      <div id="hub-legend-pinned" class="hub-tools__grid" role="list" aria-label="الأدوات المثبتة"></div>
+                    </section>
+                    <section class="hub-tools__section" id="hub-tools-main-section" aria-label="كل الأدوات">
+                      <h4 class="hub-tools__section-title">الأدوات</h4>
+                      <div id="hub-legend" class="hub-tools__grid" role="list" aria-label="الأدوات المتاحة"></div>
+                    </section>
                     <div id="hub-empty-tools" class="hub-tools__empty" hidden>
                       <svg class="icon" aria-hidden="true"><use href="#icon-alert"></use></svg>
                       <p>لا أدوات لهذا المزيج — جرّب إضافة PDF أو صور.</p>
                     </div>
+                    <details class="hub-tools__hidden" id="hub-tools-hidden-details">
+                      <summary class="hub-tools__hidden-summary">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-eye-off"></use></svg>
+                        مخفية <span class="hub-tools__hidden-count num" id="hub-hidden-count"></span>
+                      </summary>
+                      <div id="hub-legend-hidden" class="hub-tools__grid" role="list" aria-label="الأدوات المخفية"></div>
+                      <p class="hub-tools__hidden-hint">اضغط على أداة مخفية لإعادتها للقائمة.</p>
+                    </details>
                   </aside>
                 </div>
                 <div id="hub-actions" hidden></div>
@@ -998,6 +1018,68 @@
   </div>
 
   <div class="toasts" id="toasts" aria-live="polite" aria-relevant="additions text"></div>
+
+  <!-- قائمة كليك يمين للأدوات: تثبيت / إخفاء -->
+  <div class="ctxmenu" id="tool-ctxmenu" role="menu" aria-label="خيارات الأداة" hidden>
+    <button class="ctxmenu__item" type="button" role="menuitem" data-ctx="pin">
+      <svg class="icon" aria-hidden="true"><use href="#icon-pin"></use></svg> تثبيت في الأعلى
+    </button>
+    <button class="ctxmenu__item" type="button" role="menuitem" data-ctx="hide">
+      <svg class="icon" aria-hidden="true"><use href="#icon-eye-off"></use></svg> إخفاء
+    </button>
+  </div>
+
+  <!-- نافذة معاينة الملف العائمة -->
+  <div class="preview-modal" id="file-preview" role="dialog" aria-modal="true" aria-labelledby="file-preview-title" hidden>
+    <div class="preview-modal__backdrop" data-preview-close></div>
+    <div class="preview-modal__card">
+      <header class="preview-modal__head">
+        <h3 class="preview-modal__title" id="file-preview-title">معاينة</h3>
+        <button class="preview-modal__close" id="file-preview-close" type="button" aria-label="إغلاق المعاينة">
+          <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
+        </button>
+      </header>
+      <div class="preview-modal__body">
+        <aside class="preview-modal__side" aria-label="الصفحات والملفات">
+          <section class="preview-modal__side-section" id="fp-pages-section" hidden>
+            <h4 class="preview-modal__side-title">صفحات الملف</h4>
+            <div id="fp-pages" class="preview-modal__thumbs" role="list"></div>
+          </section>
+          <section class="preview-modal__side-section" id="fp-files-section" hidden>
+            <h4 class="preview-modal__side-title">كل الملفات</h4>
+            <div id="fp-files" class="preview-modal__filelist" role="list"></div>
+          </section>
+        </aside>
+        <div class="preview-modal__stage" id="fp-stage">
+          <div class="preview-modal__zoombox" id="fp-zoombox">
+            <img id="file-preview-img" alt="" hidden />
+            <canvas id="file-preview-canvas" hidden></canvas>
+          </div>
+          <p class="preview-modal__loading" id="file-preview-loading">جاري التحميل…</p>
+        </div>
+      </div>
+      <footer class="preview-modal__foot">
+        <div class="preview-modal__pager" id="file-preview-pager" hidden>
+          <button id="file-preview-prev" type="button" class="btn btn--compact" aria-label="الصفحة السابقة">
+            <svg class="icon flip" aria-hidden="true"><use href="#icon-arrow"></use></svg> السابقة
+          </button>
+          <span class="preview-modal__count num" id="file-preview-count">1 / 1</span>
+          <button id="file-preview-next" type="button" class="btn btn--compact" aria-label="الصفحة التالية">
+            التالية <svg class="icon" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+          </button>
+        </div>
+        <div class="preview-modal__zoom" id="file-preview-zoombar" hidden>
+          <button id="file-preview-zoom-out" type="button" class="preview-modal__zbtn" aria-label="تصغير" title="تصغير (−)">
+            <svg class="icon" aria-hidden="true"><use href="#icon-win-min"></use></svg>
+          </button>
+          <button id="file-preview-zoom-fit" type="button" class="preview-modal__zpct num" title="ملء النافذة (0)">100%</button>
+          <button id="file-preview-zoom-in" type="button" class="preview-modal__zbtn" aria-label="تكبير" title="تكبير (+)">
+            <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg>
+          </button>
+        </div>
+      </footer>
+    </div>
+  </div>
 
   <script src="assets/vendor/pdf-lib.min.js"></script>
   <script src="assets/vendor/Sortable.min.js"></script>

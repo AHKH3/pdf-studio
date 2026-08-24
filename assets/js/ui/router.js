@@ -2,6 +2,7 @@ import { el, qsa } from "../dom.js";
 import { actionIds, captureFiles, filesForAction, hasCapture, onCaptureChange } from "./capture.js";
 import { confirmLeave, isDialogOpen } from "./dialog.js";
 import { toast } from "./feedback.js";
+import { onToolPrefsChange, recordOrder, sortToolIds, isPinned, isHidden } from "./toolprefs.js";
 import { setOperation } from "./titleblock.js";
 
 /**
@@ -90,6 +91,45 @@ function flowChip(tool) {
 
 function hubFlowChip(tool) { return null; }
 
+/** زر أداة واحد بتصميم الزر الرئيسي بألوان مختلفة. */
+function buildToolButton(tool, { pinned = false } = {}) {
+  const tone = HUB_TONE[tool.id] || tool.id;
+  const displayName = tool.name.replace("→", "←");
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "hub-tool";
+  button.dataset.route = tool.id;
+  button.dataset.tone = tone;
+  button.setAttribute("role", "listitem");
+  button.setAttribute("aria-label", pinned ? `${displayName} (مثبّتة — كليك يمين للخيارات)` : `${displayName} (كليك يمين للخيارات)`);
+  button.title = pinned ? `${displayName} — مثبّتة` : displayName;
+  if (tool.id === activeId) {
+    button.classList.add("hub-tool--active");
+    button.setAttribute("aria-current", "page");
+  }
+
+  const iconWrap = document.createElement("span");
+  iconWrap.className = "hub-tool__icon";
+  iconWrap.append(glyph(tool.icon || "icon-file", "icon"));
+
+  const nameRow = document.createElement("span");
+  nameRow.className = "hub-tool__name";
+  nameRow.textContent = displayName;
+
+  button.append(iconWrap, nameRow);
+
+  if (pinned) {
+    const mark = document.createElement("span");
+    mark.className = "hub-tool__pinned-mark";
+    mark.setAttribute("aria-hidden", "true");
+    mark.append(glyph("icon-pin", "icon"));
+    button.append(mark);
+  }
+
+  return button;
+}
+
 /** @param {Tool[]} list */
 export function registerTools(list) {
   for (const tool of list) tools.set(tool.id, tool);
@@ -146,52 +186,55 @@ function buildLegend() {
     }
   }
 
-  // الحاوية الجانبية الجديدة في صفحة البداية — بطاقات مميزة بأيقونة ونص وسهم صحيح
+  // الحاوية الجانبية في صفحة البداية — ثلاثة أقسام: مثبّتة / أدوات / مخفية
   const hubHost = el("hub-legend");
+  const hubPinned = el("hub-legend-pinned");
+  const hubHidden = el("hub-legend-hidden");
+  const pinnedSection = el("hub-tools-pinned-section");
+  const hiddenCount = el("hub-hidden-count");
   const hubEmpty = el("hub-empty-tools");
-  if (!hubHost) return;
-  hubHost.replaceChildren();
 
-  let shown = 0;
+  // الأدوات المؤهلة حسب المزيج الحالي
+  const eligible = [];
   for (const tool of tools.values()) {
     if (tool.hidden) continue;
-    const enabled = allowed.has(tool.id);
-    if (!enabled) continue;
+    if (!allowed.has(tool.id)) continue;
+    eligible.push(tool);
+  }
+  // ترتيب المستخدم المحفوظ
+  const sortedIds = sortToolIds(eligible.map((tool) => tool.id));
+  const byId = new Map(eligible.map((tool) => [tool.id, tool]));
+  const sorted = sortedIds.map((id) => byId.get(id)).filter(Boolean);
+  recordOrder(sortedIds);
 
-    const tone = HUB_TONE[tool.id] || tool.id;
+  const pinnedTools = sorted.filter((tool) => isPinned(tool.id));
+  const mainTools = sorted.filter((tool) => !isPinned(tool.id) && !isHidden(tool.id));
+  const hiddenTools = sorted.filter((tool) => isHidden(tool.id));
 
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "hub-tool";
-    button.dataset.route = tool.id;
-    button.dataset.tone = tone;
-    button.setAttribute("role", "listitem");
-    const displayName = tool.name.replace("→", "←");
-    button.setAttribute("aria-label", displayName);
-    button.title = displayName;
-    if (tool.id === activeId) {
-      button.classList.add("hub-tool--active");
-      button.setAttribute("aria-current", "page");
-    }
+  if (hubPinned) {
+    hubPinned.replaceChildren();
+    for (const tool of pinnedTools) hubPinned.append(buildToolButton(tool, { pinned: true }));
+  }
+  if (pinnedSection) pinnedSection.hidden = pinnedTools.length === 0;
 
-    const iconWrap = document.createElement("span");
-    iconWrap.className = "hub-tool__icon";
-    iconWrap.dataset.tone = tone;
-    iconWrap.append(glyph(tool.icon || "icon-file", "icon"));
-
-    const nameRow = document.createElement("span");
-    nameRow.className = "hub-tool__name";
-    nameRow.textContent = displayName;
-
-    button.append(iconWrap, nameRow);
-    hubHost.append(button);
-    shown += 1;
+  if (hubHost) {
+    hubHost.replaceChildren();
+    for (const tool of mainTools) hubHost.append(buildToolButton(tool));
   }
 
+  if (hubHidden) {
+    hubHidden.replaceChildren();
+    for (const tool of hiddenTools) hubHidden.append(buildToolButton(tool));
+  }
+  if (hiddenCount) hiddenCount.textContent = hiddenTools.length ? String(hiddenTools.length) : "";
+
+  let shown = pinnedTools.length + mainTools.length;
   if (hubEmpty) hubEmpty.hidden = shown > 0;
-  if (shown === 0) {
+  const mainSection = el("hub-tools-main-section");
+  if (mainSection) mainSection.hidden = mainTools.length === 0 && hiddenTools.length > 0;
+  if (shown === 0 && hubHost) {
     hubHost.setAttribute("aria-hidden", "true");
-  } else {
+  } else if (hubHost) {
     hubHost.removeAttribute("aria-hidden");
   }
 }
@@ -271,6 +314,9 @@ export function initRouter() {
       console.error(`تعذّر تهيئة الأداة ${tool.id}`, error);
     }
   }
+
+  // أي تغيير في التثبيت/الإخفاء يعيد بناء الأقسام
+  onToolPrefsChange(() => buildLegend());
 
   document.addEventListener("click", (event) => {
     const trigger = /** @type {HTMLElement} */ (event.target).closest("[data-route]");

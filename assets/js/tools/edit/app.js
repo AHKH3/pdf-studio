@@ -290,11 +290,7 @@ function updateZoomLabel() {
 
 function setZoom(value) {
   session.zoom = Math.max(0.5, Math.min(2.5, value));
-  const board = session.ui?.board;
-  if (board) {
-    board.style.transform = `scale(${session.zoom})`;
-    board.style.transformOrigin = "top center";
-  }
+  session.board?.setZoom?.(session.zoom);
   updateZoomLabel();
 }
 
@@ -676,6 +672,7 @@ export function mount(rootEl) {
   session.board = createBoard({
     canvas: session.ui.canvas,
     layer: session.ui.layer,
+    wrap: session.ui.wrap,
     getObjects: () => session.objects,
     getSelectedId: () => session.selectedId,
     setSelectedId: (value) => {
@@ -686,6 +683,10 @@ export function mount(rootEl) {
     getTool: activeTool,
     getStyle,
     onCreate: createObject,
+    onZoomChange: (value) => {
+      session.zoom = value;
+      updateZoomLabel();
+    },
     onChange: () => {
       session.saved = false;
       refresh(false);
@@ -753,7 +754,10 @@ export function mount(rootEl) {
 
   session.ui.zoomIn?.addEventListener("click", () => setZoom(session.zoom + 0.15), { signal });
   session.ui.zoomOut?.addEventListener("click", () => setZoom(session.zoom - 0.15), { signal });
-  session.ui.zoomFit?.addEventListener("click", () => setZoom(1), { signal });
+  session.ui.zoomFit?.addEventListener("click", () => {
+    setZoom(1);
+    session.board?.fit?.();
+  }, { signal });
   setZoom(1);
 }
 

@@ -1,8 +1,8 @@
-{
+﻿{
   "name": "pdf-studio",
   "productName": "PDF Studio",
-  "version": "1.0.8",
-  "description": "أدوات PDF عربية — تطبيق سطح مكتب",
+  "version": "1.0.9",
+  "description": "Ø£Ø¯ÙˆØ§Øª PDF Ø¹Ø±Ø¨ÙŠØ© â€” ØªØ·Ø¨ÙŠÙ‚ Ø³Ø·Ø­ Ù…ÙƒØªØ¨",
   "homepage": "https://github.com/AHKH3/pdf-studio",
   "author": "abdo3342",
   "main": "electron/main.cjs",

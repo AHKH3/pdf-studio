@@ -20,6 +20,7 @@ const FREE_HANDLES = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
  * @param {object} options
  * @param {HTMLCanvasElement} options.canvas
  * @param {HTMLElement} options.layer
+ * @param {HTMLElement} [options.wrap]
  * @param {() => Array<any>} options.getObjects
  * @param {() => string} options.getSelectedId
  * @param {(id: string) => void} options.setSelectedId
@@ -30,11 +31,13 @@ const FREE_HANDLES = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
  * @param {() => void} [options.onBeginChange]
  * @param {() => void} options.onHistory
  * @param {() => void} [options.onDiscardHistory]
+ * @param {(zoom: number) => void} [options.onZoomChange]
  */
 export function createBoard(options) {
   const {
     canvas,
     layer,
+    wrap,
     getObjects,
     getSelectedId,
     setSelectedId,
@@ -44,7 +47,8 @@ export function createBoard(options) {
     onChange,
     onBeginChange,
     onHistory,
-    onDiscardHistory
+    onDiscardHistory,
+    onZoomChange
   } = options;
 
   /** @type {any} */
@@ -55,13 +59,75 @@ export function createBoard(options) {
   let generation = 0;
   /** @type {null | any} */
   let drag = null;
-  /** @type {HTMLCanvasElement | null} */
-  let inkLive = null;
+  /** @type {SVGSVGElement | null} */
+  let ghostInk = null;
   /** @type {SVGSVGElement | null} */
   let ghost = null;
+  let zoom = 1;
+  let fitPx = 0;
+  let hiResTimer = 0;
+  const MIN_ZOOM = 0.5;
+  const MAX_ZOOM = 2.5;
 
   function displayScale() {
     return canvas.offsetWidth / Math.max(1, visualWidth);
+  }
+
+  function availableBox() {
+    if (!wrap) return { w: 760, h: 980 };
+    const cs = getComputedStyle(wrap);
+    const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+    const padY = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+    return {
+      w: Math.max(80, wrap.clientWidth - padX),
+      h: Math.max(80, wrap.clientHeight - padY)
+    };
+  }
+
+  /** CSS px per pt at zoom 1 — fit the page inside the visible wrap, never upscale past 1:1. */
+  function computeFitPx() {
+    if (!visualWidth || !visualHeight) return 0;
+    const { w, h } = availableBox();
+    const byHeight = h * (visualWidth / visualHeight);
+    return Math.max(120, Math.min(w, byHeight, visualWidth));
+  }
+
+  /**
+   * Real layout sizing (no CSS transform): the canvas width drives offsetWidth,
+   * so displayScale and every coordinate path stay exact at any zoom.
+   */
+  function applySize() {
+    if (!visualWidth || !visualHeight) return;
+    fitPx = computeFitPx();
+    const nextWidth = `${Math.round(fitPx * zoom)}px`;
+    if (canvas.style.width !== nextWidth) canvas.style.width = nextWidth;
+    canvas.style.height = "auto";
+  }
+
+  function scheduleHiRes() {
+    if (hiResTimer) clearTimeout(hiResTimer);
+    hiResTimer = setTimeout(() => {
+      hiResTimer = 0;
+      if (!drag && pdf) void renderPage(pageIndex);
+    }, 160);
+  }
+
+  function setZoomValue(next, force = false) {
+    const clamped = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next));
+    if (clamped === zoom && !force) return zoom;
+    zoom = clamped;
+    applySize();
+    scheduleHiRes();
+    onZoomChange?.(zoom);
+    return zoom;
+  }
+
+  /** Ctrl/⌘ + wheel (and trackpad pinch) zooms; plain wheel keeps scrolling. */
+  function onWheel(event) {
+    if (!(event.ctrlKey || event.metaKey)) return;
+    event.preventDefault();
+    const factor = Math.exp(-event.deltaY * 0.0016);
+    setZoomValue(zoom * factor);
   }
 
   function clientToVisual(clientX, clientY) {
@@ -144,18 +210,41 @@ export function createBoard(options) {
     return svg;
   }
 
-  function ensureInkLive() {
-    if (inkLive) return inkLive;
-    inkLive = document.createElement("canvas");
-    inkLive.className = "edit-ink-live";
-    layer.append(inkLive);
-    return inkLive;
+  /**
+   * Live pen preview as an SVG overlay (visual pt units, same mapping as the
+   * final ink layer). A second <canvas> here used to present a stale white GPU
+   * buffer after resize and blank the whole page.
+   */
+  function beginLiveInk(color, weight) {
+    endLiveInk();
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", `0 0 ${visualWidth} ${visualHeight}`);
+    svg.setAttribute("preserveAspectRatio", "none");
+    svg.classList.add("edit-ink-live");
+    const path = document.createElementNS(ns, "path");
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke", color);
+    path.setAttribute("stroke-width", String(weight));
+    path.setAttribute("stroke-linecap", "round");
+    path.setAttribute("stroke-linejoin", "round");
+    svg.append(path);
+    layer.append(svg);
+    ghostInk = svg;
+    return path;
   }
 
-  function clearInkLive() {
-    if (!inkLive) return;
-    const ctx = inkLive.getContext("2d");
-    ctx?.clearRect(0, 0, inkLive.width, inkLive.height);
+  function endLiveInk() {
+    ghostInk?.remove();
+    ghostInk = null;
+  }
+
+  function drawLiveInk() {
+    if (!ghostInk || !drag?.livePath) return;
+    const d = drag.points
+      .map((point, index) => `${index ? "L" : "M"} ${point.x} ${visualHeight - point.y}`)
+      .join(" ");
+    drag.livePath.setAttribute("d", d);
   }
 
   function paintOverlay() {
@@ -166,7 +255,6 @@ export function createBoard(options) {
 
     layer.querySelectorAll(".edit-obj, .edit-ghost").forEach((node) => node.remove());
     layer.dataset.tool = getTool();
-    if (inkLive && !layer.contains(inkLive)) layer.append(inkLive);
 
     for (const obj of objectsOnPage()) {
       const node = document.createElement("div");
@@ -307,8 +395,14 @@ export function createBoard(options) {
     visualHeight = base.height;
     pageIndex = index;
 
-    const maxEdge = 720;
-    const scale = maxEdge / Math.max(base.width, base.height);
+    applySize();
+
+    // Bitmap resolution follows the on-screen size (zoom × fit) so zoom-in stays crisp.
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const shownW = Math.max(1, fitPx * zoom);
+    const shownLongest = Math.max(shownW, shownW * (base.height / base.width));
+    const bitmapLongest = Math.max(360, Math.min(2400, shownLongest * dpr));
+    const scale = bitmapLongest / Math.max(base.width, base.height);
     const viewport = page.getViewport({ scale });
     canvas.width = Math.max(1, Math.ceil(viewport.width));
     canvas.height = Math.max(1, Math.ceil(viewport.height));
@@ -320,11 +414,6 @@ export function createBoard(options) {
     await page.render({ canvasContext: ctx, viewport }).promise;
     page.cleanup();
     if (token !== generation) return;
-
-    if (inkLive) {
-      inkLive.width = canvas.offsetWidth;
-      inkLive.height = canvas.offsetHeight;
-    }
     paintOverlay();
   }
 
@@ -377,10 +466,8 @@ export function createBoard(options) {
         color: style.penColor,
         strokeWidth: style.penWeight
       };
-      const live = ensureInkLive();
-      live.width = canvas.offsetWidth;
-      live.height = canvas.offsetHeight;
-      drawLiveInk(drag.points, drag.color, drag.strokeWidth);
+      drag.livePath = beginLiveInk(drag.color, drag.strokeWidth);
+      drawLiveInk();
       return;
     }
 
@@ -435,26 +522,6 @@ export function createBoard(options) {
     }
   }
 
-  function drawLiveInk(points, color, weight) {
-    const live = ensureInkLive();
-    const ctx = live.getContext("2d");
-    if (!ctx || points.length < 1) return;
-    const scale = displayScale();
-    ctx.clearRect(0, 0, live.width, live.height);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = weight * scale;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.beginPath();
-    for (const [index, point] of points.entries()) {
-      const x = point.x * scale;
-      const y = (visualHeight - point.y) * scale;
-      if (index === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-  }
-
   function pointerMove(event) {
     if (!drag || event.pointerId !== drag.pointerId) return;
     event.preventDefault();
@@ -464,7 +531,7 @@ export function createBoard(options) {
       const last = drag.points[drag.points.length - 1];
       if (Math.hypot(visual.x - last.x, visual.y - last.y) < 0.8) return;
       drag.points.push({ x: visual.x, y: visual.y });
-      drawLiveInk(drag.points, drag.color, drag.strokeWidth);
+      drawLiveInk();
       return;
     }
 
@@ -533,7 +600,7 @@ export function createBoard(options) {
       const color = drag.color;
       const strokeWidth = drag.strokeWidth;
       drag = null;
-      clearInkLive();
+      endLiveInk();
       if (points.length > 1) {
         const pad = strokeWidth + 2;
         const box = bboxFromPoints(points, pad);
@@ -613,21 +680,25 @@ export function createBoard(options) {
   layer.addEventListener("pointercancel", pointerUp);
   layer.addEventListener("keydown", onLayerKey);
 
+  const sizeTarget = wrap || canvas;
   const observer = new ResizeObserver(() => {
-    if (!drag) paintOverlay();
-    if (inkLive) {
-      inkLive.width = canvas.offsetWidth;
-      inkLive.height = canvas.offsetHeight;
-    }
+    if (drag) return;
+    applySize();
+    paintOverlay();
   });
-  observer.observe(canvas);
+  observer.observe(sizeTarget);
+  sizeTarget.addEventListener("wheel", onWheel, { passive: false });
 
   async function closePdf() {
     generation += 1;
     drag = null;
     ghost?.remove();
     ghost = null;
-    clearInkLive();
+    endLiveInk();
+    if (hiResTimer) {
+      clearTimeout(hiResTimer);
+      hiResTimer = 0;
+    }
     if (pdf) {
       await pdf.destroy().catch(() => {});
       pdf = null;
@@ -645,6 +716,7 @@ export function createBoard(options) {
     layer.removeEventListener("pointerup", pointerUp);
     layer.removeEventListener("pointercancel", pointerUp);
     layer.removeEventListener("keydown", onLayerKey);
+    sizeTarget.removeEventListener("wheel", onWheel);
     observer.disconnect();
   }
 
@@ -665,6 +737,14 @@ export function createBoard(options) {
       await closePdf();
     },
     showPage: renderPage,
+    setZoom: setZoomValue,
+    getZoom() {
+      return zoom;
+    },
+    /** Re-fit the page into the wrap at zoom 1 (recomputes the fit base). */
+    fit() {
+      return setZoomValue(1, true);
+    },
     syncTool() {
       layer.dataset.tool = getTool();
     },
@@ -688,8 +768,7 @@ export function createBoard(options) {
     },
     async destroy() {
       await closePdf();
-      inkLive?.remove();
-      inkLive = null;
+      endLiveInk();
       detach();
     }
   };

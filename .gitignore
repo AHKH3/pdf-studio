@@ -1,7 +1,14 @@
-node_modules/
+﻿node_modules/
 release/
 assets/vendor/*.js
 tmp/
 .tmp/
 .tmp-grid/
 .DS_Store
+.commandcode/
+.cursor/
+.freebuff/
+*.bak
+.impeccable/critique/
+.impeccable/live/
+.impeccable/questions/

@@ -1,10 +1,11 @@
 import { el } from "../dom.js";
 import { humanSize, isImageFile } from "../lib/files.js";
 import { suggestImageOrder } from "../lib/image-order.js";
+import { probeDocument } from "../pdf/core.js";
 import { confirmDiscard } from "./dialog.js";
-import { ACTIONS, DocList } from "./doclist.js";
 import { toast } from "./feedback.js";
 import { wireIntake } from "./intake.js";
+import { openPreview } from "./preview.js";
 import { setSource, setState } from "./titleblock.js";
 import {
   addCapture,
@@ -18,10 +19,14 @@ import {
   setCapture
 } from "./capture.js";
 
-/** @type {DocList | null} */
-let list = null;
 /** @type {Map<File, string>} */
 const urls = new Map();
+/** @type {Map<string, string>} */
+const pdfCovers = new Map();
+/** @type {Map<string, number>} */
+const pdfPageCounts = new Map();
+/** @type {any} */
+let sortable = null;
 
 function previewUrl(file) {
   if (!isImageFile(file)) return "";
@@ -33,6 +38,10 @@ function previewUrl(file) {
   return url;
 }
 
+function coverKey(file) {
+  return `${file.name}:${file.size}:${file.lastModified}`;
+}
+
 function dropUnusedUrls(files) {
   const keep = new Set(files);
   for (const [file, url] of urls) {
@@ -40,6 +49,158 @@ function dropUnusedUrls(files) {
     URL.revokeObjectURL(url);
     urls.delete(file);
   }
+}
+
+function svgIcon(id, className = "icon") {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", className);
+  svg.setAttribute("aria-hidden", "true");
+  const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  use.setAttribute("href", `#${id}`);
+  svg.append(use);
+  return svg;
+}
+
+/** بطاقة ملف: الصورة تغمر البطاقة + تدرج سفلي للاسم + أزرار عائمة عند التحويم. */
+function buildCard(file, index) {
+  const card = document.createElement("div");
+  card.className = "hub-card";
+  card.dataset.id = String(index);
+  card.setAttribute("role", "listitem");
+
+  const isImg = isImageFile(file);
+  const cachedCover = isImg ? previewUrl(file) : pdfCovers.get(coverKey(file));
+
+  const thumb = document.createElement("button");
+  thumb.type = "button";
+  thumb.className = "hub-card__thumb" + (cachedCover ? "" : " is-loading");
+  thumb.title = "اضغط لمعاينة الملف";
+  thumb.setAttribute("aria-label", `معاينة ${file.name}`);
+
+  if (cachedCover) {
+    const img = document.createElement("img");
+    img.src = cachedCover;
+    img.alt = "";
+    thumb.append(img);
+  } else {
+    thumb.append(svgIcon(isImg ? "icon-images" : "icon-file"));
+  }
+
+  const badge = document.createElement("span");
+  badge.className = "hub-card__badge";
+  badge.textContent = isImg ? "صورة" : "PDF";
+  card.append(badge);
+
+  const zoom = document.createElement("span");
+  zoom.className = "hub-card__zoom";
+  zoom.setAttribute("aria-hidden", "true");
+  zoom.append(svgIcon("icon-expand"));
+  card.append(zoom);
+
+  const overlay = document.createElement("div");
+  overlay.className = "hub-card__overlay";
+  const name = document.createElement("div");
+  name.className = "hub-card__name";
+  name.textContent = file.name;
+  name.title = file.name;
+  const meta = document.createElement("div");
+  meta.className = "hub-card__meta";
+  const size = document.createElement("span");
+  size.className = "num";
+  size.textContent = humanSize(file.size);
+  meta.append(size);
+  const pages = pdfPageCounts.get(coverKey(file));
+  if (!isImg && pages) {
+    const pagesSpan = document.createElement("span");
+    pagesSpan.className = "num";
+    pagesSpan.textContent = `${pages} صفحة`;
+    meta.append(pagesSpan);
+  }
+  overlay.append(name, meta);
+  card.append(overlay);
+
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "hub-card__remove";
+  remove.setAttribute("aria-label", `حذف ${file.name}`);
+  remove.dataset.action = "remove";
+  remove.dataset.id = String(index);
+  remove.append(svgIcon("icon-trash"));
+  card.append(remove);
+
+  card.append(thumb);
+
+  const open = () => void openPreview(file);
+  thumb.addEventListener("click", open);
+  thumb.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      open();
+    }
+  });
+
+  // غلاف PDF: نولّده مرة واحدة لكل ملف
+  if (!isImg && !cachedCover) {
+    const key = coverKey(file);
+    void (async () => {
+      try {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const probe = await probeDocument(bytes);
+        pdfCovers.set(key, probe.thumbUrl);
+        pdfPageCounts.set(key, probe.pages);
+        if (card.isConnected) {
+          const img = document.createElement("img");
+          img.src = probe.thumbUrl;
+          img.alt = "";
+          thumb.querySelector("img")?.remove();
+          thumb.querySelector(".icon")?.remove();
+          thumb.prepend(img);
+          thumb.classList.remove("is-loading");
+          if (!meta.querySelector("[data-pages]")) {
+            const p = document.createElement("span");
+            p.className = "num";
+            p.dataset.pages = "1";
+            p.textContent = `${probe.pages} صفحة`;
+            meta.append(p);
+          }
+        }
+      } catch {
+        thumb.classList.remove("is-loading");
+      }
+    })();
+  }
+
+  return card;
+}
+
+function syncSortable() {
+  const host = el("hub-list");
+  if (!host) return;
+  const Sortable = /** @type {any} */ (window).Sortable;
+  if (!Sortable) return;
+  const files = captureFiles();
+  const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  if (!sortable) {
+    sortable = new Sortable(host, {
+      animation: reduce ? 0 : 150,
+      draggable: ".hub-card",
+      direction: "horizontal",
+      ghostClass: "is-ghost",
+      chosenClass: "is-chosen",
+      forceFallback: true,
+      fallbackOnBody: true,
+      scroll: true,
+      onEnd: () => {
+        const ids = Array.from(host.querySelectorAll(".hub-card")).map(
+          (card) => /** @type {HTMLElement} */ (card).dataset.id
+        );
+        const filesNow = captureFiles();
+        const ordered = ids.map((id) => filesNow[Number(id)]).filter(Boolean);
+        if (ordered.length === filesNow.length && ordered.length) reorderCapture(ordered);
+      }
+    });
+  }
+  sortable.option("disabled", files.length < 2);
 }
 
 function render() {
@@ -63,28 +224,31 @@ function render() {
   if (count) {
     if (has) {
       count.textContent = `${files.length} ملف`;
-      count.title = `${files.length} ملف`;
     } else {
       count.textContent = "";
-      count.removeAttribute("title");
     }
   }
 
   const sort = el("hub-sort");
   if (sort) sort.hidden = images.length < 2;
 
-  const useReorder = files.length > 1;
-  list?.render(
-    files.map((file, index) => ({
-      id: String(index),
-      name: file.name,
-      meta: [isImageFile(file) ? "صورة" : "PDF", humanSize(file.size)],
-      thumb: isImageFile(file)
-        ? { kind: "url", url: previewUrl(file) }
-        : { kind: "icon", icon: "icon-file" },
-      actions: useReorder ? [ACTIONS.grab, ACTIONS.up, ACTIONS.down, ACTIONS.remove] : [ACTIONS.remove]
-    }))
-  );
+  const host = el("hub-list");
+  if (host) {
+    const keep = new Map();
+    for (const node of Array.from(host.children)) {
+      if (node instanceof HTMLElement && node.dataset.id !== undefined) {
+        keep.set(node.dataset.id, node);
+      }
+    }
+    host.replaceChildren();
+    files.forEach((file, index) => {
+      const id = String(index);
+      const existing = keep.get(id);
+      // نعيد بناء البطاقة دائماً — الفهارس تتغير مع كل تعديل
+      host.append(buildCard(file, index));
+    });
+  }
+  syncSortable();
 
   if (has) {
     setSource({
@@ -125,31 +289,11 @@ async function suggestOrder() {
 }
 
 export function initHub() {
-  list = new DocList("hub-list", {
-    emptyText: "لا ملفات بعد.",
-    onAction(action, id) {
-      if (action === "remove") removeCapture(Number(id));
-      else if (action === "up" || action === "down") {
-        const idx = Number(id);
-        const files = captureFiles();
-        if (action === "up" && idx > 0) {
-          const next = files.slice();
-          const [moved] = next.splice(idx, 1);
-          next.splice(idx - 1, 0, moved);
-          reorderCapture(next);
-        } else if (action === "down" && idx < files.length - 1) {
-          const next = files.slice();
-          const [moved] = next.splice(idx, 1);
-          next.splice(idx + 1, 0, moved);
-          reorderCapture(next);
-        }
-      }
-    },
-    onReorder(ids) {
-      const files = captureFiles();
-      const ordered = ids.map((id) => files[Number(id)]).filter(Boolean);
-      if (ordered.length === files.length) reorderCapture(ordered);
-    }
+  const host = el("hub-list");
+  host?.addEventListener("click", (event) => {
+    const button = /** @type {HTMLElement} */ (event.target).closest("[data-action='remove']");
+    if (!(button instanceof HTMLElement)) return;
+    removeCapture(Number(button.dataset.id));
   });
 
   wireIntake({

@@ -1,6 +1,6 @@
 const CSS = `
-.edit-root { display: flex; flex-direction: column; gap: 0; min-height: 0; }
-.edit-root .view__head { margin-bottom: 12px; }
+.edit-root { display: grid; row-gap: 0; min-height: 0; }
+.edit-root .view__head { margin-bottom: var(--space-3); }
 
 /* ——— hero drop ——— */
 #edit-drop.intake {
@@ -16,26 +16,26 @@ const CSS = `
 .edit-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) 320px;
-  gap: 16px;
+  gap: var(--space-4);
   align-items: start;
   min-height: 0;
 }
 .edit-stage {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  align-content: start;
+  row-gap: var(--space-3);
   min-width: 0;
   background: var(--surface-1);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-xl);
-  padding: 12px;
+  padding: var(--space-3);
   box-shadow: var(--shadow-soft);
 }
 .edit-stage__bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: var(--space-3);
   flex-wrap: wrap;
 }
 .edit-stage__hint {
@@ -44,25 +44,26 @@ const CSS = `
   background: var(--surface-2);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-pill);
-  padding: 6px 10px;
+  padding: var(--space-2) var(--space-3);
   line-height: 1.3;
 }
 .edit-stage__zoom {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
 }
-.edit-stage__zoom .btn { min-width: 32px; height: 32px; padding: 0 8px; }
+.edit-stage__zoom .btn { min-width: 32px; height: 32px; padding: 0 var(--space-2); }
 .edit-board-wrap {
   position: relative;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: safe center;
+  justify-content: safe center;
   min-height: 420px;
   background: var(--surface-2);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-lg);
   overflow: auto;
-  padding: 18px;
+  padding: var(--space-5);
 }
 .edit-board {
   position: relative;
@@ -122,7 +123,7 @@ const CSS = `
   width: 100%;
   height: 100%;
   margin: 0;
-  padding: 6px 8px;
+  padding: var(--space-2) var(--space-2);
   resize: none;
   border: 0;
   background: color-mix(in srgb, #fff 88%, transparent);
@@ -138,7 +139,7 @@ const CSS = `
   display: flex;
   width: 100%;
   height: 100%;
-  padding: 6px 8px;
+  padding: var(--space-2) var(--space-2);
   box-sizing: border-box;
   white-space: pre-wrap;
   overflow: hidden;
@@ -215,9 +216,9 @@ const CSS = `
 
 /* ——— panel ——— */
 .edit-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  display: grid;
+  align-content: start;
+  row-gap: var(--space-4);
   min-width: 0;
   max-height: calc(100vh - 180px);
   overflow-y: auto;
@@ -228,14 +229,13 @@ const CSS = `
 .edit-toolbar {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
+  gap: var(--space-2);
 }
 .edit-toolbar .choice span {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 10px 6px;
+  display: grid;
+  justify-items: center;
+  row-gap: var(--space-1);
+  padding: var(--space-3) var(--space-2);
   font-size: 0.72rem;
   font-weight: 600;
   line-height: 1;
@@ -247,14 +247,14 @@ const CSS = `
   border-color: var(--accent);
 }
 .edit-layers {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  align-content: start;
+  row-gap: var(--space-2);
   max-height: 160px;
   overflow-y: auto;
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-lg);
-  padding: 8px;
+  padding: var(--space-2);
   background: var(--surface-1);
 }
 .edit-layers:empty::before {
@@ -262,13 +262,14 @@ const CSS = `
   font-size: 0.76rem;
   color: var(--text-muted);
   text-align: center;
-  padding: 12px;
+  padding: var(--space-3);
 }
 .edit-layer-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr) auto;
   align-items: center;
-  gap: 8px;
-  padding: 7px 8px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-2);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius);
   background: var(--surface-0, #fff);
@@ -293,10 +294,10 @@ const CSS = `
   .edit-board-wrap { min-height: 360px; }
 }
 @media (max-width: 640px) {
-  .edit-stage { padding: 10px; }
+  .edit-stage { padding: var(--space-3); }
   .edit-stage__bar { flex-direction: column; align-items: stretch; }
   .edit-toolbar { grid-template-columns: repeat(4, 1fr); }
-  .edit-board-wrap { padding: 10px; min-height: 300px; }
+  .edit-board-wrap { padding: var(--space-3); min-height: 300px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .edit-obj { transition: none; }
@@ -371,7 +372,7 @@ export function buildUi(root) {
               <div id="edit-layer" class="edit-layer" data-tool="select"></div>
             </div>
           </div>
-          <div class="edit-stage__hint">💡 اضغط على الصفحة لإضافة العنصر المختار · اسحب الزوايا للحجم · المقبض العلوي للتدوير · <kbd>Delete</kbd> يحذف · <kbd>Ctrl+Z</kbd> تراجع</div>
+          <div class="edit-stage__hint">💡 اضغط على الصفحة لإضافة العنصر المختار · اسحب الزوايا للحجم · المقبض العلوي للتدوير · <kbd>Delete</kbd> يحذف · <kbd>Ctrl+Z</kbd> تراجع · <kbd>Ctrl</kbd>+عجلة الفأرة تكبير</div>
         </div>
 
         <aside class="edit-panel">

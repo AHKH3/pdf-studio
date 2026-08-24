@@ -9,7 +9,7 @@ const CSS = `
   position: relative;
   display: inline-block;
   max-width: 100%;
-  padding: 12px;
+  padding: var(--space-3);
   background: var(--sheet-2);
   border: 1px solid var(--rule);
   border-radius: var(--radius-md);
@@ -82,7 +82,7 @@ const CSS = `
 .sign-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
   max-height: 180px;
   overflow: auto;
 }
@@ -90,9 +90,9 @@ const CSS = `
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--space-2);
   width: 100%;
-  padding: 8px 10px;
+  padding: var(--space-2) var(--space-3);
   font: inherit;
   color: var(--ink);
   background: var(--sheet);

@@ -4,9 +4,11 @@ import { initFeedback, toast } from "./ui/feedback.js";
 import { enterHub, initHub } from "./ui/hub.js";
 import { guardWindowDrops } from "./ui/intake.js";
 import { initKeys } from "./ui/keys.js";
+import { initFilePreview } from "./ui/preview.js";
 import { initRouter, registerTools } from "./ui/router.js";
 import { initTheme } from "./ui/theme.js";
 import { initTitleBlock } from "./ui/titleblock.js";
+import { initToolMenu } from "./ui/toolprefs.js";
 import { initUpdater } from "./ui/updater.js";
 
 /** @param {typeof import("./tools/crop/manifest.js").default} manifest */
@@ -92,6 +94,8 @@ async function boot() {
   initTheme(/** @type {HTMLButtonElement | null} */ (el("theme-toggle")));
   guardWindowDrops();
   initKeys();
+  initToolMenu();
+  initFilePreview();
 
   const tools = [startTool];
   try {
