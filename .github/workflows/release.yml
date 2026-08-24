@@ -11,16 +11,8 @@ permissions:
 
 jobs:
   build:
-    name: Build (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            args: --win
-          - os: ubuntu-latest
-            args: --linux
+    name: Build Windows installer
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -29,8 +21,10 @@ jobs:
           node-version: 20
           cache: npm
 
+      # canvas is an unused optional peer of pdfjs-dist and would demand a
+      # Visual Studio build; nothing else optional is needed at package time.
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --omit=optional
 
       - name: Run tests
         run: npm test
@@ -38,4 +32,4 @@ jobs:
       - name: Build and publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder ${{ matrix.args }} --publish always
+        run: npx electron-builder --win --publish always

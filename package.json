@@ -1,7 +1,7 @@
 {
   "name": "pdf-studio",
   "productName": "PDF Studio",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "أدوات PDF عربية — تطبيق سطح مكتب",
   "homepage": "https://github.com/AHKH3/pdf-studio",
   "author": "abdo3342",
@@ -20,9 +20,7 @@
     "test": "node scripts/check-syntax.mjs && node scripts/test-scan.mjs && node scripts/test-experience.mjs && node scripts/test-tools.mjs && node scripts/test-protect.mjs",
     "start": "electron .",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder",
-    "dist:linux": "electron-builder --linux",
-    "dist:linux-deb": "electron-builder --linux deb",
+    "dist": "electron-builder --win",
     "dist:win": "electron-builder --win"
   },
   "dependencies": {
@@ -60,17 +58,10 @@
     "icon": "assets/branding/app-icon-512.png",
     "win": {
       "target": [
-        "nsis",
-        "portable"
+        "nsis"
       ],
-      "signAndEditExecutable": false
-    },
-    "linux": {
-      "target": [
-        "AppImage"
-      ],
-      "category": "Office",
-      "maintainer": "abdo3342"
+      "signAndEditExecutable": false,
+      "artifactName": "PDFStudio-Setup.${ext}"
     },
     "nsis": {
       "oneClick": false,

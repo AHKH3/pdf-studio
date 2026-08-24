@@ -149,12 +149,12 @@
       واستخراج نصوص بالعربي — كل ده يعمل محليًا: لا رفع ملفات، لا حساب، لا انتظار.
     </p>
     <div class="cta-row">
-      <a class="btn btn-primary" href="https://github.com/AHKH3/pdf-studio/releases/latest" id="dl-primary">
+      <a class="btn btn-primary" href="https://github.com/AHKH3/pdf-studio/releases/latest/download/PDFStudio-Setup.exe" download>
         ⬇ تنزيل لويندوز
       </a>
-      <a class="btn btn-ghost" href="#download">كل الإصدارات</a>
+      <a class="btn btn-ghost" href="#features">اعرف أكتر</a>
     </div>
-    <p class="platform-note">ويندوز (مثبّت أو نسخة محمولة) ولينكس (AppImage) — مجاني بالكامل.</p>
+    <p class="platform-note">ويندوز 10/11 (64-bit) — مثبّت رسمي، مجاني بالكامل.</p>
     <div class="badges">
       <span class="badge">يعمل بدون إنترنت</span>
       <span class="badge">بدون حساب</span>
@@ -211,22 +211,12 @@
 
   <section id="download" class="downloads wrap">
     <h2 class="section-title">تنزيل PDF Studio</h2>
-    <p class="section-sub">آخر إصدار دائمًا من صفحة الإصدارات على GitHub.</p>
+    <p class="section-sub">آخر إصدار دائمًا — التنزيل يبدأ مباشرة عند الضغط.</p>
     <div class="dl-grid">
       <div class="dl-card">
         <h3>ويندوز — مثبّت</h3>
-        <p>للتركيب الدائم مع تحديثات تلقائية. Windows 10/64-bit وما بعده.</p>
-        <a href="https://github.com/AHKH3/pdf-studio/releases/latest" target="_blank" rel="noopener">تنزيل المثبّت ←</a>
-      </div>
-      <div class="dl-card">
-        <h3>ويندوز — نسخة محمولة</h3>
-        <p>ملف واحد يعمل بدون تثبيت — مناسب للفلاشة والأجهزة المشتركة.</p>
-        <a href="https://github.com/AHKH3/pdf-studio/releases/latest" target="_blank" rel="noopener">تنزيل المحمول ←</a>
-      </div>
-      <div class="dl-card">
-        <h3>لينكس — AppImage</h3>
-        <p>تشغيل مباشر بعد إعطاء صلاحية التنفيذ: chmod +x ثم شغّله.</p>
-        <a href="https://github.com/AHKH3/pdf-studio/releases/latest" target="_blank" rel="noopener">تنزيل AppImage ←</a>
+        <p>للتركيب الدائم على جهازك مع تحديثات تلقائية. Windows 10/11 (64-bit).</p>
+        <a href="https://github.com/AHKH3/pdf-studio/releases/latest/download/PDFStudio-Setup.exe" download>تنزيل الآن ←</a>
       </div>
     </div>
   </section>
@@ -235,24 +225,8 @@
 <footer class="site">
   <div class="wrap">
     <span>PDF Studio — أدوات PDF عربية، مجانية وخاصة.</span>
-    <span>
-      <a href="https://github.com/AHKH3/pdf-studio" target="_blank" rel="noopener">المستودع على GitHub</a>
-      ·
-      <a href="https://github.com/AHKH3/pdf-studio/releases" target="_blank" rel="noopener">سجل الإصدارات</a>
-    </span>
   </div>
 </footer>
 
-<script>
-  // Detect the platform so the primary button offers the most fitting asset.
-  (function () {
-    const link = document.getElementById("dl-primary");
-    if (!link) return;
-    const isLinux = /Linux/.test(navigator.platform) && !/Android/.test(navigator.userAgent);
-    if (isLinux) {
-      link.textContent = "⬇ تنزيل للينكس";
-    }
-  })();
-</script>
 </body>
 </html>
