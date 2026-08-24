@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>حبر مدمج — PDF Studio</title>
+<style>
+@font-face {
+  font-family: "Noto Naskh Arabic";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("../../assets/fonts/noto-naskh-arabic-arabic-0.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Playfair Display";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("../../assets/fonts/playfair-display-latin-0.woff2") format("woff2");
+}
+
+:root {
+  --ink: #1e3a8a;
+  --ink-2: #2b4c7e;
+  --ink-deep: #122456;
+  --ink-faded: #6b86c5;
+  --paper: #fcfbf7;
+  --bg: #f4f4f2;
+  --rule: #b8b8b4;
+  --red: #c41a1a;
+  --ui: "Noto Naskh Arabic", serif;
+  --data: "Playfair Display", "Noto Naskh Arabic", serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--ui);
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 27px,
+    var(--rule) 27px,
+    var(--rule) 28px
+  );
+  letter-spacing: 0;
+}
+
+.defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+.page {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3.5rem;
+}
+
+.page__mark {
+  font-family: var(--data);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.page__title {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.3rem, 4vmin, 1.75rem);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.page__lede {
+  margin: 0.5rem 0 0;
+  max-width: 40rem;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.page__head {
+  margin-bottom: 1.35rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1.5px solid var(--ink);
+}
+
+.map {
+  margin: 0.7rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.map li::before { content: "— "; color: var(--ink-faded); }
+
+.board {
+  background: color-mix(in srgb, var(--paper) 94%, transparent);
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+  padding: 1.2rem 1.2rem 1.4rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem 0.8rem;
+  margin-bottom: 1.1rem;
+}
+
+.row:last-of-type { margin-bottom: 0; }
+
+.row__label {
+  flex: 0 0 5.25rem;
+  align-self: center;
+  font-size: 0.6875rem;
+  font-weight: 550;
+  color: var(--ink-faded);
+}
+
+.row__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem 0.85rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.scene {
+  margin-top: 1.15rem;
+  padding-top: 0.95rem;
+  border-top: 1px dashed color-mix(in srgb, var(--ink) 22%, transparent);
+}
+
+.scene__label {
+  margin: 0 0 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 550;
+  color: var(--ink-faded);
+}
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.9rem;
+  padding: 0.55rem 0.8rem;
+  background: var(--paper);
+  border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
+  border-radius: 2px;
+  font-size: 0.75rem;
+}
+
+.status__cell { color: var(--ink-faded); }
+.status__cell strong { color: var(--ink); font-weight: 550; }
+.status__run {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.8rem;
+}
+
+.hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--ink-faded);
+}
+
+button {
+  font-family: var(--ui);
+  letter-spacing: 0;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+}
+
+button:disabled { cursor: not-allowed; opacity: 0.4; }
+button:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 3px;
+}
+
+.icon {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.spin {
+  width: 11px;
+  height: 11px;
+  border: 1.7px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .spin { animation: none; opacity: 0.65; border-color: currentColor; }
+}
+
+/* —— Primary: one ink blot (no underlines) —— */
+.ink-stamp {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 2.35rem;
+  min-width: 5.1rem;
+  padding: 0.45rem 1.1rem;
+  color: var(--paper);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.15;
+  white-space: nowrap;
+  isolation: isolate;
+}
+
+.ink-stamp__frame {
+  position: absolute;
+  inset: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+}
+
+.ink-stamp__label {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ink-stamp:hover:not(:disabled) .pool { opacity: 1; }
+.ink-stamp:active:not(:disabled) .rim { stroke-width: 2.2; }
+
+.ink-stamp--sm {
+  min-height: 2rem;
+  min-width: 0;
+  padding: 0.32rem 0.85rem;
+  font-size: 0.6875rem;
+}
+
+.ink-stamp--wide { min-width: 11rem; }
+
+.ink-stamp--icon {
+  width: 2.2rem;
+  height: 2.2rem;
+  min-width: 2.2rem;
+  min-height: 2.2rem;
+  padding: 0;
+}
+
+/* —— Written: one wrinkled underline —— */
+.ink-write {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0.12rem 0.08rem 0.15rem;
+  color: var(--ink);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.ink-write__row {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ink-write__rule {
+  display: block;
+  width: 100%;
+  height: 8px;
+  overflow: visible;
+}
+
+.ink-write--sec {
+  color: var(--ink-2);
+  font-weight: 550;
+  font-size: 0.75rem;
+}
+.ink-write--sec .mark { opacity: 0.4; stroke-width: 1.2; }
+.ink-write--sec:hover:not(:disabled) .mark { opacity: 1; stroke-width: 1.85; }
+
+.ink-write--current {
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+.ink-write--current .mark { stroke: var(--red); stroke-width: 2.1; }
+
+.ink-write--ghost {
+  color: var(--ink-faded);
+  font-weight: 550;
+  font-size: 0.75rem;
+}
+.ink-write--ghost .ink-write__rule { display: none; }
+.ink-write--ghost:hover:not(:disabled) { color: var(--ink); }
+
+.ink-write--danger {
+  color: var(--red);
+  font-weight: 550;
+  font-size: 0.75rem;
+}
+.ink-write--danger .mark { stroke: var(--red); stroke-width: 1.6; opacity: 0.75; }
+.ink-write--danger:hover:not(:disabled) .mark { opacity: 1; stroke-width: 2; }
+</style>
+</head>
+<body>
+  <svg class="defs" aria-hidden="true">
+    <defs>
+      <filter id="bleed" x="-12%" y="-12%" width="124%" height="124%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="5" result="n" />
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="1.1" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </defs>
+  </svg>
+
+  <main class="page">
+    <header class="page__head">
+      <div class="page__mark">PDF Studio</div>
+      <h1 class="page__title">حبر مدمج — أبسط</h1>
+      <p class="page__lede">
+        الأساسي حبر جاف صلب (لون القلم نفسه) بحافة متعرّجة — مش نسيج جوا الزر، ومش خط تحته.
+        الثانوي كلمة + خط قلم واحد متجعّد.
+      </p>
+      <ul class="map">
+        <li><strong>تنفيذ:</strong> حبر أزرق صلب + حافة قلم غير منتظمة — بدون نسيج وبدون خط تحت</li>
+        <li><strong>تصفّح / أداة:</strong> كلمة + خط واحد</li>
+        <li><strong>حالي:</strong> خط أحمر واحد</li>
+        <li><strong>إلغاء:</strong> كلمة فقط</li>
+        <li><strong>حذف:</strong> كلمة حمراء + خط أحمر واحد</li>
+      </ul>
+    </header>
+
+    <section class="board" aria-label="عينات">
+      <div class="row">
+        <div class="row__label">الوجوه</div>
+        <div class="row__body">
+          <button type="button" class="ink-stamp" data-stamp>
+            <svg class="ink-stamp__frame" viewBox="0 0 120 42" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <span class="ink-stamp__label">تنفيذ</span>
+          </button>
+
+          <button type="button" class="ink-write ink-write--sec" data-write>
+            <span class="ink-write__row">تصفّح</span>
+            <svg class="ink-write__rule" viewBox="0 0 56 8" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </button>
+
+          <button type="button" class="ink-write ink-write--current" data-write>
+            <span class="ink-write__row">دمج</span>
+            <svg class="ink-write__rule" viewBox="0 0 40 8" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </button>
+
+          <button type="button" class="ink-write ink-write--ghost">
+            <span class="ink-write__row">إلغاء</span>
+          </button>
+
+          <button type="button" class="ink-write ink-write--danger" data-write>
+            <span class="ink-write__row">حذف</span>
+            <svg class="ink-write__rule" viewBox="0 0 40 8" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </button>
+
+          <button type="button" class="ink-stamp ink-stamp--icon" data-stamp aria-label="المظهر">
+            <svg class="ink-stamp__frame" viewBox="0 0 40 40" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <span class="ink-stamp__label">
+              <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.1M12 19.1v2.1M4.6 4.6l1.5 1.5M17.9 17.9l1.5 1.5M2.8 12h2.1M19.1 12h2.1M4.6 19.4l1.5-1.5M17.9 6.1l1.5-1.5"/></svg>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row__label">المقاسات</div>
+        <div class="row__body">
+          <button type="button" class="ink-stamp ink-stamp--sm" data-stamp>
+            <svg class="ink-stamp__frame" viewBox="0 0 92 34" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <span class="ink-stamp__label">مضغوط</span>
+          </button>
+          <button type="button" class="ink-stamp" data-stamp>
+            <svg class="ink-stamp__frame" viewBox="0 0 120 42" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <span class="ink-stamp__label">افتراضي</span>
+          </button>
+          <button type="button" class="ink-stamp ink-stamp--wide" data-stamp>
+            <svg class="ink-stamp__frame" viewBox="0 0 176 42" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <span class="ink-stamp__label">عريض — حفظ باسم</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row__label">الحالات</div>
+        <div class="row__body">
+          <button type="button" class="ink-stamp" data-stamp>
+            <svg class="ink-stamp__frame" viewBox="0 0 100 42" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <span class="ink-stamp__label">عادي</span>
+          </button>
+          <button type="button" class="ink-stamp" data-stamp disabled>
+            <svg class="ink-stamp__frame" viewBox="0 0 100 42" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <span class="ink-stamp__label">معطّل</span>
+          </button>
+          <button type="button" class="ink-stamp" data-stamp aria-busy="true">
+            <svg class="ink-stamp__frame" viewBox="0 0 110 42" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <span class="ink-stamp__label"><span class="spin" aria-hidden="true"></span> جاري…</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="scene">
+        <p class="scene__label">شريط الحالة</p>
+        <div class="status">
+          <button type="button" class="ink-write ink-write--sec" data-write>
+            <span class="ink-write__row">مسح</span>
+            <svg class="ink-write__rule" viewBox="0 0 36 8" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </button>
+          <button type="button" class="ink-write ink-write--current" data-write>
+            <span class="ink-write__row">دمج</span>
+            <svg class="ink-write__rule" viewBox="0 0 36 8" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </button>
+          <button type="button" class="ink-write ink-write--sec" data-write>
+            <span class="ink-write__row">ضغط</span>
+            <svg class="ink-write__rule" viewBox="0 0 36 8" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </button>
+          <span class="status__cell">صفحات: <strong>12</strong></span>
+          <span class="status__run">
+            <button type="button" class="ink-write ink-write--ghost">
+              <span class="ink-write__row">إلغاء</span>
+            </button>
+            <button type="button" class="ink-stamp ink-stamp--sm" data-stamp>
+              <svg class="ink-stamp__frame" viewBox="0 0 88 34" preserveAspectRatio="none" aria-hidden="true"></svg>
+              <span class="ink-stamp__label">تنفيذ</span>
+            </button>
+          </span>
+        </div>
+        <p class="hint">الحبر = اللون + الحافة. أي نسيج داخلي (تظليل / حبيبات / خطوط) كان بيتقري جينز فاتشال.</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const pick = (seed) => {
+      let s = seed % 2147483647;
+      if (s <= 0) s += 2147483646;
+      return () => (s = (s * 16807) % 2147483647) / 2147483647;
+    };
+
+    function wobbleRect(w, h, r) {
+      const p = 2.4;
+      const j = (n) => (r() - 0.5) * n;
+      return [
+        `M${p + j(1)} ${p + 5 + j(1)}`,
+        `C${p + j(0.8)} ${p + j(1.2)} ${p + 6 + j(1)} ${p + j(0.9)} ${p + 10 + j(0.8)} ${p + j(0.7)}`,
+        `L${w - p - 10 + j(1)} ${p + j(1)}`,
+        `C${w - p - 4 + j(0.9)} ${p + j(0.8)} ${w - p + j(1)} ${p + 4 + j(1.1)} ${w - p + j(0.8)} ${p + 8 + j(0.9)}`,
+        `L${w - p + j(0.9)} ${h - p - 8 + j(1)}`,
+        `C${w - p + j(1)} ${h - p - 3 + j(0.9)} ${w - p - 5 + j(1)} ${h - p + j(0.8)} ${w - p - 10 + j(0.9)} ${h - p + j(0.7)}`,
+        `L${p + 10 + j(1)} ${h - p + j(0.9)}`,
+        `C${p + 4 + j(0.9)} ${h - p + j(0.8)} ${p + j(1)} ${h - p - 4 + j(1)} ${p + j(0.8)} ${h - p - 8 + j(0.9)}`,
+        `Z`,
+      ].join(" ");
+    }
+
+    function oneWrinkle(w, r, y = 4) {
+      const steps = Math.max(5, Math.round(w / 12));
+      let d = `M1.2 ${(y + (r() - 0.5) * 2.2).toFixed(1)}`;
+      for (let i = 1; i <= steps; i++) {
+        const x = (i / steps) * (w - 2.4) + 1.2;
+        const yy = y + (r() - 0.5) * 3.4;
+        const cx = x - (w / steps) * (0.3 + r() * 0.35);
+        const cy = y + (r() - 0.5) * 4.2;
+        d += ` Q${cx.toFixed(1)} ${cy.toFixed(1)} ${x.toFixed(1)} ${yy.toFixed(1)}`;
+      }
+      return d;
+    }
+
+    function fillStamp(btn) {
+      const frame = btn.querySelector(".ink-stamp__frame");
+      if (!frame) return;
+      const vb = frame.viewBox.baseVal;
+      const w = vb.width || 120;
+      const h = vb.height || 42;
+      const seed = Math.floor(w * 19 + h * 11 + (btn.textContent || "").length * 47);
+      const r = pick(seed);
+      const d = wobbleRect(w, h, r);
+      // Solid ballpoint pool — ink is the blue itself + imperfect rim. No inner texture.
+      frame.innerHTML = `
+        <path class="pool" d="${d}" fill="#1E3A8A" filter="url(#bleed)" />
+        <path d="${d}" fill="none" stroke="#1E3A8A" stroke-width="2.4" opacity="0.35" filter="url(#bleed)" />
+        <path class="rim" d="${d}" fill="none" stroke="#122456" stroke-width="1.45" filter="url(#bleed)" />
+      `;
+    }
+
+    function fillWrite(btn) {
+      const rule = btn.querySelector(".ink-write__rule");
+      if (!rule) return;
+      const w = rule.viewBox.baseVal.width || 56;
+      const seed = Math.floor(w * 29 + (btn.textContent || "").length * 53);
+      const r = pick(seed);
+      const isRed =
+        btn.classList.contains("ink-write--current") ||
+        btn.classList.contains("ink-write--danger");
+      const stroke = isRed ? "#C41A1A" : "#1E3A8A";
+      const sw = isRed ? 2.05 : 1.7;
+      rule.innerHTML = `
+        <path class="mark" d="${oneWrinkle(w, r)}" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" filter="url(#bleed)" />
+      `;
+    }
+
+    document.querySelectorAll("[data-stamp]").forEach(fillStamp);
+    document.querySelectorAll("[data-write]").forEach(fillWrite);
+  </script>
+</body>
+</html>

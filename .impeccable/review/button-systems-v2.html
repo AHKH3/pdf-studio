@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>أنظمة أزرار بالحبر — PDF Studio</title>
+<style>
+@font-face {
+  font-family: "Noto Naskh Arabic";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("../../assets/fonts/noto-naskh-arabic-arabic-0.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Playfair Display";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("../../assets/fonts/playfair-display-latin-0.woff2") format("woff2");
+}
+
+:root {
+  --ink: #1e3a8a;
+  --ink-2: #2b4c7e;
+  --ink-deep: #152a66;
+  --ink-faded: #6b86c5;
+  --paper: #fcfbf7;
+  --bg: #f4f4f2;
+  --rule: #b8b8b4;
+  --red: #c41a1a;
+  --red-soft: rgba(196, 26, 26, 0.12);
+  --ui: "Noto Naskh Arabic", serif;
+  --data: "Playfair Display", "Noto Naskh Arabic", serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--ui);
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 27px,
+    var(--rule) 27px,
+    var(--rule) 28px
+  );
+  letter-spacing: 0;
+}
+
+.defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.page {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.page__mark {
+  font-family: var(--data);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.page__title {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.35rem, 4vmin, 1.9rem);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.page__lede {
+  margin: 0.55rem 0 0;
+  max-width: 46rem;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+
+.page__head {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1.5px solid var(--ink);
+}
+
+.note {
+  margin: 0.65rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--ink-faded);
+}
+
+.systems { display: grid; gap: 1.75rem; }
+
+.system {
+  position: relative;
+  background: color-mix(in srgb, var(--paper) 94%, transparent);
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+  padding: 1.2rem 1.25rem 1.4rem;
+}
+
+.system__name {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.system__thesis {
+  margin: 0.35rem 0 0;
+  max-width: 52ch;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.system__build {
+  margin: 0.55rem 0 0;
+  font-size: 0.6875rem;
+  color: var(--ink-faded);
+  line-height: 1.45;
+}
+
+.system__head {
+  margin-bottom: 1.15rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 28%, transparent);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.7rem;
+  margin-bottom: 0.95rem;
+}
+
+.row:last-of-type { margin-bottom: 0; }
+
+.row__label {
+  flex: 0 0 5.25rem;
+  font-size: 0.6875rem;
+  font-weight: 550;
+  color: var(--ink-faded);
+}
+
+.row__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.65rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.scene {
+  margin-top: 1.1rem;
+  padding-top: 0.95rem;
+  border-top: 1px dashed color-mix(in srgb, var(--ink) 22%, transparent);
+}
+
+.scene__label {
+  margin: 0 0 0.55rem;
+  font-size: 0.6875rem;
+  font-weight: 550;
+  color: var(--ink-faded);
+}
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.55rem 0.75rem;
+  background: var(--paper);
+  border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
+  border-radius: 2px;
+  font-size: 0.75rem;
+}
+
+.status__cell { color: var(--ink-faded); }
+.status__cell strong { color: var(--ink); font-weight: 550; }
+.status__run { margin-inline-start: auto; display: flex; gap: 0.5rem; align-items: center; }
+
+.hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--ink-faded);
+}
+
+button {
+  font-family: var(--ui);
+  letter-spacing: 0;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+button:disabled { cursor: not-allowed; }
+
+button:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 3px;
+}
+
+.icon {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.spin {
+  width: 11px;
+  height: 11px;
+  border: 1.6px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .spin { animation: none; opacity: 0.65; border-color: currentColor; }
+}
+
+/* =========================================================
+   A — كتلة التظليل (hatched ink stamp)
+   Construction: dense ballpoint hatch + knock-out paper type
+   ========================================================= */
+.a-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 2.35rem;
+  padding: 0.45rem 1.05rem;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  isolation: isolate;
+  transition: color 140ms var(--ease), opacity 140ms var(--ease);
+}
+
+.a-btn__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+}
+
+.a-btn__label {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.a-primary {
+  color: var(--paper);
+  min-width: 5.5rem;
+  text-shadow: 0 0 1px rgba(21, 42, 102, 0.35);
+}
+.a-primary .ink-base { fill: #1e3a8a; opacity: 0.42; }
+.a-primary:hover:not(:disabled) { color: #fff; }
+.a-primary:hover:not(:disabled) .ink-base { opacity: 0.55; }
+.a-primary:active:not(:disabled) .a-btn__frame .stroke { stroke-width: 2.4; }
+.a-primary:disabled { opacity: 0.4; }
+
+.a-secondary { color: var(--ink); font-weight: 550; }
+.a-secondary:hover:not(:disabled) .a-btn__frame .stroke { stroke-width: 2.1; }
+.a-secondary:disabled { opacity: 0.4; }
+
+.a-ghost {
+  color: var(--ink-faded);
+  font-weight: 550;
+  min-height: 2rem;
+  padding: 0.3rem 0.55rem;
+}
+.a-ghost:hover:not(:disabled) { color: var(--ink); }
+.a-ghost .a-btn__frame { display: none; }
+
+.a-danger {
+  color: var(--red);
+  font-weight: 550;
+}
+.a-danger .stroke { stroke: var(--red); }
+.a-danger:hover:not(:disabled) {
+  background: var(--red-soft);
+}
+
+.a-icon {
+  width: 2.15rem;
+  height: 2.15rem;
+  min-height: 2.15rem;
+  padding: 0;
+  color: var(--ink);
+}
+.a-icon:hover:not(:disabled) .a-btn__frame .stroke { stroke-width: 2.1; }
+
+.a-sm { min-height: 2rem; padding: 0.3rem 0.85rem; font-size: 0.6875rem; }
+.a-wide { min-width: 11rem; }
+
+/* =========================================================
+   B — البئر المزدوج (double ballpoint well)
+   Construction: two concentric ink strokes, paper gutter
+   ========================================================= */
+.b-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 2.45rem;
+  padding: 0.5rem 1.15rem;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  isolation: isolate;
+}
+
+.b-btn__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+}
+
+.b-btn__label {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.b-primary { color: var(--paper); min-width: 5.75rem; text-shadow: 0 0 1px rgba(21, 42, 102, 0.35); }
+.b-primary .ink-base { fill: #1e3a8a; opacity: 0.4; }
+.b-primary:hover:not(:disabled) .ink-base { opacity: 0.55; }
+.b-primary:disabled { opacity: 0.4; }
+
+.b-secondary { color: var(--ink); font-weight: 550; }
+.b-secondary .inner { opacity: 0; }
+.b-secondary:hover:not(:disabled) .inner { opacity: 1; }
+.b-secondary:disabled { opacity: 0.4; }
+
+.b-ghost {
+  color: var(--ink-faded);
+  font-weight: 550;
+  min-height: 2rem;
+  padding: 0.3rem 0.55rem;
+}
+.b-ghost .b-btn__frame { display: none; }
+.b-ghost:hover:not(:disabled) { color: var(--ink); }
+
+.b-danger {
+  color: var(--red);
+  font-weight: 550;
+}
+.b-danger .outer,
+.b-danger .inner { stroke: var(--red); }
+.b-danger .inner { opacity: 0; }
+.b-danger:hover:not(:disabled) .inner { opacity: 1; }
+
+.b-icon {
+  width: 2.35rem;
+  height: 2.35rem;
+  min-height: 2.35rem;
+  padding: 0;
+}
+.b-icon .inner { opacity: 0; }
+.b-icon:hover:not(:disabled) .inner { opacity: 1; }
+
+.b-sm { min-height: 2.1rem; padding: 0.35rem 0.9rem; font-size: 0.6875rem; }
+.b-wide { min-width: 11.5rem; }
+
+/* =========================================================
+   C — السطر المكتوب (written ballpoint line)
+   Construction: no box — weight + underline stroke
+   ========================================================= */
+.c-btn {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  min-height: 0;
+  padding: 0.2rem 0.15rem 0.35rem;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.c-btn__row {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.c-btn__rule {
+  display: block;
+  width: 100%;
+  height: 6px;
+  margin-top: 1px;
+  overflow: visible;
+}
+
+.c-primary { color: var(--ink); }
+.c-primary .c-btn__rule .u { stroke: var(--ink); stroke-width: 2.2; }
+.c-primary:hover:not(:disabled) .c-btn__rule .u { stroke-width: 2.8; }
+.c-primary:disabled { opacity: 0.4; }
+
+.c-secondary {
+  color: var(--ink-2);
+  font-weight: 550;
+  font-size: 0.75rem;
+}
+.c-secondary .c-btn__rule .u {
+  stroke: var(--ink-faded);
+  stroke-width: 1;
+  opacity: 0;
+}
+.c-secondary:hover:not(:disabled) .c-btn__rule .u { opacity: 1; }
+.c-secondary.is-current .c-btn__rule .u {
+  stroke: var(--red);
+  stroke-width: 2;
+  opacity: 1;
+}
+.c-secondary:disabled { opacity: 0.4; }
+
+.c-ghost {
+  color: var(--ink-faded);
+  font-weight: 550;
+  font-size: 0.75rem;
+}
+.c-ghost .c-btn__rule { display: none; }
+.c-ghost:hover:not(:disabled) { color: var(--ink); }
+
+.c-danger {
+  color: var(--red);
+  font-weight: 550;
+  font-size: 0.75rem;
+}
+.c-danger .c-btn__rule .u { stroke: var(--red); stroke-width: 1.4; opacity: 0.55; }
+.c-danger:hover:not(:disabled) .c-btn__rule .u { opacity: 1; stroke-width: 2; }
+
+.c-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0.15rem;
+  color: var(--ink);
+  align-items: center;
+}
+.c-icon .c-btn__rule { display: none; }
+.c-icon:hover:not(:disabled) { color: var(--ink-deep); }
+
+.c-sm { font-size: 0.75rem; }
+.c-sm.c-primary .c-btn__rule .u { stroke-width: 1.8; }
+.c-wide { min-width: 9rem; }
+
+.c-loading .c-btn__rule .u {
+  stroke-dasharray: 4 3;
+  animation: dash 0.9s linear infinite;
+}
+@keyframes dash { to { stroke-dashoffset: -14; } }
+@media (prefers-reduced-motion: reduce) {
+  .c-loading .c-btn__rule .u { animation: none; }
+}
+
+.footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 28%, transparent);
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--ink-faded);
+  max-width: 48rem;
+}
+</style>
+</head>
+<body>
+  <!-- Shared ink patterns & filters -->
+  <svg class="defs" aria-hidden="true">
+    <defs>
+      <pattern id="hatch-a" width="2.4" height="2.4" patternUnits="userSpaceOnUse" patternTransform="rotate(18)">
+        <line x1="0" y1="0" x2="0" y2="2.4" stroke="#1E3A8A" stroke-width="1.55" />
+      </pattern>
+      <pattern id="hatch-a2" width="2.6" height="2.6" patternUnits="userSpaceOnUse" patternTransform="rotate(-34)">
+        <line x1="0" y1="0" x2="0" y2="2.6" stroke="#152A66" stroke-width="1.15" opacity="0.75" />
+      </pattern>
+      <pattern id="hatch-b" width="2.3" height="2.3" patternUnits="userSpaceOnUse" patternTransform="rotate(12)">
+        <line x1="0" y1="0" x2="0" y2="2.3" stroke="#1E3A8A" stroke-width="1.6" />
+      </pattern>
+      <pattern id="hatch-b2" width="2.5" height="2.5" patternUnits="userSpaceOnUse" patternTransform="rotate(-28)">
+        <line x1="0" y1="0" x2="0" y2="2.5" stroke="#152A66" stroke-width="1" opacity="0.65" />
+      </pattern>
+      <filter id="ink-jitter" x="-8%" y="-8%" width="116%" height="116%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n" />
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="0.85" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </defs>
+  </svg>
+
+  <main class="page">
+    <header class="page__head">
+      <div class="page__mark">PDF Studio</div>
+      <h1 class="page__title">ثلاث بنى أزرار بالحبر الأزرق</h1>
+      <p class="page__lede">
+        الحبر الأزرق هو اللون الرئيسي للتنفيذ. الأحمر شريط مطبوع فقط (تسطير / خطر) — مش خلفية زر.
+        الثلاثة من صورة نظام التصميم (تظليل جاف، إطار قلم، كتابة على السطر) — الاختلاف في <strong>بناء</strong> الزر، مش في لوحة الألوان.
+      </p>
+      <p class="note">الأنظمة السابقة (ختم أحمر / قائمة مسطّرة / حبر معكوس) مرفوضة ومش موجودة هنا.</p>
+    </header>
+
+    <div class="systems">
+
+      <!-- A: Hatched stamp -->
+      <section class="system" id="sys-hatch" aria-labelledby="a-name">
+        <header class="system__head">
+          <h2 class="system__name" id="a-name">كتلة التظليل</h2>
+          <p class="system__thesis">
+            زي زر PLAY في لوحة الـ J-card: مستطيل مقفول، داخله تظليل قلم جاف كثيف، والنص بلون الورق كأنه «مفرّغ» من الحبر.
+            الثانوي إطار قلم واحد فاضي. الخطر إطار أحمر رفيع بدون تعبئة.
+          </p>
+          <p class="system__build">البناء: مسار SVG غير منتظم + pattern تظليل متقاطع · النص knock-out على الورق</p>
+        </header>
+
+        <div class="row">
+          <div class="row__label">الوجوه</div>
+          <div class="row__body">
+            <button type="button" class="a-btn a-primary">
+              <svg class="a-btn__frame" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true">
+                <path class="hatch" d="M3.2 7.1 C3 3.4 6.8 2.6 10.2 2.8 H109.4 C113.6 2.7 117.1 5.2 116.8 9.2 V31.2 C117 34.8 113.2 37.4 109.1 37.2 H10.5 C6.2 37.4 3.1 34.1 3.3 30.2 Z" fill="url(#hatch-a)" filter="url(#ink-jitter)" />
+                <path d="M3.2 7.1 C3 3.4 6.8 2.6 10.2 2.8 H109.4 C113.6 2.7 117.1 5.2 116.8 9.2 V31.2 C117 34.8 113.2 37.4 109.1 37.2 H10.5 C6.2 37.4 3.1 34.1 3.3 30.2 Z" fill="url(#hatch-a2)" opacity="0.85" />
+                <path class="stroke" d="M3.2 7.1 C3 3.4 6.8 2.6 10.2 2.8 H109.4 C113.6 2.7 117.1 5.2 116.8 9.2 V31.2 C117 34.8 113.2 37.4 109.1 37.2 H10.5 C6.2 37.4 3.1 34.1 3.3 30.2 Z" fill="none" stroke="#1E3A8A" stroke-width="1.7" />
+              </svg>
+              <span class="a-btn__label">تنفيذ</span>
+            </button>
+
+            <button type="button" class="a-btn a-secondary">
+              <svg class="a-btn__frame" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+                <path class="stroke" d="M3.4 6.8 C3.1 3.2 7.1 2.5 10.4 2.9 H89.2 C93.4 2.6 96.8 5.4 96.6 9.3 V30.8 C96.9 34.6 93.1 37.3 88.9 37 H10.6 C6.4 37.3 3.2 33.9 3.5 30 Z" fill="none" stroke="#1E3A8A" stroke-width="1.55" />
+              </svg>
+              <span class="a-btn__label">تصفّح</span>
+            </button>
+
+            <button type="button" class="a-btn a-ghost"><span class="a-btn__label">إلغاء</span></button>
+
+            <button type="button" class="a-btn a-danger">
+              <svg class="a-btn__frame" viewBox="0 0 88 40" preserveAspectRatio="none" aria-hidden="true">
+                <path class="stroke" d="M3.5 7 C3.2 3.3 7 2.6 10.2 2.9 H77.4 C81.6 2.7 85 5.5 84.8 9.4 V30.7 C85 34.5 81.3 37.2 77.1 37 H10.4 C6.3 37.2 3.3 34 3.6 30.1 Z" fill="none" stroke="#C41A1A" stroke-width="1.45" />
+              </svg>
+              <span class="a-btn__label">حذف</span>
+            </button>
+
+            <button type="button" class="a-btn a-icon" aria-label="المظهر">
+              <svg class="a-btn__frame" viewBox="0 0 40 40" preserveAspectRatio="none" aria-hidden="true">
+                <path class="stroke" d="M5.2 8.1 C4.9 4.2 8.4 3.1 11.2 3.4 H28.6 C32.4 3.2 35.4 6.1 35.1 9.8 V29.8 C35.3 33.5 32.1 36.4 28.4 36.1 H11.1 C7.2 36.3 4.8 33 5.1 29.4 Z" fill="none" stroke="#1E3A8A" stroke-width="1.55" />
+              </svg>
+              <span class="a-btn__label">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.1M12 19.1v2.1M4.6 4.6l1.5 1.5M17.9 17.9l1.5 1.5M2.8 12h2.1M19.1 12h2.1M4.6 19.4l1.5-1.5M17.9 6.1l1.5-1.5"/></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row__label">المقاسات</div>
+          <div class="row__body">
+            <button type="button" class="a-btn a-primary a-sm">
+              <svg class="a-btn__frame" viewBox="0 0 96 34" preserveAspectRatio="none" aria-hidden="true">
+                <path class="hatch" d="M2.8 6.2 C2.6 3 6 2.2 9 2.4 H86.6 C90.4 2.3 93.4 4.6 93.2 8 V25.6 C93.4 28.8 90.2 31.2 86.4 31 H9.1 C5.4 31.2 2.7 28.4 2.9 25.2 Z" fill="url(#hatch-a)" />
+                <path class="stroke" d="M2.8 6.2 C2.6 3 6 2.2 9 2.4 H86.6 C90.4 2.3 93.4 4.6 93.2 8 V25.6 C93.4 28.8 90.2 31.2 86.4 31 H9.1 C5.4 31.2 2.7 28.4 2.9 25.2 Z" fill="none" stroke="#1E3A8A" stroke-width="1.5" />
+              </svg>
+              <span class="a-btn__label">مضغوط</span>
+            </button>
+            <button type="button" class="a-btn a-primary">
+              <svg class="a-btn__frame" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true">
+                <path class="hatch" d="M3.2 7.1 C3 3.4 6.8 2.6 10.2 2.8 H109.4 C113.6 2.7 117.1 5.2 116.8 9.2 V31.2 C117 34.8 113.2 37.4 109.1 37.2 H10.5 C6.2 37.4 3.1 34.1 3.3 30.2 Z" fill="url(#hatch-a)" />
+                <path d="M3.2 7.1 C3 3.4 6.8 2.6 10.2 2.8 H109.4 C113.6 2.7 117.1 5.2 116.8 9.2 V31.2 C117 34.8 113.2 37.4 109.1 37.2 H10.5 C6.2 37.4 3.1 34.1 3.3 30.2 Z" fill="url(#hatch-a2)" opacity="0.8" />
+                <path class="stroke" d="M3.2 7.1 C3 3.4 6.8 2.6 10.2 2.8 H109.4 C113.6 2.7 117.1 5.2 116.8 9.2 V31.2 C117 34.8 113.2 37.4 109.1 37.2 H10.5 C6.2 37.4 3.1 34.1 3.3 30.2 Z" fill="none" stroke="#1E3A8A" stroke-width="1.7" />
+              </svg>
+              <span class="a-btn__label">افتراضي</span>
+            </button>
+            <button type="button" class="a-btn a-primary a-wide">
+              <svg class="a-btn__frame" viewBox="0 0 180 40" preserveAspectRatio="none" aria-hidden="true">
+                <path class="hatch" d="M3.4 7 C3.1 3.3 7 2.5 10.5 2.8 H169.2 C173.5 2.6 177 5.3 176.7 9.3 V31 C177 34.7 173.2 37.3 169 37.1 H10.6 C6.3 37.3 3.2 34 3.5 30.1 Z" fill="url(#hatch-a)" />
+                <path d="M3.4 7 C3.1 3.3 7 2.5 10.5 2.8 H169.2 C173.5 2.6 177 5.3 176.7 9.3 V31 C177 34.7 173.2 37.3 169 37.1 H10.6 C6.3 37.3 3.2 34 3.5 30.1 Z" fill="url(#hatch-a2)" opacity="0.8" />
+                <path class="stroke" d="M3.4 7 C3.1 3.3 7 2.5 10.5 2.8 H169.2 C173.5 2.6 177 5.3 176.7 9.3 V31 C177 34.7 173.2 37.3 169 37.1 H10.6 C6.3 37.3 3.2 34 3.5 30.1 Z" fill="none" stroke="#1E3A8A" stroke-width="1.7" />
+              </svg>
+              <span class="a-btn__label">عريض — حفظ باسم</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row__label">الحالات</div>
+          <div class="row__body">
+            <button type="button" class="a-btn a-primary">
+              <svg class="a-btn__frame" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+                <path class="hatch" d="M3.2 7 C3 3.3 6.9 2.5 10.2 2.8 H89.4 C93.5 2.6 96.9 5.3 96.6 9.3 V30.9 C96.9 34.6 93.1 37.2 88.9 37 H10.4 C6.2 37.2 3.1 34 3.4 30.1 Z" fill="url(#hatch-a)" />
+                <path class="stroke" d="M3.2 7 C3 3.3 6.9 2.5 10.2 2.8 H89.4 C93.5 2.6 96.9 5.3 96.6 9.3 V30.9 C96.9 34.6 93.1 37.2 88.9 37 H10.4 C6.2 37.2 3.1 34 3.4 30.1 Z" fill="none" stroke="#1E3A8A" stroke-width="1.7" />
+              </svg>
+              <span class="a-btn__label">عادي</span>
+            </button>
+            <button type="button" class="a-btn a-primary" disabled>
+              <svg class="a-btn__frame" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+                <path class="hatch" d="M3.2 7 C3 3.3 6.9 2.5 10.2 2.8 H89.4 C93.5 2.6 96.9 5.3 96.6 9.3 V30.9 C96.9 34.6 93.1 37.2 88.9 37 H10.4 C6.2 37.2 3.1 34 3.4 30.1 Z" fill="url(#hatch-a)" />
+                <path class="stroke" d="M3.2 7 C3 3.3 6.9 2.5 10.2 2.8 H89.4 C93.5 2.6 96.9 5.3 96.6 9.3 V30.9 C96.9 34.6 93.1 37.2 88.9 37 H10.4 C6.2 37.2 3.1 34 3.4 30.1 Z" fill="none" stroke="#1E3A8A" stroke-width="1.7" />
+              </svg>
+              <span class="a-btn__label">معطّل</span>
+            </button>
+            <button type="button" class="a-btn a-primary" aria-busy="true">
+              <svg class="a-btn__frame" viewBox="0 0 110 40" preserveAspectRatio="none" aria-hidden="true">
+                <path class="hatch" d="M3.2 7 C3 3.3 6.9 2.5 10.2 2.8 H99.4 C103.5 2.6 106.9 5.3 106.6 9.3 V30.9 C106.9 34.6 103.1 37.2 98.9 37 H10.4 C6.2 37.2 3.1 34 3.4 30.1 Z" fill="url(#hatch-a)" />
+                <path class="stroke" d="M3.2 7 C3 3.3 6.9 2.5 10.2 2.8 H99.4 C103.5 2.6 106.9 5.3 106.6 9.3 V30.9 C106.9 34.6 103.1 37.2 98.9 37 H10.4 C6.2 37.2 3.1 34 3.4 30.1 Z" fill="none" stroke="#1E3A8A" stroke-width="1.7" />
+              </svg>
+              <span class="a-btn__label"><span class="spin" aria-hidden="true"></span> جاري…</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="scene">
+          <p class="scene__label">مشهد شريط الحالة</p>
+          <div class="status">
+            <span class="status__cell">الأداة: <strong>دمج</strong></span>
+            <span class="status__cell">صفحات: <strong>12</strong></span>
+            <span class="status__cell">الحالة: <strong>جاهز</strong></span>
+            <span class="status__run">
+              <button type="button" class="a-btn a-primary a-sm">
+                <svg class="a-btn__frame" viewBox="0 0 88 34" preserveAspectRatio="none" aria-hidden="true">
+                  <path class="hatch" d="M2.8 6 C2.6 2.9 6 2.1 8.9 2.4 H78.8 C82.4 2.2 85.2 4.6 85 7.9 V25.4 C85.2 28.6 82.2 31 78.6 30.8 H9 C5.4 31 2.7 28.2 2.9 25 Z" fill="url(#hatch-a)" />
+                  <path class="stroke" d="M2.8 6 C2.6 2.9 6 2.1 8.9 2.4 H78.8 C82.4 2.2 85.2 4.6 85 7.9 V25.4 C85.2 28.6 82.2 31 78.6 30.8 H9 C5.4 31 2.7 28.2 2.9 25 Z" fill="none" stroke="#1E3A8A" stroke-width="1.5" />
+                </svg>
+                <span class="a-btn__label">تنفيذ</span>
+              </button>
+            </span>
+          </div>
+          <p class="hint">أقرب قراءة لصورة نظام التصميم: الحبر يتعبّى بالتظليل، مش بلون مسطّح رقمي.</p>
+        </div>
+      </section>
+
+      <!-- B: Double well -->
+      <section class="system" id="sys-double" aria-labelledby="b-name">
+        <header class="system__head">
+          <h2 class="system__name" id="b-name">البئر المزدوج</h2>
+          <p class="system__thesis">
+            القلم يمرّ مرتين: إطار خارجي + إطار داخلي وبينهم ورقة ظاهرة. الأساسي يملأ البئر الداخلي بالتظليل.
+            الثانوي إطار خارجي فقط — والداخلي يظهر عند المرور. الخطر بنفس البناء لكن بخط أحمر مطبوع.
+          </p>
+          <p class="system__build">البناء: مساران متداخلان بمسافة ~3px · التظليل داخل البئر فقط · hover يكمّل الإطار</p>
+        </header>
+
+        <div class="row">
+          <div class="row__label">الوجوه</div>
+          <div class="row__body">
+            <button type="button" class="b-btn b-primary">
+              <svg class="b-btn__frame" viewBox="0 0 124 44" preserveAspectRatio="none" aria-hidden="true">
+                <path class="outer" d="M2.8 8 C2.5 3.6 7 2.4 11 2.8 H112.6 C117.2 2.5 121.2 5.8 120.8 10.4 V33.4 C121.2 37.8 117.2 41.2 112.4 40.9 H11.2 C6.4 41.2 2.9 37.4 3.2 32.9 Z" fill="none" stroke="#1E3A8A" stroke-width="1.55" />
+                <path class="inner inner-hatch" d="M8.4 12.2 C8.2 9.1 10.8 8.1 13.2 8.3 H110 C112.8 8.1 115.4 9.6 115.2 12.6 V31.2 C115.4 34 112.8 35.6 110 35.4 H13.4 C10.6 35.6 8.2 33.8 8.4 31 Z" fill="url(#hatch-b)" />
+                <path class="inner" d="M8.4 12.2 C8.2 9.1 10.8 8.1 13.2 8.3 H110 C112.8 8.1 115.4 9.6 115.2 12.6 V31.2 C115.4 34 112.8 35.6 110 35.4 H13.4 C10.6 35.6 8.2 33.8 8.4 31 Z" fill="none" stroke="#1E3A8A" stroke-width="1.2" />
+              </svg>
+              <span class="b-btn__label">تنفيذ</span>
+            </button>
+
+            <button type="button" class="b-btn b-secondary">
+              <svg class="b-btn__frame" viewBox="0 0 108 44" preserveAspectRatio="none" aria-hidden="true">
+                <path class="outer" d="M2.8 8 C2.5 3.6 7 2.4 11 2.8 H96.6 C101.2 2.5 105.2 5.8 104.8 10.4 V33.4 C105.2 37.8 101.2 41.2 96.4 40.9 H11.2 C6.4 41.2 2.9 37.4 3.2 32.9 Z" fill="none" stroke="#1E3A8A" stroke-width="1.55" />
+                <path class="inner" d="M8.4 12.2 C8.2 9.1 10.8 8.1 13.2 8.3 H94 C96.8 8.1 99.4 9.6 99.2 12.6 V31.2 C99.4 34 96.8 35.6 94 35.4 H13.4 C10.6 35.6 8.2 33.8 8.4 31 Z" fill="none" stroke="#1E3A8A" stroke-width="1.15" />
+              </svg>
+              <span class="b-btn__label">تصفّح</span>
+            </button>
+
+            <button type="button" class="b-btn b-ghost"><span class="b-btn__label">إلغاء</span></button>
+
+            <button type="button" class="b-btn b-danger">
+              <svg class="b-btn__frame" viewBox="0 0 96 44" preserveAspectRatio="none" aria-hidden="true">
+                <path class="outer" d="M2.8 8 C2.5 3.6 7 2.4 11 2.8 H84.6 C89.2 2.5 93.2 5.8 92.8 10.4 V33.4 C93.2 37.8 89.2 41.2 84.4 40.9 H11.2 C6.4 41.2 2.9 37.4 3.2 32.9 Z" fill="none" stroke="#C41A1A" stroke-width="1.45" />
+                <path class="inner" d="M8.4 12.2 C8.2 9.1 10.8 8.1 13.2 8.3 H82 C84.8 8.1 87.4 9.6 87.2 12.6 V31.2 C87.4 34 84.8 35.6 82 35.4 H13.4 C10.6 35.6 8.2 33.8 8.4 31 Z" fill="none" stroke="#C41A1A" stroke-width="1.1" />
+              </svg>
+              <span class="b-btn__label">حذف</span>
+            </button>
+
+            <button type="button" class="b-btn b-icon" aria-label="المظهر">
+              <svg class="b-btn__frame" viewBox="0 0 44 44" preserveAspectRatio="none" aria-hidden="true">
+                <path class="outer" d="M4.2 9 C3.9 4.6 7.8 3.2 11.4 3.6 H32.4 C36.4 3.3 39.8 6.6 39.4 10.8 V32.8 C39.8 36.8 36.2 40 32.2 39.6 H11.6 C7.4 40 4 36.4 4.4 32.2 Z" fill="none" stroke="#1E3A8A" stroke-width="1.45" />
+                <path class="inner" d="M10 14 C9.8 11.2 12 10.2 14 10.4 H29.8 C31.8 10.2 34 11.4 33.8 14 V29.6 C34 32 31.8 33.4 29.8 33.2 H14.2 C12 33.4 9.8 31.8 10 29.4 Z" fill="none" stroke="#1E3A8A" stroke-width="1.1" />
+              </svg>
+              <span class="b-btn__label">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.1M12 19.1v2.1M4.6 4.6l1.5 1.5M17.9 17.9l1.5 1.5M2.8 12h2.1M19.1 12h2.1M4.6 19.4l1.5-1.5M17.9 6.1l1.5-1.5"/></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row__label">المقاسات</div>
+          <div class="row__body">
+            <button type="button" class="b-btn b-primary b-sm">
+              <svg class="b-btn__frame" viewBox="0 0 100 38" preserveAspectRatio="none" aria-hidden="true">
+                <path class="outer" d="M2.6 7 C2.4 3.4 6.4 2.4 9.8 2.7 H89.8 C93.8 2.4 97.2 5.2 96.9 9.2 V28.6 C97.2 32.4 93.6 35.2 89.6 34.9 H10 C6 35.2 2.8 32 3.1 28.2 Z" fill="none" stroke="#1E3A8A" stroke-width="1.4" />
+                <path class="inner" d="M7.6 11 C7.4 8.6 9.6 7.8 11.6 8 H85.8 C88 7.8 90.2 9 90 11.2 V26 C90.2 28.2 88 29.4 85.8 29.2 H11.8 C9.6 29.4 7.4 28 7.6 25.8 Z" fill="url(#hatch-b)" />
+                <path class="inner" d="M7.6 11 C7.4 8.6 9.6 7.8 11.6 8 H85.8 C88 7.8 90.2 9 90 11.2 V26 C90.2 28.2 88 29.4 85.8 29.2 H11.8 C9.6 29.4 7.4 28 7.6 25.8 Z" fill="none" stroke="#1E3A8A" stroke-width="1.05" />
+              </svg>
+              <span class="b-btn__label">مضغوط</span>
+            </button>
+            <button type="button" class="b-btn b-primary">
+              <svg class="b-btn__frame" viewBox="0 0 124 44" preserveAspectRatio="none" aria-hidden="true">
+                <path class="outer" d="M2.8 8 C2.5 3.6 7 2.4 11 2.8 H112.6 C117.2 2.5 121.2 5.8 120.8 10.4 V33.4 C121.2 37.8 117.2 41.2 112.4 40.9 H11.2 C6.4 41.2 2.9 37.4 3.2 32.9 Z" fill="none" stroke="#1E3A8A" stroke-width="1.55" />
+                <path class="inner" d="M8.4 12.2 C8.2 9.1 10.8 8.1 13.2 8.3 H110 C112.8 8.1 115.4 9.6 115.2 12.6 V31.2 C115.4 34 112.8 35.6 110 35.4 H13.4 C10.6 35.6 8.2 33.8 8.4 31 Z" fill="url(#hatch-b)" />
+                <path class="inner" d="M8.4 12.2 C8.2 9.1 10.8 8.1 13.2 8.3 H110 C112.8 8.1 115.4 9.6 115.2 12.6 V31.2 C115.4 34 112.8 35.6 110 35.4 H13.4 C10.6 35.6 8.2 33.8 8.4 31 Z" fill="none" stroke="#1E3A8A" stroke-width="1.2" />
+              </svg>
+              <span class="b-btn__label">افتراضي</span>
+            </button>
+            <button type="button" class="b-btn b-primary b-wide">
+              <svg class="b-btn__frame" viewBox="0 0 188 44" preserveAspectRatio="none" aria-hidden="true">
+                <path class="outer" d="M2.8 8 C2.5 3.6 7 2.4 11 2.8 H176.6 C181.2 2.5 185.2 5.8 184.8 10.4 V33.4 C185.2 37.8 181.2 41.2 176.4 40.9 H11.2 C6.4 41.2 2.9 37.4 3.2 32.9 Z" fill="none" stroke="#1E3A8A" stroke-width="1.55" />
+                <path class="inner" d="M8.4 12.2 C8.2 9.1 10.8 8.1 13.2 8.3 H174 C176.8 8.1 179.4 9.6 179.2 12.6 V31.2 C179.4 34 176.8 35.6 174 35.4 H13.4 C10.6 35.6 8.2 33.8 8.4 31 Z" fill="url(#hatch-b)" />
+                <path class="inner" d="M8.4 12.2 C8.2 9.1 10.8 8.1 13.2 8.3 H174 C176.8 8.1 179.4 9.6 179.2 12.6 V31.2 C179.4 34 176.8 35.6 174 35.4 H13.4 C10.6 35.6 8.2 33.8 8.4 31 Z" fill="none" stroke="#1E3A8A" stroke-width="1.2" />
+              </svg>
+              <span class="b-btn__label">عريض — حفظ باسم</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row__label">الحالات</div>
+          <div class="row__body">
+            <button type="button" class="b-btn b-primary">
+              <svg class="b-btn__frame" viewBox="0 0 108 44" preserveAspectRatio="none" aria-hidden="true">
+                <path class="outer" d="M2.8 8 C2.5 3.6 7 2.4 11 2.8 H96.6 C101.2 2.5 105.2 5.8 104.8 10.4 V33.4 C105.2 37.8 101.2 41.2 96.4 40.9 H11.2 C6.4 41.2 2.9 37.4 3.2 32.9 Z" fill="none" stroke="#1E3A8A" stroke-width="1.55" />
+                <path class="inner" d="M8.4 12.2 C8.2 9.1 10.8 8.1 13.2 8.3 H94 C96.8 8.1 99.4 9.6 99.2 12.6 V31.2 C99.4 34 96.8 35.6 94 35.4 H13.4 C10.6 35.6 8.2 33.8 8.4 31 Z" fill="url(#hatch-b)" />
+                <path class="inner" d="M8.4 12.2 C8.2 9.1 10.8 8.1 13.2 8.3 H94 C96.8 8.1 99.4 9.6 99.2 12.6 V31.2 C99.4 34 96.8 35.6 94 35.4 H13.4 C10.6 35.6 8.2 33.8 8.4 31 Z" fill="none" stroke="#1E3A8A" stroke-width="1.2" />
+              </svg>
+              <span class="b-btn__label">عادي</span>
+            </button>
+            <button type="button" class="b-btn b-primary" disabled>
+              <svg class="b-btn__frame" viewBox="0 0 108 44" preserveAspectRatio="none" aria-hidden="true">
+                <path class="outer" d="M2.8 8 C2.5 3.6 7 2.4 11 2.8 H96.6 C101.2 2.5 105.2 5.8 104.8 10.4 V33.4 C105.2 37.8 101.2 41.2 96.4 40.9 H11.2 C6.4 41.2 2.9 37.4 3.2 32.9 Z" fill="none" stroke="#1E3A8A" stroke-width="1.55" />
+                <path class="inner" d="M8.4 12.2 C8.2 9.1 10.8 8.1 13.2 8.3 H94 C96.8 8.1 99.4 9.6 99.2 12.6 V31.2 C99.4 34 96.8 35.6 94 35.4 H13.4 C10.6 35.6 8.2 33.8 8.4 31 Z" fill="url(#hatch-b)" />
+                <path class="inner" d="M8.4 12.2 C8.2 9.1 10.8 8.1 13.2 8.3 H94 C96.8 8.1 99.4 9.6 99.2 12.6 V31.2 C99.4 34 96.8 35.6 94 35.4 H13.4 C10.6 35.6 8.2 33.8 8.4 31 Z" fill="none" stroke="#1E3A8A" stroke-width="1.2" />
+              </svg>
+              <span class="b-btn__label">معطّل</span>
+            </button>
+            <button type="button" class="b-btn b-primary" aria-busy="true">
+              <svg class="b-btn__frame" viewBox="0 0 118 44" preserveAspectRatio="none" aria-hidden="true">
+                <path class="outer" d="M2.8 8 C2.5 3.6 7 2.4 11 2.8 H106.6 C111.2 2.5 115.2 5.8 114.8 10.4 V33.4 C115.2 37.8 111.2 41.2 106.4 40.9 H11.2 C6.4 41.2 2.9 37.4 3.2 32.9 Z" fill="none" stroke="#1E3A8A" stroke-width="1.55" />
+                <path class="inner" d="M8.4 12.2 C8.2 9.1 10.8 8.1 13.2 8.3 H104 C106.8 8.1 109.4 9.6 109.2 12.6 V31.2 C109.4 34 106.8 35.6 104 35.4 H13.4 C10.6 35.6 8.2 33.8 8.4 31 Z" fill="url(#hatch-b)" />
+                <path class="inner" d="M8.4 12.2 C8.2 9.1 10.8 8.1 13.2 8.3 H104 C106.8 8.1 109.4 9.6 109.2 12.6 V31.2 C109.4 34 106.8 35.6 104 35.4 H13.4 C10.6 35.6 8.2 33.8 8.4 31 Z" fill="none" stroke="#1E3A8A" stroke-width="1.2" />
+              </svg>
+              <span class="b-btn__label"><span class="spin" aria-hidden="true"></span> جاري…</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="scene">
+          <p class="scene__label">مشهد شريط الحالة</p>
+          <div class="status">
+            <span class="status__cell">الأداة: <strong>دمج</strong></span>
+            <span class="status__cell">صفحات: <strong>12</strong></span>
+            <span class="status__cell">الحالة: <strong>جاهز</strong></span>
+            <span class="status__run">
+              <button type="button" class="b-btn b-primary b-sm">
+                <svg class="b-btn__frame" viewBox="0 0 96 38" preserveAspectRatio="none" aria-hidden="true">
+                  <path class="outer" d="M2.6 7 C2.4 3.4 6.4 2.4 9.8 2.7 H85.8 C89.8 2.4 93.2 5.2 92.9 9.2 V28.6 C93.2 32.4 89.6 35.2 85.6 34.9 H10 C6 35.2 2.8 32 3.1 28.2 Z" fill="none" stroke="#1E3A8A" stroke-width="1.4" />
+                  <path class="inner" d="M7.6 11 C7.4 8.6 9.6 7.8 11.6 8 H81.8 C84 7.8 86.2 9 86 11.2 V26 C86.2 28.2 84 29.4 81.8 29.2 H11.8 C9.6 29.4 7.4 28 7.6 25.8 Z" fill="url(#hatch-b)" />
+                  <path class="inner" d="M7.6 11 C7.4 8.6 9.6 7.8 11.6 8 H81.8 C84 7.8 86.2 9 86 11.2 V26 C86.2 28.2 84 29.4 81.8 29.2 H11.8 C9.6 29.4 7.4 28 7.6 25.8 Z" fill="none" stroke="#1E3A8A" stroke-width="1.05" />
+                </svg>
+                <span class="b-btn__label">تنفيذ</span>
+              </button>
+            </span>
+          </div>
+          <p class="hint">البناء نفسه يفرّق الأساسي عن الثانوي: بئر ممتلئ مقابل إطار واحد ينتظر الضغطة الثانية.</p>
+        </div>
+      </section>
+
+      <!-- C: Written line -->
+      <section class="system" id="sys-write" aria-labelledby="c-name">
+        <header class="system__head">
+          <h2 class="system__name" id="c-name">السطر المكتوب</h2>
+          <p class="system__thesis">
+            مفيش صندوق. الزر كلمة مكتوبة بحبر جاف؛ الأساسي تحته خط قلم ثقيل متعرّج.
+            الحالي في القائمة: خط أحمر مطبوع 2px (شريط TDK). الشبح بدون خط. الخطر خط أحمر خفيف يثقل عند المرور.
+          </p>
+          <p class="system__build">البناء: وزن الخط + مسار SVG للتسطير · لا border ولا fill · الأحمر للوضع الحالي/الخطر فقط</p>
+        </header>
+
+        <div class="row">
+          <div class="row__label">الوجوه</div>
+          <div class="row__body">
+            <button type="button" class="c-btn c-primary">
+              <span class="c-btn__row">تنفيذ</span>
+              <svg class="c-btn__rule" viewBox="0 0 72 6" preserveAspectRatio="none" aria-hidden="true">
+                <path class="u" d="M1 3.2 C8 2.4 14 3.8 22 2.9 C31 2 40 3.6 49 3 C58 2.4 66 3.5 71 2.8" fill="none" stroke-linecap="round" />
+              </svg>
+            </button>
+
+            <button type="button" class="c-btn c-secondary">
+              <span class="c-btn__row">تصفّح</span>
+              <svg class="c-btn__rule" viewBox="0 0 56 6" preserveAspectRatio="none" aria-hidden="true">
+                <path class="u" d="M1 3.1 C10 2.5 20 3.6 30 2.8 C40 2.1 48 3.4 55 3" fill="none" stroke-linecap="round" />
+              </svg>
+            </button>
+
+            <button type="button" class="c-btn c-secondary is-current">
+              <span class="c-btn__row">دمج</span>
+              <svg class="c-btn__rule" viewBox="0 0 40 6" preserveAspectRatio="none" aria-hidden="true">
+                <path class="u" d="M1 3.4 C8 2.6 16 3.7 24 3 C31 2.4 36 3.5 39 3.1" fill="none" stroke-linecap="round" />
+              </svg>
+            </button>
+
+            <button type="button" class="c-btn c-ghost"><span class="c-btn__row">إلغاء</span></button>
+
+            <button type="button" class="c-btn c-danger">
+              <span class="c-btn__row">حذف</span>
+              <svg class="c-btn__rule" viewBox="0 0 40 6" preserveAspectRatio="none" aria-hidden="true">
+                <path class="u" d="M1 3.2 C9 2.5 18 3.8 27 3 C33 2.5 37 3.4 39 3" fill="none" stroke-linecap="round" />
+              </svg>
+            </button>
+
+            <button type="button" class="c-btn c-icon" aria-label="المظهر">
+              <span class="c-btn__row">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.1M12 19.1v2.1M4.6 4.6l1.5 1.5M17.9 17.9l1.5 1.5M2.8 12h2.1M19.1 12h2.1M4.6 19.4l1.5-1.5M17.9 6.1l1.5-1.5"/></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row__label">المقاسات</div>
+          <div class="row__body">
+            <button type="button" class="c-btn c-primary c-sm">
+              <span class="c-btn__row">مضغوط</span>
+              <svg class="c-btn__rule" viewBox="0 0 56 6" preserveAspectRatio="none" aria-hidden="true">
+                <path class="u" d="M1 3.2 C10 2.4 22 3.7 34 2.9 C44 2.2 51 3.4 55 3" fill="none" stroke-linecap="round" />
+              </svg>
+            </button>
+            <button type="button" class="c-btn c-primary">
+              <span class="c-btn__row">افتراضي</span>
+              <svg class="c-btn__rule" viewBox="0 0 72 6" preserveAspectRatio="none" aria-hidden="true">
+                <path class="u" d="M1 3.2 C12 2.3 28 3.8 44 2.9 C56 2.2 66 3.5 71 2.8" fill="none" stroke-linecap="round" />
+              </svg>
+            </button>
+            <button type="button" class="c-btn c-primary c-wide">
+              <span class="c-btn__row">عريض — حفظ باسم</span>
+              <svg class="c-btn__rule" viewBox="0 0 140 6" preserveAspectRatio="none" aria-hidden="true">
+                <path class="u" d="M1 3.3 C18 2.4 40 3.9 62 2.8 C88 1.8 112 3.6 139 2.9" fill="none" stroke-linecap="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row__label">الحالات</div>
+          <div class="row__body">
+            <button type="button" class="c-btn c-primary">
+              <span class="c-btn__row">عادي</span>
+              <svg class="c-btn__rule" viewBox="0 0 48 6" preserveAspectRatio="none" aria-hidden="true">
+                <path class="u" d="M1 3.2 C10 2.4 22 3.7 34 2.9 C41 2.4 45 3.4 47 3" fill="none" stroke-linecap="round" />
+              </svg>
+            </button>
+            <button type="button" class="c-btn c-primary" disabled>
+              <span class="c-btn__row">معطّل</span>
+              <svg class="c-btn__rule" viewBox="0 0 52 6" preserveAspectRatio="none" aria-hidden="true">
+                <path class="u" d="M1 3.2 C12 2.4 24 3.7 36 2.9 C44 2.3 49 3.4 51 3" fill="none" stroke-linecap="round" />
+              </svg>
+            </button>
+            <button type="button" class="c-btn c-primary c-loading" aria-busy="true">
+              <span class="c-btn__row"><span class="spin" aria-hidden="true"></span> جاري…</span>
+              <svg class="c-btn__rule" viewBox="0 0 72 6" preserveAspectRatio="none" aria-hidden="true">
+                <path class="u" d="M1 3.2 C12 2.3 28 3.8 44 2.9 C56 2.2 66 3.5 71 2.8" fill="none" stroke-linecap="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="scene">
+          <p class="scene__label">مشهد شريط الحالة</p>
+          <div class="status">
+            <span class="status__cell">الأداة: <strong>دمج</strong></span>
+            <span class="status__cell">صفحات: <strong>12</strong></span>
+            <span class="status__cell">الحالة: <strong>جاهز</strong></span>
+            <span class="status__run">
+              <button type="button" class="c-btn c-ghost"><span class="c-btn__row">إلغاء</span></button>
+              <button type="button" class="c-btn c-primary c-sm">
+                <span class="c-btn__row">تنفيذ</span>
+                <svg class="c-btn__rule" viewBox="0 0 48 6" preserveAspectRatio="none" aria-hidden="true">
+                  <path class="u" d="M1 3.2 C10 2.4 22 3.7 34 2.9 C41 2.4 45 3.4 47 3" fill="none" stroke-linecap="round" />
+                </svg>
+              </button>
+            </span>
+          </div>
+          <p class="hint">الأهدأ والأكثر «ورقة»: التنفيذ خط قلم تحت الكلمة — مش ختم معبّأ. يناسب لو عايز الشاشة تفضل دفتر مفتوح.</p>
+        </div>
+      </section>
+    </div>
+
+    <p class="footer">
+      اختر بنية واحدة للتطبيق على التطبيق، أو اطلب دمج (مثلاً: تظليل للتنفيذ + سطر مكتوب لقائمة الأدوات).
+      لم تُحدَّث ملفات المنتج بعد.
+    </p>
+  </main>
+  <script>
+    // Dense ink underlay so knock-out type stays readable on hatch (matches J-card PLAY weight).
+    document.querySelectorAll(".a-primary .a-btn__frame, .b-primary .b-btn__frame").forEach((svg) => {
+      const hatch = svg.querySelector(".hatch, .inner-hatch, [fill^='url(#hatch']");
+      if (!hatch || svg.querySelector(".ink-base")) return;
+      const base = hatch.cloneNode();
+      base.removeAttribute("filter");
+      base.setAttribute("class", "ink-base");
+      base.setAttribute("fill", "#1E3A8A");
+      base.setAttribute("opacity", "0.45");
+      hatch.parentNode.insertBefore(base, hatch);
+      if (svg.closest(".b-primary") && !svg.querySelector("[fill='url(#hatch-b2)']")) {
+        const cross = hatch.cloneNode();
+        cross.setAttribute("fill", "url(#hatch-b2)");
+        cross.setAttribute("opacity", "0.85");
+        hatch.after(cross);
+      }
+    });
+  </script>
+</body>
+</html>

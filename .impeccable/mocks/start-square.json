@@ -1,0 +1,9 @@
+{
+  "approved": true,
+  "path": ".impeccable/mocks/start-square.png",
+  "composition": "centered washi square drop on diagram-paper stage",
+  "refinements": [
+    "Background is unbleached crease-lattice kraft, never flat white",
+    "Square is kozo washi with valley folds and a corner flap, never a flat red card"
+  ]
+}

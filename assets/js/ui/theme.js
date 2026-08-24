@@ -21,8 +21,9 @@ function syncWindowChrome() {
   const api = desktop();
   if (!api?.setWindowChrome) return;
   const styles = getComputedStyle(document.documentElement);
-  const bg = styles.getPropertyValue("--surface-1").trim() || "#F5F1E7";
-  const symbol = styles.getPropertyValue("--text-secondary").trim() || "#4E4A3E";
+  // surface-3 is solid (#FFFFFF / #121214), surface-1 is translucent glass — overlay needs solid
+  const bg = styles.getPropertyValue("--surface-3").trim() || styles.getPropertyValue("--bg").trim() || "#FFFFFF";
+  const symbol = styles.getPropertyValue("--text-secondary").trim() || "#475569";
   api.setWindowChrome({ bg, symbol });
 }
 

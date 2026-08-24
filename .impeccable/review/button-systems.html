@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>عينات أنظمة الأزرار — PDF Studio</title>
+<style>
+@font-face {
+  font-family: "Noto Naskh Arabic";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("../../assets/fonts/noto-naskh-arabic-arabic-0.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Playfair Display";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("../../assets/fonts/playfair-display-latin-0.woff2") format("woff2");
+}
+
+:root {
+  --accent: #c41a1a;
+  --accent-hover: #a81616;
+  --accent-deep: #8e1212;
+  --accent-soft: rgba(196, 26, 26, 0.1);
+  --accent-contrast: #fcfbf7;
+  --ink: #1e3a8a;
+  --ink-faded: #6b86c5;
+  --bg: #f4f4f2;
+  --surface-1: #fcfbf7;
+  --surface-2: #ecece8;
+  --surface-3: #e2e2dc;
+  --rule: #b8b8b4;
+  --danger: #8e1212;
+  --danger-soft: rgba(142, 18, 18, 0.08);
+  --success: #1f6b45;
+  --radius: 4px;
+  --ui: "Noto Naskh Arabic", serif;
+  --data: "Playfair Display", "Noto Naskh Arabic", serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--ui);
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 27px,
+    var(--rule) 27px,
+    var(--rule) 28px
+  );
+  letter-spacing: 0;
+}
+
+.page {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.page__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--ink);
+}
+
+.page__mark {
+  font-family: var(--data);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.page__title {
+  margin: 0;
+  font-size: clamp(1.35rem, 4vmin, 1.85rem);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.page__lede {
+  margin: 0.5rem 0 0;
+  max-width: 42rem;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.page__meta {
+  font-size: 0.75rem;
+  color: var(--ink-faded);
+}
+
+.systems {
+  display: grid;
+  gap: 2rem;
+}
+
+.system {
+  background: color-mix(in srgb, var(--surface-1) 92%, transparent);
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  padding: 1.25rem 1.25rem 1.5rem;
+}
+
+.system__head {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 28%, transparent);
+}
+
+.system__tag {
+  font-family: var(--data);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  color: var(--accent);
+}
+
+.system__name {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.system__thesis {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--ink);
+  max-width: 52ch;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.row:last-child { margin-bottom: 0; }
+
+.row__label {
+  flex: 0 0 5.5rem;
+  font-size: 0.6875rem;
+  font-weight: 550;
+  color: var(--ink-faded);
+}
+
+.row__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.scene {
+  margin-top: 1.15rem;
+  padding-top: 1rem;
+  border-top: 1px dashed color-mix(in srgb, var(--ink) 22%, transparent);
+}
+
+.scene__label {
+  margin: 0 0 0.65rem;
+  font-size: 0.6875rem;
+  font-weight: 550;
+  color: var(--ink-faded);
+}
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.55rem 0.75rem;
+  background: var(--surface-1);
+  border: 1px solid color-mix(in srgb, var(--ink) 28%, transparent);
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+
+.status__cell {
+  color: var(--ink-faded);
+}
+
+.status__cell strong {
+  color: var(--ink);
+  font-weight: 550;
+}
+
+.status__run {
+  margin-inline-start: auto;
+}
+
+.hint {
+  margin: 0.85rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--ink-faded);
+}
+
+/* Shared base for all systems */
+[class*="b1-"],
+[class*="b2-"],
+[class*="b3-"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--ui);
+  letter-spacing: 0;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  appearance: none;
+  -webkit-appearance: none;
+  text-decoration: none;
+  box-shadow: none;
+  transition:
+    background-color 140ms var(--ease),
+    border-color 140ms var(--ease),
+    color 140ms var(--ease),
+    opacity 140ms var(--ease),
+    box-shadow 140ms var(--ease);
+}
+
+[class*="b1-"]:disabled,
+[class*="b2-"]:disabled,
+[class*="b3-"]:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+[class*="b1-"]:focus-visible,
+[class*="b2-"]:focus-visible,
+[class*="b3-"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.icon {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.spinner {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; border-color: currentColor; opacity: 0.7; }
+  [class*="b1-"], [class*="b2-"], [class*="b3-"] { transition: none; }
+}
+
+/* ========== نظام ١: الختم الأحمر ========== */
+.b1-primary,
+.b1-secondary,
+.b1-ghost,
+.b1-danger,
+.b1-icon {
+  min-height: 2.25rem;
+  padding: 8px 16px;
+  font-size: 0.75rem;
+  font-weight: 550;
+  line-height: 1.2;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+}
+
+.b1-primary {
+  padding-inline: 18px;
+  font-weight: 700;
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.b1-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.b1-primary:active:not(:disabled) {
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
+}
+.b1-primary .icon { color: var(--accent-contrast); }
+
+.b1-secondary {
+  color: var(--ink);
+  background: var(--surface-1);
+  border-color: var(--ink);
+}
+.b1-secondary:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.b1-secondary:active:not(:disabled) {
+  background: var(--surface-3);
+}
+
+.b1-ghost {
+  color: var(--ink-faded);
+  background: transparent;
+  border-color: transparent;
+  padding: 6px 10px;
+}
+.b1-ghost:hover:not(:disabled) {
+  color: var(--ink);
+  background: var(--accent-soft);
+}
+
+.b1-danger {
+  color: var(--danger);
+  background: transparent;
+  border-color: transparent;
+}
+.b1-danger:hover:not(:disabled) {
+  background: var(--danger-soft);
+  border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+}
+
+.b1-icon {
+  width: 2rem;
+  height: 2rem;
+  min-height: 2rem;
+  padding: 0;
+  color: var(--ink);
+  background: var(--surface-1);
+  border-color: var(--ink);
+}
+.b1-icon:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.b1-sm {
+  min-height: 2rem;
+  padding: 6px 14px;
+  font-size: 0.75rem;
+}
+.b1-primary.b1-sm { padding-inline: 14px; }
+
+.b1-wide {
+  width: 100%;
+  max-width: 16rem;
+}
+
+.b1-loading {
+  pointer-events: none;
+  gap: 8px;
+}
+
+/* ========== نظام ٢: القائمة المسطّرة ========== */
+.b2-primary,
+.b2-secondary,
+.b2-ghost,
+.b2-danger,
+.b2-icon {
+  min-height: 2.125rem;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 550;
+  line-height: 1.2;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+.b2-primary {
+  padding: 8px 18px;
+  font-weight: 700;
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border-color: var(--accent);
+  border-radius: var(--radius);
+}
+.b2-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.b2-primary:active:not(:disabled) {
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
+}
+
+.b2-secondary {
+  color: var(--ink);
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding-inline: 4px;
+  padding-block: 4px 2px;
+}
+.b2-secondary:hover:not(:disabled) {
+  border-bottom-color: var(--ink-faded);
+}
+.b2-secondary:focus-visible {
+  border-radius: 2px;
+}
+.b2-secondary[aria-current="true"],
+.b2-secondary.is-current {
+  border-bottom-color: var(--accent);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.b2-ghost {
+  color: var(--ink-faded);
+  padding: 4px 8px;
+  border-radius: var(--radius);
+}
+.b2-ghost:hover:not(:disabled) {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+.b2-danger {
+  color: var(--danger);
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding-inline: 4px;
+  padding-block: 4px 2px;
+}
+.b2-danger:hover:not(:disabled) {
+  border-bottom-color: var(--danger);
+}
+
+.b2-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  min-height: 1.75rem;
+  padding: 0;
+  color: var(--ink);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+}
+.b2-icon:hover:not(:disabled) {
+  border-color: var(--ink);
+  background: var(--surface-1);
+}
+
+.b2-sm {
+  min-height: 1.875rem;
+  padding: 4px 12px;
+  font-size: 0.6875rem;
+}
+.b2-primary.b2-sm { padding: 6px 14px; }
+
+.b2-wide { width: 100%; max-width: 14rem; }
+
+.b2-loading { pointer-events: none; gap: 8px; }
+
+/* ========== نظام ٣: الحبر المعكوس ========== */
+.b3-primary,
+.b3-secondary,
+.b3-tertiary,
+.b3-ghost,
+.b3-danger,
+.b3-icon {
+  min-height: 2.25rem;
+  padding: 8px 16px;
+  font-size: 0.75rem;
+  font-weight: 550;
+  line-height: 1.2;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+}
+
+.b3-primary {
+  padding-inline: 20px;
+  font-weight: 700;
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.b3-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.b3-primary:active:not(:disabled) {
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
+}
+
+.b3-secondary {
+  font-weight: 700;
+  color: var(--accent-contrast);
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.b3-secondary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ink) 88%, #000);
+  border-color: color-mix(in srgb, var(--ink) 88%, #000);
+}
+.b3-secondary:active:not(:disabled) {
+  background: color-mix(in srgb, var(--ink) 78%, #000);
+}
+
+.b3-tertiary {
+  color: var(--ink);
+  background: var(--surface-1);
+  border-color: var(--ink);
+}
+.b3-tertiary:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.b3-ghost {
+  color: var(--ink-faded);
+  background: transparent;
+  border-color: transparent;
+  padding: 6px 10px;
+}
+.b3-ghost:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--ink) 28%, transparent);
+}
+
+.b3-danger {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-color: color-mix(in srgb, var(--danger) 28%, transparent);
+}
+.b3-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  border-color: var(--danger);
+}
+
+.b3-icon {
+  width: 2rem;
+  height: 2rem;
+  min-height: 2rem;
+  padding: 0;
+  color: var(--ink);
+  background: var(--surface-2);
+  border-color: color-mix(in srgb, var(--ink) 28%, transparent);
+}
+.b3-icon:hover:not(:disabled) {
+  background: var(--surface-1);
+  border-color: var(--ink);
+}
+
+.b3-xs {
+  min-height: 1.75rem;
+  padding: 4px 10px;
+  font-size: 0.6875rem;
+}
+.b3-sm {
+  min-height: 2rem;
+  padding: 6px 14px;
+  font-size: 0.75rem;
+}
+.b3-lg {
+  min-height: 2.5rem;
+  padding: 10px 22px;
+  font-size: 0.8125rem;
+}
+.b3-primary.b3-lg { padding-inline: 24px; }
+
+.b3-wide { width: 100%; max-width: 16rem; }
+
+.b3-loading { pointer-events: none; gap: 8px; }
+
+.footer-note {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 28%, transparent);
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--ink-faded);
+  max-width: 48rem;
+}
+</style>
+</head>
+<body>
+  <main class="page">
+    <header class="page__head">
+      <div>
+        <div class="page__mark">PDF Studio</div>
+        <h1 class="page__title">ثلاث أنظمة أزرار كاملة</h1>
+        <p class="page__lede">
+          كلها داخل عالم «ورقة مسطّرة وحبر أزرق»: نصف قطر 4px، بدون ظلال على الزر،
+          أحمر TDK للتنفيذ فقط، ونوتو نسخ عربي. الفرق في قواعد الهرمية والوجوه — مش في الهوية.
+        </p>
+      </div>
+      <div class="page__meta">DESIGN.md · Operate</div>
+    </header>
+
+    <div class="systems">
+      <!-- نظام 1 -->
+      <section class="system" id="system-stamp" aria-labelledby="s1-name">
+        <header class="system__head">
+          <div class="system__tag">01</div>
+          <h2 class="system__name" id="s1-name">الختم الأحمر</h2>
+          <p class="system__thesis">
+            مطابق لنص DESIGN.md حاليًا: أساسي أحمر مسطّح، ثانوي كريم + خط حبر 1px،
+            شبح شفاف، خطر نصّي. أبسط قراءة — زر واحد يصرخ «نفّذ».
+          </p>
+        </header>
+
+        <div class="row">
+          <div class="row__label">الوجوه</div>
+          <div class="row__body">
+            <button type="button" class="b1-primary">تنفيذ</button>
+            <button type="button" class="b1-secondary">تصفّح</button>
+            <button type="button" class="b1-ghost">إلغاء</button>
+            <button type="button" class="b1-danger">حذف</button>
+            <button type="button" class="b1-icon" aria-label="الإعدادات">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row__label">المقاسات</div>
+          <div class="row__body">
+            <button type="button" class="b1-primary b1-sm">مضغوط</button>
+            <button type="button" class="b1-primary">افتراضي</button>
+            <button type="button" class="b1-primary b1-wide">عريض — حفظ باسم</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row__label">الحالات</div>
+          <div class="row__body">
+            <button type="button" class="b1-primary">عادي</button>
+            <button type="button" class="b1-primary" disabled>معطّل</button>
+            <button type="button" class="b1-primary b1-loading" aria-busy="true">
+              <span class="spinner" aria-hidden="true"></span>
+              جاري…
+            </button>
+            <button type="button" class="b1-secondary" disabled>ثانوي معطّل</button>
+          </div>
+        </div>
+
+        <div class="scene">
+          <p class="scene__label">مشهد شريط الحالة</p>
+          <div class="status">
+            <span class="status__cell">الأداة: <strong>دمج</strong></span>
+            <span class="status__cell">صفحات: <strong>12</strong></span>
+            <span class="status__cell">الحالة: <strong>جاهز</strong></span>
+            <span class="status__run">
+              <button type="button" class="b1-primary b1-sm">تنفيذ</button>
+            </span>
+          </div>
+          <p class="hint">مناسب لو عايز أقرب تطبيق حرفي لـ DESIGN.md بدون اختراع وجوه جديدة.</p>
+        </div>
+      </section>
+
+      <!-- نظام 2 -->
+      <section class="system" id="system-ruled" aria-labelledby="s2-name">
+        <header class="system__head">
+          <div class="system__tag">02</div>
+          <h2 class="system__name" id="s2-name">القائمة المسطّرة</h2>
+          <p class="system__thesis">
+            الأحمر المعبّأ هو الوجه الوحيد الممتلئ. الباقي يكتب على السطر: ثانوي وخطر بخط سفلي 2px
+            (نفس لغة قائمة الأدوات في شريط العنوان). الشبح أيقونة خفيفة حتى يمرّ المؤشر.
+          </p>
+        </header>
+
+        <div class="row">
+          <div class="row__label">الوجوه</div>
+          <div class="row__body">
+            <button type="button" class="b2-primary">تنفيذ</button>
+            <button type="button" class="b2-secondary">تصفّح</button>
+            <button type="button" class="b2-secondary is-current">دمج</button>
+            <button type="button" class="b2-ghost">إلغاء</button>
+            <button type="button" class="b2-danger">حذف</button>
+            <button type="button" class="b2-icon" aria-label="الإعدادات">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row__label">المقاسات</div>
+          <div class="row__body">
+            <button type="button" class="b2-primary b2-sm">مضغوط</button>
+            <button type="button" class="b2-primary">افتراضي</button>
+            <button type="button" class="b2-primary b2-wide">عريض — حفظ باسم</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row__label">الحالات</div>
+          <div class="row__body">
+            <button type="button" class="b2-primary">عادي</button>
+            <button type="button" class="b2-primary" disabled>معطّل</button>
+            <button type="button" class="b2-primary b2-loading" aria-busy="true">
+              <span class="spinner" aria-hidden="true"></span>
+              جاري…
+            </button>
+            <button type="button" class="b2-secondary" disabled>ثانوي معطّل</button>
+          </div>
+        </div>
+
+        <div class="scene">
+          <p class="scene__label">مشهد شريط الحالة</p>
+          <div class="status">
+            <span class="status__cell">الأداة: <strong>دمج</strong></span>
+            <span class="status__cell">صفحات: <strong>12</strong></span>
+            <span class="status__cell">الحالة: <strong>جاهز</strong></span>
+            <span class="status__run">
+              <button type="button" class="b2-primary b2-sm">تنفيذ</button>
+            </span>
+          </div>
+          <p class="hint">أقوى اتساق مع قائمة الأدوات (underline أحمر). الشاشة تبدو أهدأ؛ التنفيذ يبرز أكتر.</p>
+        </div>
+      </section>
+
+      <!-- نظام 3 -->
+      <section class="system" id="system-ink" aria-labelledby="s3-name">
+        <header class="system__head">
+          <div class="system__tag">03</div>
+          <h2 class="system__name" id="s3-name">الحبر المعكوس</h2>
+          <p class="system__thesis">
+            سلم وجوه أوضح: أحمر = نفّذ، حبر معبّأ = إجراء ثانوي مهم (تصفّح / تأكيد)،
+            كريم بحد = ثالثي، شبح = خروج، خطر بخلفية خفيفة. مقاسات xs→lg لأشرطة العنوان والحالة.
+          </p>
+        </header>
+
+        <div class="row">
+          <div class="row__label">الوجوه</div>
+          <div class="row__body">
+            <button type="button" class="b3-primary">تنفيذ</button>
+            <button type="button" class="b3-secondary">تصفّح</button>
+            <button type="button" class="b3-tertiary">خيارات</button>
+            <button type="button" class="b3-ghost">إلغاء</button>
+            <button type="button" class="b3-danger">حذف</button>
+            <button type="button" class="b3-icon" aria-label="الإعدادات">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row__label">المقاسات</div>
+          <div class="row__body">
+            <button type="button" class="b3-primary b3-xs">صغير جدًا</button>
+            <button type="button" class="b3-primary b3-sm">مضغوط</button>
+            <button type="button" class="b3-primary">افتراضي</button>
+            <button type="button" class="b3-primary b3-lg">كبير</button>
+            <button type="button" class="b3-primary b3-wide">عريض — حفظ باسم</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row__label">الحالات</div>
+          <div class="row__body">
+            <button type="button" class="b3-primary">عادي</button>
+            <button type="button" class="b3-primary" disabled>معطّل</button>
+            <button type="button" class="b3-primary b3-loading" aria-busy="true">
+              <span class="spinner" aria-hidden="true"></span>
+              جاري…
+            </button>
+            <button type="button" class="b3-secondary" disabled>ثانوي معطّل</button>
+          </div>
+        </div>
+
+        <div class="scene">
+          <p class="scene__label">مشهد شريط الحالة</p>
+          <div class="status">
+            <span class="status__cell">الأداة: <strong>دمج</strong></span>
+            <span class="status__cell">صفحات: <strong>12</strong></span>
+            <span class="status__cell">الحالة: <strong>جاهز</strong></span>
+            <span class="status__run">
+              <button type="button" class="b3-tertiary b3-sm">إلغاء</button>
+              <button type="button" class="b3-primary b3-sm">تنفيذ</button>
+            </span>
+          </div>
+          <p class="hint">أفضل لو حاسس إن الثانوي الحالي بيضيع جنب الأحمر — الحبر المعكوس يخلق قطبًا ثانيًا واضحًا.</p>
+        </div>
+      </section>
+    </div>
+
+    <p class="footer-note">
+      اختر نظامًا واحدًا للتطبيق على <code>.btn</code> / <code>.btn--act</code> في التطبيق،
+      أو اطلب دمج عناصر من نظامين. الصفحة للمعاينة فقط — لم تُغيَّر ملفات المنتج بعد.
+    </p>
+  </main>
+</body>
+</html>

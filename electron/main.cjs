@@ -137,8 +137,8 @@ function registerIpc() {
       if (typeof chrome.bg === "string" && chrome.bg) win.setBackgroundColor(chrome.bg);
       if (typeof win.setTitleBarOverlay === "function" && process.platform === "win32") {
         win.setTitleBarOverlay({
-          color: chrome.bg || "#F5F1E7",
-          symbolColor: chrome.symbol || "#4E4A3E",
+          color: chrome.bg || "#FFFFFF",
+          symbolColor: chrome.symbol || "#475569",
           height: 40
         });
       }
@@ -212,7 +212,7 @@ async function createWindow() {
     minWidth: 940,
     minHeight: 640,
     show: false,
-    backgroundColor: "#FCFAF4",
+    backgroundColor: "#FFFFFF",
     autoHideMenuBar: true,
     titleBarStyle: "hidden",
     webPreferences: {
@@ -227,8 +227,8 @@ async function createWindow() {
   };
   if (process.platform === "win32") {
     winOpts.titleBarOverlay = {
-      color: "#F5F1E7",
-      symbolColor: "#4E4A3E",
+      color: "#FFFFFF",
+      symbolColor: "#475569",
       height: 40
     };
   }
