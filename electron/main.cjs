@@ -1,5 +1,6 @@
 "use strict";
 const { app, BrowserWindow, shell, nativeImage, ipcMain, dialog, Menu } = require("electron");
+const { autoUpdater } = require("electron-updater");
 const path = require("path");
 const http = require("http");
 const fs = require("fs");
@@ -259,6 +260,44 @@ function shutdownServer() {
   }
 }
 
+/**
+ * Auto-updates only make sense for an installed build; dev runs and portable
+ * copies stay silent. Failures are swallowed — updating must never break the
+ * app itself.
+ */
+const UPDATE_CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000;
+
+function wireAutoUpdater() {
+  if (!app.isPackaged) return;
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on("update-downloaded", async () => {
+    const win = getMainWindow();
+    if (!win) return;
+    try {
+      const { response } = await dialog.showMessageBox(win, {
+        type: "info",
+        title: "تحديث جديد",
+        message: "تم تنزيل نسخة جديدة من التطبيق.",
+        detail: "أعد التشغيل الآن لتثبيت التحديث، أو سيُثبَّت تلقائيًا عند إغلاق التطبيق.",
+        buttons: ["إعادة التشغيل الآن", "لاحقًا"],
+        defaultId: 0,
+        cancelId: 1
+      });
+      if (response === 0) autoUpdater.quitAndInstall();
+    } catch {
+      /* the window may be closing; install-on-quit still applies */
+    }
+  });
+
+  const check = () => {
+    autoUpdater.checkForUpdates().catch(() => {});
+  };
+  check();
+  setInterval(check, UPDATE_CHECK_INTERVAL_MS);
+}
+
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();
@@ -274,6 +313,7 @@ if (!gotLock) {
     Menu.setApplicationMenu(null);
     registerIpc();
     await createWindow();
+    wireAutoUpdater();
     app.on("activate", async () => {
       if (BrowserWindow.getAllWindows().length === 0) await createWindow();
     });
