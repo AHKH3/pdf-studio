@@ -161,17 +161,22 @@ export async function upscaleToTarget(bitmap) {
  * @returns {Promise<ImageBitmap>} upgraded bitmap (may be a new object)
  */
 export async function upgradeForPdf(bitmap) {
-  const pixels = bitmapToImageData(bitmap);
-  const output = await engine.enhance(pixels);
-  let result = await imageDataToBitmap(
-    new ImageData(output.image.data, output.image.width, output.image.height)
-  );
+  let result = null;
+  try {
+    const pixels = bitmapToImageData(bitmap);
+    const output = await engine.enhance(pixels);
+    result = await imageDataToBitmap(
+      new ImageData(output.image.data, output.image.width, output.image.height)
+    );
+  } catch {
+    result = null;
+  }
+  if (!result) return upscaleToTarget(bitmap);
   const upgraded = await upscaleToTarget(result);
   if (upgraded !== result) {
     result.close();
-    result = upgraded;
   }
-  return result;
+  return upgraded;
 }
 
 /**

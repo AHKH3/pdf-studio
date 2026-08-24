@@ -29,6 +29,7 @@ export class EnhanceEngine {
       const failure = new Error(event.message || "توقف محرك التحسين");
       for (const entry of this.pending.values()) entry.reject(failure);
       this.pending.clear();
+      this.worker = null;
     });
     return this.worker;
   }
@@ -39,11 +40,16 @@ export class EnhanceEngine {
    * @param {Transferable[]} [transfer]
    */
   call(op, payload, transfer = []) {
-    const worker = this.ensure();
     const id = (this.nextId += 1);
     return new Promise((resolve, reject) => {
-      this.pending.set(id, { resolve, reject });
-      worker.postMessage({ id, op, payload }, transfer);
+      try {
+        const worker = this.ensure();
+        this.pending.set(id, { resolve, reject });
+        worker.postMessage({ id, op, payload }, transfer);
+      } catch (error) {
+        this.pending.delete(id);
+        reject(new Error(`تعذر تشغيل محرك التحسين: ${error.message}`));
+      }
     });
   }
 
