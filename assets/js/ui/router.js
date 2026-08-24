@@ -37,39 +37,22 @@ const ACTION_FLOW = {
   "extract-images": ["PDF", "صور"]
 };
 
-const HUB_HINTS = {
-  scan: "قص تلقائي وتصحيح منظور — حوّل صورك إلى PDF نظيف",
-  merge: "اجمع ملفات PDF متعددة في مستند واحد بالترتيب",
-  organize: "رتّب الصفحات، أدرها، احذف أو أضف صفحات جديدة",
-  split: "قسّم الملف إلى أجزاء حسب النطاقات التي تحددها",
-  compress: "قلّل الحجم بإعادة ضغط الصفحات كصور",
-  watermark: "اطبع نصاً شفافاً فوق كل الصفحات",
-  numbers: "أضف ترقيماً نصياً حقيقياً قابلاً للبحث",
-  rasterize: "صدّر كل صفحة كصورة PNG أو JPG",
-  crop: "قص الهوامش بسحب مربع على المعاينة",
-  protect: "احمِ الملف بكلمة سر أو أزل الحماية",
-  "extract-images": "استخرج الصور الأصلية كما خُزّنت داخل PDF",
-  ocr: "أضف طبقة نص مخفية (OCR عربي+إنجليزي) للبحث",
-  sign: "أضف توقيعاً أو ختماً على الصفحات",
-  edit: "حرّر النص والعناصر داخل الصفحات"
-};
-
 const HUB_TONE = {
-  scan: "convert",
-  images: "convert",
-  rasterize: "convert",
-  "extract-images": "convert",
-  merge: "organize",
+  scan: "scan",
+  images: "scan",
+  rasterize: "rasterize",
+  "extract-images": "extract",
+  merge: "merge",
   organize: "organize",
-  split: "organize",
-  compress: "enhance",
-  watermark: "enhance",
-  numbers: "enhance",
-  crop: "enhance",
-  protect: "enhance",
-  ocr: "enhance",
-  sign: "enhance",
-  edit: "enhance"
+  split: "split",
+  compress: "compress",
+  watermark: "watermark",
+  numbers: "numbers",
+  crop: "crop",
+  protect: "protect",
+  ocr: "ocr",
+  sign: "sign",
+  edit: "edit"
 };
 
 function glyph(id, className = "icon") {
@@ -105,24 +88,7 @@ function flowChip(tool) {
   return null;
 }
 
-function hubFlowChip(tool) {
-  const parts = ACTION_FLOW[tool.id];
-  if (!parts) return null;
-  const flow = document.createElement("span");
-  flow.className = "hub-tool__flow";
-  flow.setAttribute("aria-hidden", "true");
-  const from = document.createElement("span");
-  from.className = "hub-tool__flow-from";
-  from.textContent = parts[0];
-  const to = document.createElement("span");
-  to.className = "hub-tool__flow-to";
-  to.textContent = parts[1];
-  const arrow = document.createElement("span");
-  arrow.className = "hub-tool__flow-arrow";
-  arrow.append(glyph("icon-arrow", "icon"));
-  flow.append(from, arrow, to);
-  return flow;
-}
+function hubFlowChip(tool) { return null; }
 
 /** @param {Tool[]} list */
 export function registerTools(list) {
@@ -192,64 +158,32 @@ function buildLegend() {
     const enabled = allowed.has(tool.id);
     if (!enabled) continue;
 
-    const tone = HUB_TONE[tool.id] || "enhance";
-    const hint = HUB_HINTS[tool.id] || "";
-    const flow = hubFlowChip(tool);
+    const tone = HUB_TONE[tool.id] || tool.id;
 
     const button = document.createElement("button");
     button.type = "button";
     button.className = "hub-tool";
     button.dataset.route = tool.id;
+    button.dataset.tone = tone;
     button.setAttribute("role", "listitem");
-    button.setAttribute("aria-label", `${tool.name} — ${hint}`);
+    const displayName = tool.name.replace("→", "←");
+    button.setAttribute("aria-label", displayName);
+    button.title = displayName;
     if (tool.id === activeId) {
       button.classList.add("hub-tool--active");
       button.setAttribute("aria-current", "page");
     }
-
-    const head = document.createElement("div");
-    head.className = "hub-tool__head";
 
     const iconWrap = document.createElement("span");
     iconWrap.className = "hub-tool__icon";
     iconWrap.dataset.tone = tone;
     iconWrap.append(glyph(tool.icon || "icon-file", "icon"));
 
-    const titles = document.createElement("div");
-    titles.className = "hub-tool__titles";
-
     const nameRow = document.createElement("span");
     nameRow.className = "hub-tool__name";
-    // نستخدم الاسم كما هو لكن نضمن أن السهم يتجه يساراً (←) للتقدم في RTL
-    // إذا كان الاسم يحتوي → نستبدله بصرياً بـ ← عبر النص
-    const displayName = tool.name.replace("→", "←");
     nameRow.textContent = displayName;
 
-    titles.append(nameRow);
-    if (flow) titles.append(flow);
-
-    head.append(iconWrap, titles);
-
-    const hintEl = document.createElement("p");
-    hintEl.className = "hub-tool__hint";
-    hintEl.textContent = hint;
-
-    const meta = document.createElement("div");
-    meta.className = "hub-tool__meta";
-    if (tool.input) {
-      const badge = document.createElement("span");
-      badge.className = "hub-tool__badge hub-tool__badge--needs";
-      badge.textContent = `يحتاج: ${tool.input}`;
-      meta.append(badge);
-    }
-    if (tool.actionLabel) {
-      const act = document.createElement("span");
-      act.className = "hub-tool__badge";
-      act.textContent = tool.actionLabel;
-      meta.append(act);
-    }
-
-    button.append(head, hintEl, meta);
+    button.append(iconWrap, nameRow);
     hubHost.append(button);
     shown += 1;
   }
