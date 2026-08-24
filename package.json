@@ -45,7 +45,8 @@
     "publish": {
       "provider": "github",
       "owner": "AHKH3",
-      "repo": "pdf-studio"
+      "repo": "pdf-studio",
+      "releaseType": "release"
     },
     "files": [
       "electron/**/*",
