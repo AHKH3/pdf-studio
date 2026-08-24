@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PDF Studio — أدوات PDF عربية على جهازك</title>
+<meta name="description" content="مسح، دمج، تقسيم، ضغط، توقيع، حماية، وOCR عربي — كل أدوات PDF تعمل محليًا على جهازك دون رفع أي ملف ودون حساب." />
+<style>
+  :root {
+    --paper: #fcfaf4;
+    --paper-deep: #f5f1e7;
+    --ink: #35322a;
+    --ink-soft: #6b6659;
+    --red: #8c2323;
+    --red-deep: #6e1a1a;
+    --line: rgba(53, 50, 42, 0.14);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #211d18;
+      --paper-deep: #2a251e;
+      --ink: #ece5d5;
+      --ink-soft: #b0a892;
+      --red: #d05555;
+      --red-deep: #b03f3f;
+      --line: rgba(236, 229, 213, 0.16);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Segoe UI", Tahoma, "Noto Naskh Arabic", Arial, sans-serif;
+    line-height: 1.7;
+  }
+  .wrap { max-width: 68rem; margin-inline: auto; padding-inline: 1.5rem; }
+
+  header.site {
+    position: sticky; top: 0; z-index: 10;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  header.site .wrap { display: flex; align-items: center; gap: 1rem; min-height: 3.75rem; }
+  .brand { display: flex; align-items: center; gap: 0.6rem; font-weight: 700; text-decoration: none; color: var(--ink); }
+  .brand svg { width: 1.6rem; height: 1.6rem; color: var(--red); }
+  header nav { margin-inline-start: auto; display: flex; gap: 1.25rem; }
+  header nav a { color: var(--ink-soft); text-decoration: none; font-size: 0.95rem; }
+  header nav a:hover { color: var(--red); }
+
+  .hero { padding-block: clamp(3rem, 8vw, 6rem) clamp(2.5rem, 6vw, 4.5rem); text-align: center; }
+  .hero h1 { font-size: clamp(2rem, 5.5vw, 3.4rem); line-height: 1.25; letter-spacing: -0.01em; }
+  .hero h1 em { font-style: normal; color: var(--red); }
+  .hero p.sub {
+    max-width: 42rem; margin: 1.25rem auto 0;
+    color: var(--ink-soft); font-size: clamp(1rem, 2.5vw, 1.2rem);
+  }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 0.9rem; justify-content: center; margin-top: 2.25rem; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.55rem;
+    padding: 0.85rem 1.9rem; border-radius: 6px;
+    font-weight: 700; font-size: 1rem; text-decoration: none;
+    transition: filter 0.15s ease, transform 0.15s ease;
+  }
+  .btn:hover { filter: brightness(1.07); }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: var(--red); color: #fff; box-shadow: 0 10px 24px rgba(90, 20, 20, 0.25); }
+  .btn-ghost { border: 1px solid var(--line); color: var(--ink); background: transparent; }
+  .platform-note { margin-top: 0.9rem; color: var(--ink-soft); font-size: 0.9rem; }
+
+  .badges {
+    display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; margin-top: 2rem;
+  }
+  .badge {
+    font-size: 0.85rem; color: var(--ink-soft);
+    border: 1px solid var(--line); border-radius: 999px; padding: 0.3rem 0.95rem;
+    background: var(--paper-deep);
+  }
+
+  h2.section-title { font-size: clamp(1.4rem, 3.5vw, 1.9rem); text-align: center; }
+  .section-sub { text-align: center; color: var(--ink-soft); max-width: 38rem; margin: 0.6rem auto 0; }
+
+  .features {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr));
+    gap: 1rem; margin-top: 2.5rem;
+  }
+  .feature {
+    background: var(--paper-deep); border: 1px solid var(--line); border-radius: 12px;
+    padding: 1.25rem 1.35rem;
+  }
+  .feature svg { width: 1.45rem; height: 1.45rem; color: var(--red); margin-bottom: 0.55rem; }
+  .feature h3 { font-size: 1.02rem; margin-bottom: 0.3rem; }
+  .feature p { color: var(--ink-soft); font-size: 0.92rem; line-height: 1.6; }
+
+  .privacy {
+    margin-block: clamp(3rem, 7vw, 5rem);
+    background: var(--paper-deep); border: 1px solid var(--line); border-radius: 16px;
+    padding: clamp(1.75rem, 4vw, 3rem);
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1.5rem;
+  }
+  .privacy div strong { display: block; font-size: 1.05rem; margin-bottom: 0.25rem; }
+  .privacy div span { color: var(--ink-soft); font-size: 0.93rem; }
+
+  .downloads { text-align: center; padding-block: 1rem 4.5rem; }
+  .dl-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1rem; margin-top: 2rem; text-align: start;
+  }
+  .dl-card {
+    background: var(--paper-deep); border: 1px solid var(--line); border-radius: 12px;
+    padding: 1.4rem; display: flex; flex-direction: column; gap: 0.4rem;
+  }
+  .dl-card h3 { font-size: 1.05rem; }
+  .dl-card p { color: var(--ink-soft); font-size: 0.88rem; flex-grow: 1; }
+  .dl-card a { color: var(--red); font-weight: 700; text-decoration: none; }
+  .dl-card a:hover { text-decoration: underline; }
+
+  footer.site { border-top: 1px solid var(--line); padding-block: 1.75rem; color: var(--ink-soft); font-size: 0.9rem; }
+  footer.site .wrap { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; }
+  footer a { color: var(--ink-soft); }
+  footer a:hover { color: var(--red); }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <path d="M14 2v6h6"/>
+      </svg>
+      PDF Studio
+    </a>
+    <nav>
+      <a href="#features">الأدوات</a>
+      <a href="#privacy">الخصوصية</a>
+      <a href="#download">تنزيل</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap">
+    <h1>كل أدوات PDF اللي محتاجها…<br /><em>على جهازك ومش على السيرفر</em></h1>
+    <p class="sub">
+      مسح مستندات من صور الموبايل، دمج وتقسيم وضغط، توقيع وأختام، حماية بكلمة مرور،
+      واستخراج نصوص بالعربي — كل ده يعمل محليًا: لا رفع ملفات، لا حساب، لا انتظار.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/abdo3342/pdf-studio/releases/latest" id="dl-primary">
+        ⬇ تنزيل لويندوز
+      </a>
+      <a class="btn btn-ghost" href="#download">كل الإصدارات</a>
+    </div>
+    <p class="platform-note">ويندوز (مثبّت أو نسخة محمولة) ولينكس (AppImage) — مجاني بالكامل.</p>
+    <div class="badges">
+      <span class="badge">يعمل بدون إنترنت</span>
+      <span class="badge">بدون حساب</span>
+      <span class="badge">واجهة عربية أصلًا</span>
+      <span class="badge">تحديثات تلقائية</span>
+    </div>
+  </section>
+
+  <section id="features" class="wrap">
+    <h2 class="section-title">أداة لكل شغلانة ورق</h2>
+    <p class="section-sub">كل أداة شاشة واحدة وتخلّص في أقل من دقيقة.</p>
+    <div class="features">
+      <div class="feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <h3>مسح مستندات</h3><p>صوّر الورق بالموبايل والتطبيق يعدّل الزوايا والإضاءة ويطلّعك مسحة نظيفة.</p>
+      </div>
+      <div class="feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <h3>دمج وترتيب</h3><p>اجمع ملفات في واحد، رتّب الصفحات بالسحب، أدر الصفحات، واحذف زيادة.</p>
+      </div>
+      <div class="feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M12 1v22"/></svg>
+        <h3>تقسيم</h3><p>صفحات محددة، كل N صفحة، أو استخراج نطاقات — بمعاينة مباشرة للخطة.</p>
+      </div>
+      <div class="feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        <h3>ضغط</h3><p>قلّل حجم الملف برسم الصفحات بدقة مضبوطة، مع خيار تدرّج رمادي.</p>
+      </div>
+      <div class="feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+        <h3>توقيع وأختام</h3><p>ارسم توقيعك أو اكتب اسمك وضعه على أي صفحة، بتاريخ وختم إن أردت.</p>
+      </div>
+      <div class="feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <h3>حماية وفك حماية</h3><p>تشفير AES-256 بكلمة مرور أو إزالة الحماية من ملفاتك — كله محلي.</p>
+      </div>
+      <div class="feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+        <h3>علامة مائية وترقيم</h3><p>نص مائي بموضع وزاوية وشكل تحدده بنفسك، وترقيم صفحات بالعربية أو الأرقام.</p>
+      </div>
+      <div class="feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <h3>بحث ونصوص (OCR)</h3><p>حوّل المستخدمين المصورين لنص قابل للبحث والنسخ بالعربية والإنجليزية.</p>
+      </div>
+    </div>
+
+    <div class="privacy" id="privacy">
+      <div><strong>🔒 مستنداتك ما بتسيبش الجهاز</strong><span>كل عملية تعمل داخل تطبيقك. لا يوجد سيرفر يرفع إليه أي ملف أصلًا.</span></div>
+      <div><strong>📴 يعمل بلا إنترنت</strong><span>نزّله مرة واحدة وشغّله في أي وقت، حتى بدون اتصال.</span></div>
+      <div><strong>🆓 مجاني بلا حدود</strong><span>لا اشتراك، لا حد لحجم الملف، ولا ميزة مقفولة.</span></div>
+      <div><strong>🔄 تحديث تلقائي</strong><span>التطبيق ينزل التحديثات الجديدة ويثبتها عند إعادة التشغيل.</span></div>
+    </div>
+  </section>
+
+  <section id="download" class="downloads wrap">
+    <h2 class="section-title">تنزيل PDF Studio</h2>
+    <p class="section-sub">آخر إصدار دائمًا من صفحة الإصدارات على GitHub.</p>
+    <div class="dl-grid">
+      <div class="dl-card">
+        <h3>ويندوز — مثبّت</h3>
+        <p>للتركيب الدائم مع تحديثات تلقائية. Windows 10/64-bit وما بعده.</p>
+        <a href="https://github.com/abdo3342/pdf-studio/releases/latest" target="_blank" rel="noopener">تنزيل المثبّت ←</a>
+      </div>
+      <div class="dl-card">
+        <h3>ويندوز — نسخة محمولة</h3>
+        <p>ملف واحد يعمل بدون تثبيت — مناسب للفلاشة والأجهزة المشتركة.</p>
+        <a href="https://github.com/abdo3342/pdf-studio/releases/latest" target="_blank" rel="noopener">تنزيل المحمول ←</a>
+      </div>
+      <div class="dl-card">
+        <h3>لينكس — AppImage</h3>
+        <p>تشغيل مباشر بعد إعطاء صلاحية التنفيذ: chmod +x ثم شغّله.</p>
+        <a href="https://github.com/abdo3342/pdf-studio/releases/latest" target="_blank" rel="noopener">تنزيل AppImage ←</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>PDF Studio — أدوات PDF عربية، مجانية وخاصة.</span>
+    <span>
+      <a href="https://github.com/abdo3342/pdf-studio" target="_blank" rel="noopener">المستودع على GitHub</a>
+      ·
+      <a href="https://github.com/abdo3342/pdf-studio/releases" target="_blank" rel="noopener">سجل الإصدارات</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+  // Detect the platform so the primary button offers the most fitting asset.
+  (function () {
+    const link = document.getElementById("dl-primary");
+    if (!link) return;
+    const isLinux = /Linux/.test(navigator.platform) && !/Android/.test(navigator.userAgent);
+    if (isLinux) {
+      link.textContent = "⬇ تنزيل للينكس";
+    }
+  })();
+</script>
+</body>
+</html>
