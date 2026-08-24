@@ -77,18 +77,24 @@ function createStaticServer() {
           res.setHeader("Content-Type", guessMime(filePath));
           res.setHeader("X-Content-Type-Options", "nosniff");
           res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
-          res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+          // credentialless: يسمح لـ WASM/workers بالعمل دون مطالبة كل مورد بـ CORP، مع الحفاظ على عزل الأصل المتقاطع
+          res.setHeader("Cross-Origin-Embedder-Policy", "credentialless");
           res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
           res.setHeader(
             "Content-Security-Policy",
             [
               "default-src 'none'",
-              "script-src 'self'",
+              // wasm-unsafe-eval: يسمح لـ pdf.js/tesseract/heic2any بتجميع WASM دون فتح eval الكامل
+              // unsafe-eval: مطلوب لـ heic2any (يستخدم new Function داخليًا)
+              "script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval'",
               "worker-src 'self' blob:",
-              "style-src 'self'",
+              // unsafe-inline: حقن <style> عبر JS (injectStyles) وإسناد element.style
+              "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob:",
-              "font-src 'self'",
+              "font-src 'self' data:",
               "connect-src 'self' blob: data:",
+              "media-src 'self' blob: data:",
+              "object-src 'none'",
               "base-uri 'none'",
               "form-action 'none'",
               "frame-ancestors 'none'"
@@ -238,8 +244,23 @@ async function createWindow() {
   }
 
   mainWindow = new BrowserWindow(winOpts);
+  // احتياط: إذا لم يطلق ready-to-show خلال 3 ثوانٍ (خطأ CSP/JS)، أظهر النافذة قسراً حتى لا يبدو التطبيق متوقفاً
+  const showFallback = setTimeout(() => {
+    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
+      console.warn("ready-to-show لم يطلق — إظهار قسري للنافذة");
+      mainWindow.show();
+    }
+  }, 3500);
   mainWindow.once("ready-to-show", () => {
+    clearTimeout(showFallback);
     if (!mainWindow.isDestroyed()) mainWindow.show();
+  });
+  // تسجيل أخطاء الـ renderer لتظهر في سجل main
+  mainWindow.webContents.on("did-fail-load", (_e, code, desc, url) => {
+    console.error("did-fail-load", code, desc, url);
+  });
+  mainWindow.webContents.on("render-process-gone", (_e, details) => {
+    console.error("render-process-gone", details);
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -335,16 +356,20 @@ function wireAutoUpdater() {
 app.commandLine.appendSwitch("disable-renderer-backgrounding");
 app.commandLine.appendSwitch("disable-background-timer-throttling");
 
-const gotLock = app.requestSingleInstanceLock();
+// في التطوير لا نفرض قفل النسخة الواحدة حتى لا يمنع تشغيل npm start بينما النسخة المثبتة تعمل
+const isDev = !app.isPackaged;
+const gotLock = isDev ? true : app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();
 } else {
-  app.on("second-instance", () => {
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
-    }
-  });
+  if (!isDev) {
+    app.on("second-instance", () => {
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.focus();
+      }
+    });
+  }
 
   app.whenReady().then(async () => {
     Menu.setApplicationMenu(null);

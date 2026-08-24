@@ -213,7 +213,7 @@ async function run() {
 /** @type {import("../ui/router.js").Tool} */
 export const rasterizeTool = {
   id: "rasterize",
-  name: "PDF → صور",
+  name: "PDF ← صور",
   icon: "icon-pdf-to-images",
   input: "PDF",
   actionLabel: "تصدير",

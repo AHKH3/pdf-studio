@@ -59,9 +59,21 @@ function render() {
   const mix = el("hub-mix");
   if (mix) mix.textContent = has ? mixLabel() : "الملفات";
 
+  const count = el("hub-count");
+  if (count) {
+    if (has) {
+      count.textContent = `${files.length} ملف`;
+      count.title = `${files.length} ملف`;
+    } else {
+      count.textContent = "";
+      count.removeAttribute("title");
+    }
+  }
+
   const sort = el("hub-sort");
   if (sort) sort.hidden = images.length < 2;
 
+  const useReorder = files.length > 1;
   list?.render(
     files.map((file, index) => ({
       id: String(index),
@@ -70,7 +82,7 @@ function render() {
       thumb: isImageFile(file)
         ? { kind: "url", url: previewUrl(file) }
         : { kind: "icon", icon: "icon-file" },
-      actions: [ACTIONS.remove]
+      actions: useReorder ? [ACTIONS.grab, ACTIONS.up, ACTIONS.down, ACTIONS.remove] : [ACTIONS.remove]
     }))
   );
 
@@ -117,6 +129,26 @@ export function initHub() {
     emptyText: "لا ملفات بعد.",
     onAction(action, id) {
       if (action === "remove") removeCapture(Number(id));
+      else if (action === "up" || action === "down") {
+        const idx = Number(id);
+        const files = captureFiles();
+        if (action === "up" && idx > 0) {
+          const next = files.slice();
+          const [moved] = next.splice(idx, 1);
+          next.splice(idx - 1, 0, moved);
+          reorderCapture(next);
+        } else if (action === "down" && idx < files.length - 1) {
+          const next = files.slice();
+          const [moved] = next.splice(idx, 1);
+          next.splice(idx + 1, 0, moved);
+          reorderCapture(next);
+        }
+      }
+    },
+    onReorder(ids) {
+      const files = captureFiles();
+      const ordered = ids.map((id) => files[Number(id)]).filter(Boolean);
+      if (ordered.length === files.length) reorderCapture(ordered);
     }
   });
 

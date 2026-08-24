@@ -120,23 +120,49 @@
               </div>
               <input id="hub-input" type="file" accept="image/*,application/pdf,.pdf,.heic,.heif" multiple hidden />
 
-              <!-- Files: has-files state — بلا شروحات -->
-              <div id="hub-panel" class="files-panel" hidden>
-                <div class="files-panel__head">
-                  <h2 class="files-panel__title" id="hub-mix">الملفات</h2>
-                  <div class="files-panel__actions">
-                    <button id="hub-add" type="button" class="btn">
-                      <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> إضافة
-                    </button>
-                    <button id="hub-sort" type="button" class="btn" hidden>
-                      <svg class="icon" aria-hidden="true"><use href="#icon-organize"></use></svg> ترتيب ذكي
-                    </button>
-                    <button id="hub-clear" type="button" class="btn btn--ghost">
-                      <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> تفريغ
-                    </button>
-                  </div>
+              <!-- Files: has-files state — تصميم hub الجديد: ملفات + حاوية أدوات جانبية -->
+              <div id="hub-panel" class="files-panel hub-panel" hidden>
+                <div class="hub-layout">
+                  <section class="hub-files" aria-labelledby="hub-mix">
+                    <div class="files-panel__head">
+                      <div class="files-panel__head-main">
+                        <h2 class="files-panel__title" id="hub-mix">الملفات</h2>
+                        <span class="files-panel__count num" id="hub-count" aria-live="polite"></span>
+                      </div>
+                      <div class="files-panel__actions">
+                        <button id="hub-add" type="button" class="btn">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> إضافة
+                        </button>
+                        <button id="hub-sort" type="button" class="btn" hidden>
+                          <svg class="icon" aria-hidden="true"><use href="#icon-organize"></use></svg> ترتيب ذكي
+                        </button>
+                        <button id="hub-clear" type="button" class="btn btn--ghost">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> تفريغ
+                        </button>
+                      </div>
+                    </div>
+                    <div id="hub-list" class="doclist files-panel__list"></div>
+                    <p class="hub-files__hint" id="hub-hint">اسحب لإعادة الترتيب — اضغط الأداة المناسبة على اليمين.</p>
+                  </section>
+
+                  <aside class="hub-tools" aria-labelledby="hub-tools-title">
+                    <div class="hub-tools__head">
+                      <h3 class="hub-tools__title" id="hub-tools-title">اختر الأداة</h3>
+                      <p class="hub-tools__lede">الأدوات المتاحة لهذه الملفات — كل بطاقة توضّح <em>من → إلى</em> بأيقونة ولون مميّز.</p>
+                      <div class="hub-tools__arrows-legend" aria-hidden="true">
+                        <span class="hub-tools__legend-item"><i class="hub-tools__legend-dot" data-tone="convert"></i> تحويل</span>
+                        <span class="hub-tools__legend-item"><i class="hub-tools__legend-dot" data-tone="organize"></i> تنظيم</span>
+                        <span class="hub-tools__legend-item"><i class="hub-tools__legend-dot" data-tone="enhance"></i> تحسين</span>
+                      </div>
+                    </div>
+                    <div id="hub-legend" class="hub-tools__grid" role="list" aria-label="الأدوات المتاحة"></div>
+                    <div id="hub-empty-tools" class="hub-tools__empty" hidden>
+                      <svg class="icon" aria-hidden="true"><use href="#icon-alert"></use></svg>
+                      <p>لا أدوات لهذا المزيج — جرّب إضافة PDF أو صور.</p>
+                    </div>
+                    <p class="hub-tools__foot">السهم يشير من المصدر إلى الناتج — في واجهتنا العربية يتجه إلى اليسار (←) هو اتجاه التقدم.</p>
+                  </aside>
                 </div>
-                <div id="hub-list" class="doclist files-panel__list"></div>
                 <div id="hub-actions" hidden></div>
               </div>
             </div>
@@ -144,7 +170,7 @@
 
           <section id="view-scan" class="view" aria-labelledby="scan-title" role="region" hidden>
             <div class="view__head view__head--scan">
-              <h2 class="view__title" id="scan-title" tabindex="-1">صور → PDF</h2>
+              <h2 class="view__title" id="scan-title" tabindex="-1">صور ← PDF</h2>
               <ol class="flow flow--compact" aria-hidden="true">
                 <li class="flow__node"><span class="flow__glyph" data-tone="in"><svg class="icon"><use href="#icon-scan"></use></svg></span></li>
                 <li class="flow__arrow"><svg class="icon"><use href="#icon-arrow"></use></svg></li>
@@ -252,7 +278,7 @@
 
           <section id="view-images" class="view" aria-labelledby="images-title" role="region" hidden>
             <div class="view__head">
-              <h2 class="view__title" id="images-title" tabindex="-1">صور → PDF</h2>
+              <h2 class="view__title" id="images-title" tabindex="-1">صور ← PDF</h2>
               <p class="view__lede">رتّب الصفحات، واضبط المقاس والهوامش.</p>
             </div>
 
@@ -619,8 +645,8 @@
 
           <section id="view-rasterize" class="view" aria-labelledby="rasterize-title" role="region" hidden>
             <div class="view__head">
-              <h2 class="view__title" id="rasterize-title" tabindex="-1">PDF → صور</h2>
-              <p class="view__lede">صفحة → صورة. مجلد أو ZIP.</p>
+              <h2 class="view__title" id="rasterize-title" tabindex="-1">PDF ← صور</h2>
+              <p class="view__lede">صفحة ← صورة. مجلد أو ZIP.</p>
             </div>
 
             <div class="view__body">

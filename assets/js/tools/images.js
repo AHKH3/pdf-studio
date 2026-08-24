@@ -168,7 +168,7 @@ async function run() {
 /** @type {import("../ui/router.js").Tool} */
 export const imagesTool = {
   id: "images",
-  name: "صور → PDF",
+  name: "صور ← PDF",
   icon: "icon-images",
   hidden: true,
   actionLabel: "أنشئ",

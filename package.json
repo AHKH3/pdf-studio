@@ -1,7 +1,7 @@
 {
   "name": "pdf-studio",
   "productName": "PDF Studio",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "أدوات PDF عربية — تطبيق سطح مكتب",
   "homepage": "https://github.com/AHKH3/pdf-studio",
   "author": "abdo3342",
@@ -17,7 +17,7 @@
     "icons": "node scripts/generate-icon-sprite.mjs",
     "fonts": "node scripts/fetch-fonts.mjs",
     "check": "node scripts/check-syntax.mjs",
-    "test": "node scripts/check-syntax.mjs && node scripts/test-scan.mjs && node scripts/test-experience.mjs && node scripts/test-tools.mjs && node scripts/test-edit.mjs && node scripts/test-protect.mjs",
+    "test": "node scripts/check-syntax.mjs && node scripts/test-scan.mjs && node scripts/test-experience.mjs && node scripts/test-tools.mjs && node scripts/test-edit.mjs && node scripts/test-protect.mjs && node scripts/test-launch.mjs",
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --win",

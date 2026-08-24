@@ -688,7 +688,7 @@ async function run() {
 /** @type {import("../ui/router.js").Tool} */
 export const scanTool = {
   id: "scan",
-  name: "صور → PDF",
+  name: "صور ← PDF",
   icon: "icon-scan",
   input: "صورة",
   actionLabel: "أنشئ",
