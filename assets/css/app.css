@@ -412,8 +412,100 @@ html.is-desktop[data-platform="darwin"] .sheet__head.app-titlebar {
 
 .titlebar-nodrag,
 .sheet__head button,
-.sheet__head .win-controls {
+.sheet__head .win-controls,
+.sheet__head .update-bar {
   -webkit-app-region: no-drag;
+}
+
+/* ---------- update bar (header) — هادئ ولا يقطع العمل ---------- */
+.update-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 1 320px;
+  min-width: 0;
+  height: 28px;
+  padding: 0 10px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-pill);
+  position: relative;
+  overflow: hidden;
+}
+
+.update-bar[hidden] {
+  display: none !important;
+}
+
+.update-bar__progress {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0%;
+  background: var(--accent-soft);
+  border-radius: inherit;
+  pointer-events: none;
+  transition: width 400ms var(--ease);
+}
+
+[dir="rtl"] .update-bar__progress {
+  inset: 0 0 0 auto;
+}
+
+.update-bar[data-state="ready"] .update-bar__progress {
+  background: var(--success-soft);
+}
+
+.update-bar__text {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.update-bar__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.update-bar__action {
+  flex: none;
+  padding: 3px 10px;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.update-bar__action:hover {
+  background: var(--accent-hover);
+}
+
+.update-bar__dismiss {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--ink-3);
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.update-bar__dismiss:hover {
+  color: var(--ink);
+  background: var(--surface-2);
 }
 
 .win-controls {

@@ -221,7 +221,8 @@ async function createWindow() {
       nodeIntegration: false,
       sandbox: true,
       webviewTag: false,
-      spellcheck: false
+      spellcheck: false,
+      backgroundThrottling: false
     }
   };
   if (process.platform === "win32") {
@@ -266,42 +267,73 @@ function shutdownServer() {
 }
 
 /**
- * Auto-updates only make sense for an installed build; dev runs and portable
- * copies stay silent. Failures are swallowed — updating must never break the
- * app itself.
+ * Auto-updates: صامت تمامًا، لا يقطع عمل المستخدم أبدًا.
+ * - الفحص والتنزيل في الخلفية، مع إرسال الحالة للهيدر.
+ * - عند الجاهزية: يظهر شريط هادئ في الهيدر + يثبّت تلقائيًا عند الإغلاق.
+ * - لا حوار modal يزعج المستخدم أثناء العمل.
  */
 const UPDATE_CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000;
+
+function sendUpdateStatus(payload) {
+  const win = getMainWindow();
+  if (win && !win.isDestroyed()) {
+    win.webContents.send("app:update-status", payload);
+  }
+}
 
 function wireAutoUpdater() {
   if (!app.isPackaged || !autoUpdater) return;
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.allowPrerelease = false;
+  // يسمح بإعادة المحاولة بدون إزعاج لو فشل التحميل
+  autoUpdater.logger = null;
 
-  autoUpdater.on("update-downloaded", async () => {
-    const win = getMainWindow();
-    if (!win) return;
+  autoUpdater.on("checking-for-update", () => {
+    sendUpdateStatus({ state: "checking" });
+  });
+  autoUpdater.on("update-available", (info) => {
+    sendUpdateStatus({ state: "downloading", percent: 0, version: info.version });
+  });
+  autoUpdater.on("update-not-available", () => {
+    sendUpdateStatus({ state: "idle" });
+  });
+  autoUpdater.on("download-progress", (progress) => {
+    sendUpdateStatus({
+      state: "downloading",
+      percent: Math.round(progress.percent || 0),
+      bytesPerSecond: progress.bytesPerSecond || 0
+    });
+  });
+  autoUpdater.on("update-downloaded", (info) => {
+    sendUpdateStatus({ state: "ready", version: info.version });
+  });
+  autoUpdater.on("error", () => {
+    // فشل صامت — نعيد المحاولة في الفحص الدوري، بدون إزعاج
+    sendUpdateStatus({ state: "idle" });
+  });
+
+  // يسمح للواجهة بطلب إعادة التشغيل فورًا
+  ipcMain.handle("app:restart-to-update", () => {
     try {
-      const { response } = await dialog.showMessageBox(win, {
-        type: "info",
-        title: "تحديث جديد",
-        message: "تم تنزيل نسخة جديدة من التطبيق.",
-        detail: "أعد التشغيل الآن لتثبيت التحديث، أو سيُثبَّت تلقائيًا عند إغلاق التطبيق.",
-        buttons: ["إعادة التشغيل الآن", "لاحقًا"],
-        defaultId: 0,
-        cancelId: 1
-      });
-      if (response === 0) autoUpdater.quitAndInstall();
+      autoUpdater.quitAndInstall(false, true);
     } catch {
-      /* the window may be closing; install-on-quit still applies */
+      app.relaunch();
+      app.quit();
     }
   });
 
   const check = () => {
     autoUpdater.checkForUpdates().catch(() => {});
   };
-  check();
+  // فحص أولي بعد 8 ثوانٍ من الإقلاع (حتى لا يبطّئ فتح النافذة)
+  setTimeout(check, 8000);
   setInterval(check, UPDATE_CHECK_INTERVAL_MS);
 }
+
+// ---- أداء: تسريع الإقلاع وتقليل استهلاك الخلفية ----
+app.commandLine.appendSwitch("disable-renderer-backgrounding");
+app.commandLine.appendSwitch("disable-background-timer-throttling");
 
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {

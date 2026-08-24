@@ -28,5 +28,13 @@ contextBridge.exposeInMainWorld("pdfStudioDesktop", {
    * @param {Array<{ name: string; data: ArrayBuffer }>} files
    * @returns {Promise<{ saved: boolean; name?: string; count?: number }>}
    */
-  saveFolder: (request, files) => ipcRenderer.invoke("pdf-studio:save-folder", request, files)
+  saveFolder: (request, files) => ipcRenderer.invoke("pdf-studio:save-folder", request, files),
+
+  /** @param {(status: { state: string; percent?: number; version?: string }) => void} callback */
+  onUpdateStatus: (callback) => {
+    const handler = (_event, status) => callback(status);
+    ipcRenderer.on("app:update-status", handler);
+    return () => ipcRenderer.removeListener("app:update-status", handler);
+  },
+  restartToUpdate: () => ipcRenderer.invoke("app:restart-to-update")
 });

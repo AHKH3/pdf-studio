@@ -7,6 +7,7 @@ import { initKeys } from "./ui/keys.js";
 import { initRouter, registerTools } from "./ui/router.js";
 import { initTheme } from "./ui/theme.js";
 import { initTitleBlock } from "./ui/titleblock.js";
+import { initUpdater } from "./ui/updater.js";
 
 /** @param {typeof import("./tools/crop/manifest.js").default} manifest */
 function wiredManifest(manifest) {
@@ -52,6 +53,7 @@ const TOOL_LOADERS = [
   ["numbers", () => import("./tools/numbers.js").then((m) => m.numbersTool)],
   ["rasterize", () => import("./tools/rasterize.js").then((m) => m.rasterizeTool)],
   ["sign", () => import("./tools/sign/manifest.js").then((m) => m.asTool())],
+  ["edit", () => import("./tools/edit/manifest.js").then((m) => m.asTool())],
   ["protect", () => import("./tools/protect/manifest.js").then((m) => m.protectTool)],
   ["crop", () => import("./tools/crop/manifest.js").then((m) => wiredManifest(m.default))],
   ["extract-images", () => import("./tools/extract-images/manifest.js").then((m) => m.extractImagesTool)],
@@ -86,6 +88,7 @@ async function boot() {
 
   initFeedback();
   initTitleBlock();
+  initUpdater();
   initTheme(/** @type {HTMLButtonElement | null} */ (el("theme-toggle")));
   guardWindowDrops();
   initKeys();
