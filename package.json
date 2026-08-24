@@ -1,9 +1,9 @@
 {
   "name": "pdf-studio",
   "productName": "PDF Studio",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "أدوات PDF عربية — تطبيق سطح مكتب",
-  "homepage": "https://github.com/abdo3342/pdf-studio",
+  "homepage": "https://github.com/AHKH3/pdf-studio",
   "author": "abdo3342",
   "main": "electron/main.cjs",
   "private": true,
@@ -46,7 +46,7 @@
     "appId": "app.pdfstudio.desktop",
     "publish": {
       "provider": "github",
-      "owner": "abdo3342",
+      "owner": "AHKH3",
       "repo": "pdf-studio"
     },
     "files": [
