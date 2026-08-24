@@ -207,6 +207,9 @@ button, input, select, textarea { font-family: inherit; }
   border:0; border-radius:0; box-shadow:none;
   overflow: visible;
 }
+html.is-desktop .sheet { height: 100vh; max-height: 100vh; overflow: hidden; }
+html.is-desktop .sheet__body { overflow: hidden; min-height: 0; }
+html.is-desktop .work { overflow-y: auto; overscroll-behavior: contain; }
 .sheet__frame { display:none; }
 
 /* header — merged with native Electron titlebar (no pill, drag region) */
@@ -618,21 +621,25 @@ code { font-family: var(--data); font-variant-numeric: tabular-nums; font-size:0
 }
 @media (max-width: 900px) {
   :root { --pad: 16px; }
-  .sheet__head { width: calc(100% - 20px); margin-top:10px; padding: 8px 10px; gap:8px; }
-  .legend__row { padding:0 10px; }
+  .sheet__head { padding: 0 6px 0 8px; gap: 6px; height: 40px; min-height: 40px; }
+  .legend__row { padding:0 10px; font-size:0.76rem; }
   .tb__kbd { display:none; }
-  .work { padding: 20px 14px 16px; }
-  .start { padding: 20px 14px; }
-  #hub-drop.intake--sheet { min-height: 300px; padding: 24px 18px; }
-  .titleblock { grid-template-columns: minmax(0,1fr) minmax(0,1fr) auto; grid-auto-rows:auto; }
-  .tb__cell--num, .tb__cell--state { display:none; }
+  .work { padding: 18px 12px 14px; }
+  .start { padding: 18px 12px; }
+  #hub-drop.intake--sheet { min-height: 280px; padding: 22px 16px; }
+  .titleblock { padding: 10px 12px calc(10px + env(safe-area-inset-bottom,0px)); gap: 8px 10px; border-radius: 10px 10px 0 0; }
+  .tb__cell { padding: 5px 8px; }
+  .tb__cell--name { flex: 1 1 100%; max-width: none; }
+  .tb__value { font-size: 0.84rem; }
+  .tb__input { height: 34px; font-size: 0.82rem; }
 }
 @media (max-width: 640px) {
-  .sheet__head { min-height:52px; }
-  .legend { gap:4px; }
-  .legend__list { gap:4px; }
-  .legend__row { padding:0 10px; font-size:0.76rem; }
-  .legend__name { max-width:7rem; }
+  .sheet__head { height: 40px; min-height: 40px; padding: 0 6px; }
+  .mark__name { font-size: 0.95rem; }
+  .legend { gap:3px; }
+  .legend__list { gap:3px; }
+  .legend__row { padding:0 8px; font-size:0.72rem; height:28px; min-height:28px; }
+  .legend__name { max-width:6rem; }
   .fieldset { grid-template-columns: minmax(0,1fr); }
   .docrow { grid-template-columns: 32px 48px minmax(0,1fr); gap:8px; }
   .docrow__actions { grid-column: 1 / -1; justify-content:flex-end; }
@@ -640,6 +647,11 @@ code { font-family: var(--data); font-variant-numeric: tabular-nums; font-size:0
   .toasts { inset-inline: 12px; }
   .toast { max-width:none; min-width:0; }
   #hub-drop.intake--sheet { width: calc(100% - 16px); }
+  .titleblock { flex-direction: column; align-items: stretch; gap: 8px; padding: 12px 12px calc(12px + env(safe-area-inset-bottom,0px)); }
+  .tb__cell, .tb__cell--name, .tb__cell--num, .tb__cell--state, .tb__run { width: 100%; }
+  .tb__run { justify-content: stretch; }
+  .tb__run .btn--act { flex: 1; width: 100%; }
+  .tb__cell--num .tb__value--num { display: inline-flex; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
