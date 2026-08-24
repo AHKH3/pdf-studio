@@ -470,7 +470,7 @@ html.is-desktop[data-platform="linux"] .win-controls { display:flex; }
     0 0 0 var(--border-strong),
     0 1px 3px rgba(15,23,42,0.06);
 }
-.btn:disabled { opacity:0.45; cursor:not-allowed; transform:none; }
+.btn:disabled { opacity:0.45; cursor:not-allowed; transform:none; box-shadow: none; }
 .btn:focus-visible, .choice input[type="radio"]:focus-visible + span { box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 5px transparent; outline:none; border-color: var(--accent); }
 .btn--act, .choice input[type="radio"]:checked + span {
   color:#fff; background: var(--accent); border-color: var(--accent-deep);
@@ -495,7 +495,7 @@ html.is-desktop[data-platform="linux"] .win-controls { display:flex; }
     0 2px 6px rgba(15,23,42,0.10),
     0 6px 12px var(--accent-glow);
 }
-.btn--act:disabled { opacity:0.50; }
+.btn--act:disabled { opacity:0.50; box-shadow: none; }
 .btn--compact, .legend__row, .scan__pager .btn, .tb__run .btn--act { min-height:32px; padding: 0 14px; font-size:0.82rem; }
 .legend__row { height:32px; min-height:32px; }
 .btn--wide { width:100%; min-width:0; margin-top:8px; }

@@ -387,8 +387,9 @@ export function buildUi(root) {
               ${choice("edit-tool", "image", "صورة", "icon-images")}
             </div>
             <div class="btn-row" style="margin-top:10px">
-              <button id="edit-undo" type="button" class="btn" style="flex:1">${icon("icon-rotate")} تراجع</button>
-              <button id="edit-delete" type="button" class="btn" style="flex:1">${icon("icon-trash")} حذف</button>
+              <button id="edit-undo" type="button" class="btn" style="flex:1" aria-label="تراجع">${icon("icon-rotate")} تراجع</button>
+              <button id="edit-redo" type="button" class="btn" style="flex:1" aria-label="إعادة">${icon("icon-rotate")} إعادة</button>
+              <button id="edit-delete" type="button" class="btn" style="flex:1" aria-label="حذف المحدد">${icon("icon-trash")} حذف</button>
             </div>
           </div>
 
@@ -527,6 +528,7 @@ export function buildUi(root) {
     strokeColor: root.querySelector("#edit-stroke-color"),
     strokeWidth: root.querySelector("#edit-stroke-width"),
     undo: root.querySelector("#edit-undo"),
+    redo: root.querySelector("#edit-redo"),
     remove: root.querySelector("#edit-delete"),
     save: root.querySelector("#edit-save"),
     clear: root.querySelector("#edit-clear")

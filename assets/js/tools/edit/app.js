@@ -32,6 +32,8 @@ const session = {
   saved: true,
   /** @type {any[][]} */
   history: [],
+  /** @type {any[][]} */
+  redoStack: [],
   historyBatch: false,
   syncing: false,
   zoom: 1
@@ -150,6 +152,7 @@ function cloneObjects(list) {
 function pushHistory() {
   session.history.push(cloneObjects(session.objects));
   if (session.history.length > 40) session.history.shift();
+  session.redoStack = [];
 }
 
 function beginChange() {
@@ -180,8 +183,26 @@ function undo() {
     return;
   }
   breakChange();
+  session.redoStack.push(cloneObjects(session.objects));
+  if (session.redoStack.length > 40) session.redoStack.shift();
   const previous = session.objects;
   session.objects = session.history.pop() || [];
+  revokeUnusedUrls(previous, session.objects);
+  if (!session.objects.some((obj) => obj.id === session.selectedId)) session.selectedId = "";
+  session.saved = false;
+  refresh();
+}
+
+function redo() {
+  if (!session.redoStack.length) {
+    toast("لا يوجد إعادة.", "info");
+    return;
+  }
+  breakChange();
+  session.history.push(cloneObjects(session.objects));
+  if (session.history.length > 40) session.history.shift();
+  const previous = session.objects;
+  session.objects = session.redoStack.pop() || [];
   revokeUnusedUrls(previous, session.objects);
   if (!session.objects.some((obj) => obj.id === session.selectedId)) session.selectedId = "";
   session.saved = false;
@@ -203,6 +224,7 @@ function refresh(overlay = true) {
   if (session.ui?.save) session.ui.save.disabled = session.objects.length === 0;
   if (session.ui?.remove) session.ui.remove.disabled = !session.selectedId;
   if (session.ui?.undo) session.ui.undo.disabled = session.history.length === 0;
+  if (session.ui?.redo) session.ui.redo.disabled = session.redoStack.length === 0;
   syncChrome();
 }
 
@@ -480,6 +502,7 @@ async function resetObjects() {
   session.objects = [];
   session.selectedId = "";
   session.history = [];
+  session.redoStack = [];
   session.historyBatch = false;
   session.saved = true;
 }
@@ -571,10 +594,16 @@ async function pickImage(file) {
 function onRootKey(event) {
   const typing = event.target.closest?.("input, textarea, select");
 
-  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z" && !event.shiftKey) {
     if (typing) return;
     event.preventDefault();
     undo();
+    return;
+  }
+  if ((event.ctrlKey || event.metaKey) && (event.key.toLowerCase() === "y" || (event.key.toLowerCase() === "z" && event.shiftKey))) {
+    if (typing) return;
+    event.preventDefault();
+    redo();
     return;
   }
 
@@ -701,6 +730,7 @@ export function mount(rootEl) {
   rootEl.addEventListener("keydown", onRootKey, { signal });
 
   session.ui.undo.addEventListener("click", undo, { signal });
+  session.ui.redo?.addEventListener("click", redo, { signal });
   session.ui.remove.addEventListener("click", deleteSelected, { signal });
   session.ui.save.addEventListener("click", () => run(), { signal });
   session.ui.clear.addEventListener("click", () => closeDocument(), { signal });
@@ -735,6 +765,7 @@ export function unmount() {
   session.objects = [];
   session.selectedId = "";
   session.history = [];
+  session.redoStack = [];
   session.historyBatch = false;
   session.bytes = null;
   session.fileName = "";
