@@ -112,6 +112,8 @@ function getStyle() {
     fontSize: Math.min(96, Math.max(10, finiteNumber(ui?.textSize.value, 18))),
     textColor: ui?.textColor.value || "#1E3A8A",
     bold: Boolean(ui?.textBold.checked),
+    italic: Boolean(ui?.textItalic?.checked),
+    underline: Boolean(ui?.textUnderline?.checked),
     align: activeAlign(),
     penColor: ui?.penColor.value || "#1E3A8A",
     penWeight: finiteNumber(ui?.penWeight.value, 2.2),
@@ -305,6 +307,8 @@ function syncInspectorFromSelection() {
       ui.textSize.value = String(obj.fontSize || 18);
       ui.textColor.value = obj.color || "#1E3A8A";
       ui.textBold.checked = Boolean(obj.bold);
+      ui.textItalic.checked = Boolean(obj.italic);
+      ui.textUnderline.checked = Boolean(obj.underline);
       const align = obj.align || "right";
       for (const input of session.root?.querySelectorAll('input[name="edit-align"]') ?? []) {
         /** @type {HTMLInputElement} */ (input).checked = input.value === align;
@@ -346,6 +350,8 @@ function saveStylePrefs() {
         textSize: ui.textSize.value,
         textColor: ui.textColor.value,
         bold: ui.textBold.checked,
+        italic: ui.textItalic?.checked ?? false,
+        underline: ui.textUnderline?.checked ?? false,
         align: activeAlign(),
         penColor: ui.penColor.value,
         penWeight: ui.penWeight.value,
@@ -371,6 +377,8 @@ function applySavedStyle() {
   if (saved.textSize) ui.textSize.value = String(saved.textSize);
   if (saved.textColor) ui.textColor.value = saved.textColor;
   if (typeof saved.bold === "boolean") ui.textBold.checked = saved.bold;
+  if (typeof saved.italic === "boolean" && ui.textItalic) ui.textItalic.checked = saved.italic;
+  if (typeof saved.underline === "boolean" && ui.textUnderline) ui.textUnderline.checked = saved.underline;
   if (saved.align) {
     for (const input of session.root?.querySelectorAll('input[name="edit-align"]') ?? []) {
       /** @type {HTMLInputElement} */ (input).checked = input.value === saved.align;
@@ -426,7 +434,10 @@ function applyInspectorToSelection() {
     obj.fontSize = style.fontSize;
     obj.color = style.textColor;
     obj.bold = style.bold;
+    obj.italic = style.italic;
+    obj.underline = style.underline;
     obj.align = style.align;
+    session.board?.syncSelectedText?.(obj.text);
   } else if (obj.type === "ink") {
     obj.color = style.penColor;
     obj.strokeWidth = style.penWeight;

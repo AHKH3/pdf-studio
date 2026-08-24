@@ -72,6 +72,8 @@ function wrapLines(ctx, text, maxWidth) {
  *   fontSize: number;
  *   color: string;
  *   bold?: boolean;
+ *   italic?: boolean;
+ *   underline?: boolean;
  *   align?: "right" | "center" | "left";
  * }} style
  */
@@ -82,7 +84,7 @@ export async function renderTextBoxPng(text, style) {
   const height = Math.max(1, Math.round(style.height * scale));
   const fontSize = Math.max(10, style.fontSize * scale);
   const weight = style.bold ? 700 : 400;
-  const font = `${weight} ${fontSize}px ${FONT}`;
+  const font = `${style.italic ? "italic " : ""}${weight} ${fontSize}px ${FONT}`;
   const pad = Math.max(4, fontSize * 0.18);
   const align = style.align || "right";
 
@@ -111,6 +113,12 @@ export async function renderTextBoxPng(text, style) {
     const y = pad + i * lineHeight;
     if (y > height) break;
     ctx.fillText(lines[i], x, y);
+    if (style.underline && lines[i].trim()) {
+      const w = ctx.measureText(lines[i]).width;
+      const ux = align === "center" ? x - w / 2 : align === "left" ? x : x - w;
+      const uy = y + fontSize * 1.12;
+      ctx.fillRect(ux, uy, w, Math.max(1.5, fontSize * 0.07));
+    }
   }
   ctx.restore();
 

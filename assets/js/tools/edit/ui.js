@@ -435,9 +435,9 @@ export function buildUi(root) {
               ${choice("edit-tool", "image", "صورة", "icon-images")}
             </div>
             <div class="btn-row">
-              <button id="edit-undo" type="button" class="btn" aria-label="تراجع">${icon("icon-rotate")} تراجع</button>
-              <button id="edit-redo" type="button" class="btn" aria-label="إعادة">${icon("icon-rotate")} إعادة</button>
-              <button id="edit-delete" type="button" class="btn" aria-label="حذف المحدد">${icon("icon-trash")} حذف</button>
+              <button id="edit-undo" type="button" class="btn btn--fill" aria-label="تراجع">${icon("icon-rotate")} تراجع</button>
+              <button id="edit-redo" type="button" class="btn btn--fill" aria-label="إعادة">${icon("icon-rotate")} إعادة</button>
+              <button id="edit-delete" type="button" class="btn btn--fill" aria-label="حذف المحدد">${icon("icon-trash")} حذف</button>
             </div>
           </div>
 
@@ -466,9 +466,19 @@ export function buildUi(root) {
             <div class="edit-chips" role="group" aria-label="مقاسات جاهزة">
               ${TEXT_SIZES.map((s) => `<button type="button" class="edit-chip" data-size-chip="${s}" data-for="edit-text-size">${s}</button>`).join("")}
             </div>
+            <div class="grid-2col">
+              <label class="check">
+                <input id="edit-text-bold" type="checkbox" />
+                عريض
+              </label>
+              <label class="check">
+                <input id="edit-text-italic" type="checkbox" />
+                مائل
+              </label>
+            </div>
             <label class="check">
-              <input id="edit-text-bold" type="checkbox" />
-              عريض
+              <input id="edit-text-underline" type="checkbox" />
+              تسطير
             </label>
             <div class="field field--wide">
               <span id="edit-align-label">المحاذاة</span>
@@ -582,6 +592,8 @@ export function buildUi(root) {
     textSize: root.querySelector("#edit-text-size"),
     textColor: root.querySelector("#edit-text-color"),
     textBold: root.querySelector("#edit-text-bold"),
+    textItalic: root.querySelector("#edit-text-italic"),
+    textUnderline: root.querySelector("#edit-text-underline"),
     penColor: root.querySelector("#edit-pen-color"),
     penWeight: root.querySelector("#edit-pen-weight"),
     fillOn: root.querySelector("#edit-fill-on"),

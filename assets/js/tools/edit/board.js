@@ -247,13 +247,37 @@ export function createBoard(options) {
     drag.livePath.setAttribute("d", d);
   }
 
+  /**
+   * Grow a text object's height so its textarea never clips content.
+   * Keeps the visual TOP edge fixed (box grows downward on screen).
+   * @param {HTMLTextAreaElement} area
+   * @param {any} obj
+   */
+  function growTextArea(area, obj) {
+    const scale = displayScale();
+    if (!(scale > 0)) return;
+    const neededPt = area.scrollHeight / scale + 2;
+    if (neededPt <= obj.height + 0.5) return;
+    const top = visualHeight - obj.y - obj.height;
+    obj.height = Math.min(visualHeight, Math.max(MIN_PT, neededPt));
+    obj.y = Math.max(0, Math.min(visualHeight - obj.height, visualHeight - top - obj.height));
+    const node = area.closest(".edit-obj");
+    if (node instanceof HTMLElement) positionNode(node, obj);
+  }
+
   function paintOverlay() {
     const selected = getSelectedId();
     const focused = document.activeElement;
     const keepFocusId =
       focused instanceof HTMLTextAreaElement ? focused.closest(".edit-obj")?.dataset.id : "";
 
-    layer.querySelectorAll(".edit-obj, .edit-ghost").forEach((node) => node.remove());
+    layer.querySelectorAll(".edit-obj, .edit-ghost").forEach((node) => {
+      try {
+        node.remove();
+      } catch {
+        /* أُزيلت بالفعل أثناء معالجة متداخلة */
+      }
+    });
     layer.dataset.tool = getTool();
 
     for (const obj of objectsOnPage()) {
@@ -274,6 +298,8 @@ export function createBoard(options) {
         node.style.color = obj.color || "#1E3A8A";
         node.style.fontFamily = FONT;
         node.style.fontWeight = obj.bold ? "700" : "400";
+        node.style.fontStyle = obj.italic ? "italic" : "normal";
+        node.style.textDecoration = obj.underline ? "underline" : "none";
         node.style.fontSize = `${fontSize * scale}px`;
         node.style.lineHeight = "1.45";
         node.style.textAlign = obj.align || "right";
@@ -284,12 +310,25 @@ export function createBoard(options) {
           area.dir = "rtl";
           area.maxLength = 2000;
           area.addEventListener("pointerdown", (event) => event.stopPropagation());
+          area.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              event.stopPropagation();
+              setSelectedId("");
+              paintOverlay();
+              onChange();
+            }
+          });
           area.addEventListener("input", () => {
             onBeginChange?.();
             obj.text = area.value;
+            growTextArea(area, obj);
             onChange();
           });
           node.append(area);
+          requestAnimationFrame(() => {
+            if (area.isConnected) growTextArea(area, obj);
+          });
         } else {
           const preview = document.createElement("div");
           preview.className = "edit-obj__text";
@@ -436,6 +475,7 @@ export function createBoard(options) {
       if (!obj) return;
       setSelectedId(obj.id);
       paintOverlay();
+      if (obj.type === "text") focusSelectedText();
       layer.setPointerCapture(event.pointerId);
       const mode = handle?.dataset.handle || "move";
       onHistory();
@@ -707,7 +747,13 @@ export function createBoard(options) {
     visualHeight = 0;
     const ctx = canvas.getContext("2d");
     ctx?.clearRect(0, 0, canvas.width, canvas.height);
-    layer.querySelectorAll(".edit-obj, .edit-ghost").forEach((node) => node.remove());
+    layer.querySelectorAll(".edit-obj, .edit-ghost").forEach((node) => {
+      try {
+        node.remove();
+      } catch {
+        /* أُزيلت بالفعل */
+      }
+    });
   }
 
   function detach() {
@@ -765,6 +811,16 @@ export function createBoard(options) {
     focusSelectedText() {
       const area = layer.querySelector(".edit-obj.is-selected textarea");
       if (area instanceof HTMLTextAreaElement) area.focus();
+    },
+    /** Mirror side-panel text into the on-canvas textarea (when not focused). */
+    syncSelectedText(value) {
+      const node = layer.querySelector(".edit-obj.is-selected");
+      const area = node?.querySelector("textarea");
+      if (!(area instanceof HTMLTextAreaElement) || document.activeElement === area) return;
+      const obj = getObjects().find((item) => item.id === node?.dataset.id);
+      if (!obj) return;
+      area.value = value || "";
+      growTextArea(area, obj);
     },
     async destroy() {
       await closePdf();

@@ -103,6 +103,8 @@ export async function flattenObjects(bytes, objects) {
         fontSize: obj.fontSize || 18,
         color: obj.color || "#1E3A8A",
         bold: Boolean(obj.bold),
+        italic: Boolean(obj.italic),
+        underline: Boolean(obj.underline),
         align: obj.align || "right"
       });
       let png = painted.bytes;
