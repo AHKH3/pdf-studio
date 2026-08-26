@@ -203,6 +203,31 @@ group("shell — close with unsaved work");
   fs.rmSync(dir, { recursive: true, force: true });
 }
 
+group("shell — unsaved work per tool (organize/edit)");
+{
+  const dir = tmpUserData();
+  const { done } = spawnApp(
+    [root, `--user-data-dir=${dir}`],
+    { ...displayEnv, PDF_STUDIO_TEST: "dirty-tools" },
+    { timeoutMs: 45000 }
+  );
+  const res = await done;
+  const line = (res.out.match(/\[test\] dirty-tools (\{.*\})/) || [])[1];
+  let parsed = null;
+  try {
+    parsed = line ? JSON.parse(line) : null;
+  } catch {
+    parsed = null;
+  }
+  check("تحميل PDF في الأدوات نجح", Boolean(parsed?.dirty) && res.code === 0, res.out.slice(-500));
+  check("organize يعتبر غير محفوظ بعد التحميل", parsed?.dirty?.organize === true, JSON.stringify(parsed?.dirty));
+  const pdfDirty = ["split", "compress", "watermark", "numbers", "rasterize"];
+  const pdfOk = pdfDirty.every((id) => parsed?.dirty?.[id] === true);
+  check("أدوات PDF ذات isDirty تُبلّغ عن عمل غير محفوظ", pdfOk, JSON.stringify(parsed?.dirty));
+  check("edit بدون طبقات ليس dirty (متوقع)", parsed?.dirty?.edit === false, JSON.stringify(parsed?.dirty));
+  fs.rmSync(dir, { recursive: true, force: true });
+}
+
 group("shell — second-instance lock vs background-update");
 {
   const dir = tmpUserData();

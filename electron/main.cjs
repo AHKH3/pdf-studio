@@ -264,6 +264,61 @@ async function runTestProbe(win) {
     return;
   }
 
+  if (mode === "dirty-tools") {
+    await waitRenderer(
+      win,
+      "Promise.resolve(globalThis.__pdfStudioToolsLoaded).then((ids) => (Array.isArray(ids) ? ids.length : 0))",
+      120
+    );
+    const result = await win.webContents
+      .executeJavaScript(
+        `(async () => {
+          const lib = window.PDFLib;
+          if (!lib) return { error: "no-pdflib" };
+          const doc = await lib.PDFDocument.create();
+          const page = doc.addPage([595, 842]);
+          const font = await doc.embedFont(lib.StandardFonts.Helvetica);
+          page.drawText("sample", { x: 72, y: 720, size: 18, font });
+          const bytes = await doc.save();
+          const file = new File([bytes], "sample.pdf", { type: "application/pdf" });
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          const drop = document.getElementById("hub-drop");
+          if (!drop) return { error: "no-drop" };
+          drop.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: dt }));
+          await new Promise((r) => setTimeout(r, 500));
+
+          const ids = ["organize", "split", "compress", "watermark", "numbers", "rasterize", "edit"];
+          const dirty = {};
+          for (const id of ids) {
+            const btn = document.querySelector("[data-route='" + id + "']");
+            if (!btn) {
+              dirty[id] = "missing-button";
+              continue;
+            }
+            btn.click();
+            await new Promise((r) => setTimeout(r, 200));
+            const leave = document.querySelector(".progress.is-open .btn--act");
+            if (leave) {
+              leave.click();
+              await new Promise((r) => setTimeout(r, 400));
+            }
+            await new Promise((r) => setTimeout(r, 700));
+            const idsDirty = typeof __pdfStudioDirtyToolIds === "function" ? __pdfStudioDirtyToolIds() : [];
+            dirty[id] = idsDirty.includes(id);
+          }
+          return { dirty, hasFile: true };
+        })()`,
+        true
+      )
+      .catch((error) => ({ error: String(error) }));
+    console.log("[test] dirty-tools " + JSON.stringify(result));
+    forceClose = true;
+    armExitWatchdog();
+    app.exit(0);
+    return;
+  }
+
   if (mode === "close-clean" || mode === "close-unsaved-stay" || mode === "close-unsaved-close") {
     await waitRenderer(win, "typeof __pdfStudioHasUnsavedWork==='function'");
     if (mode !== "close-clean") {

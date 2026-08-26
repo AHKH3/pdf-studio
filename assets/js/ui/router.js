@@ -170,6 +170,12 @@ export function hasUnsavedWork() {
   return false;
 }
 
+export function dirtyToolIds() {
+  return Array.from(tools.values())
+    .filter((tool) => tool.isDirty?.())
+    .map((tool) => tool.id);
+}
+
 export function activeTool() {
   return tools.get(activeId) ?? null;
 }
@@ -369,6 +375,7 @@ export function initRouter() {
   // Main process queries this on close (native dialog + forceClose). beforeunload
   // is intentionally absent — it can trap the window and block quitAndInstall.
   globalThis.__pdfStudioHasUnsavedWork = hasUnsavedWork;
+  globalThis.__pdfStudioDirtyToolIds = dirtyToolIds;
 
   showRoute("start");
   void deliverAndEnter("start");
