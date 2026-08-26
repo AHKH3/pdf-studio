@@ -622,9 +622,13 @@ async function loadFile(file) {
     session.pages = pages;
     session.size = loaded.size;
     session.pageIndex = 0;
-    await session.board.showPage(0);
+    session.zoom = 1;
+    session.board.setZoom?.(1);
+    updateZoomLabel();
     session.ui.drop.hidden = true;
     session.ui.workspace.hidden = false;
+    await session.board.whenLaidOut?.();
+    await session.board.showPage(0);
     refresh();
   } catch (error) {
     reportFailure(error, "تعذّر فتح المستند.");

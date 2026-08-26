@@ -9,6 +9,7 @@ import {
   visualPointToMedia,
   visualRectToMedia
 } from "../assets/js/tools/edit/coords.js";
+import { fitPageCssWidth, stabilizeFitPx } from "../assets/js/tools/edit/fit.js";
 
 let failures = 0;
 let checks = 0;
@@ -126,6 +127,82 @@ console.log("\nedit coords (visual ↔ media, ink rotation, clamp)");
   const edge = { x: 80, y: 0, width: 20, height: 20 };
   const bump = clampedMove(edge, 40, 0, 100, 100);
   check("clamp at far edge reports no delta", bump.dx === 0 && bump.x === 80);
+}
+
+console.log("\nedit fit (page CSS width must not oscillate on open)");
+
+{
+  const A4W = 595;
+  const A4H = 842;
+
+  check(
+    "hidden / zero wrap is not laid out — return 0 so we do not shrink to 120px",
+    fitPageCssWidth(A4W, A4H, 0, 0) === 0 && fitPageCssWidth(A4W, A4H, 40, 40) === 0
+  );
+
+  const paneW = 660;
+  const paneH = 380;
+  const fitted = fitPageCssWidth(A4W, A4H, paneW, paneH);
+  const expected = paneH * (A4W / A4H);
+  check(
+    "visible pane height-limits A4 without exceeding width or 1:1",
+    close(fitted, expected, 0.5) && fitted <= paneW && fitted <= A4W,
+    String(fitted)
+  );
+
+  check(
+    "never wider than the pane even when minPx would overflow",
+    fitPageCssWidth(A4W, A4H, 100, 80) <= 100
+  );
+
+  check(
+    "stabilize ignores 1px jitter that used to retrigger ResizeObserver",
+    stabilizeFitPx(268.4, 268, 2) === 268 && stabilizeFitPx(280, 268, 2) === 280
+  );
+
+  check("stabilize keeps previous size when the wrap is not laid out yet", stabilizeFitPx(0, 268) === 268);
+
+  function legacyFit(pageW, pageH, boxW, boxH) {
+    const w = Math.max(80, boxW);
+    const h = Math.max(80, boxH);
+    const byHeight = h * (pageW / pageH);
+    return Math.max(120, Math.min(w, byHeight, pageW));
+  }
+
+  check(
+    "legacy hidden wrap reports 120px — the first-open jump before layout",
+    legacyFit(A4W, A4H, 0, 0) === 120
+  );
+
+  const frames = [];
+  let last = 0;
+  for (const box of [
+    [0, 0],
+    [0, 0],
+    [660, 380]
+  ]) {
+    last = stabilizeFitPx(fitPageCssWidth(A4W, A4H, box[0], box[1]), last);
+    if (last) frames.push(Math.round(last));
+  }
+  check(
+    "skipping hidden measures means the first visible width is the pane fit, not 120",
+    frames.length === 1 && frames[0] === Math.round(paneH * (A4W / A4H)),
+    frames.join(" → ")
+  );
+
+  const stablePaneH = 640;
+  const stable = [];
+  let prev = 0;
+  for (let i = 0; i < 10; i++) {
+    const next = stabilizeFitPx(fitPageCssWidth(A4W, A4H, 660, stablePaneH), prev);
+    stable.push(Math.round(next));
+    prev = next;
+  }
+  check(
+    "new fit on a fixed pane converges to one CSS width",
+    new Set(stable).size === 1 && stable[0] > 120,
+    stable.join(" → ")
+  );
 }
 
 console.log(`\n${checks - failures}/${checks} checks passed`);
