@@ -24,6 +24,7 @@ check("COEP هو credentialless", /Cross-Origin-Embedder-Policy.*credentialless/
 check("يوجد fallback لإظهار النافذة", /ready-to-show لم يطلق|showFallback/.test(mainCjs));
 check("قفل النسخة الواحدة لا يمنع التطوير", /isDev.*requestSingleInstanceLock|!app\.isPackaged/.test(mainCjs));
 check("preload ما زال sandbox/contextIsolation", /contextIsolation:\s*true/.test(mainCjs) && /sandbox:\s*true/.test(mainCjs));
+check("التحديثات لا تعمل إلا في النسخة المعبأة", /!app\.isPackaged\s*\|\|\s*!autoUpdater/.test(mainCjs));
 
 // 2) فحص Vendor الحرجة موجودة
 console.log("launch — vendor checks");

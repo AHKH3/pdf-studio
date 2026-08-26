@@ -8,20 +8,24 @@
   <meta name="color-scheme" content="light dark" />
   <meta name="theme-color" content="#4F46E5" />
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" sizes="192x192" href="../assets/branding/app-icon-192.png" />
-  <link rel="apple-touch-icon" href="../assets/branding/app-icon-512.png" />
-
-  <!-- Google Fonts: Cairo (Arabic Display & Headings) + Inter (UI & Numbers) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Favicon — files live inside landing/ so GitHub Pages (artifact = this folder) can serve them -->
+  <link rel="icon" type="image/png" sizes="192x192" href="branding/app-icon-192.png" />
+  <link rel="apple-touch-icon" href="branding/app-icon-512.png" />
 
   <style>
     /* ==========================================================================
        Lumen Glow v2 — Design Tokens & Foundations
        Pure White / Deep Space Black + Single Subtle Indigo Halo
        ========================================================================== */
+    @font-face {
+      font-family: "Noto Naskh Arabic";
+      font-style: normal;
+      font-weight: 400 700;
+      font-display: swap;
+      src: url("fonts/noto-naskh-arabic.woff2") format("woff2");
+      unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+    }
+
     :root {
       /* Light Theme (Sheet) */
       --bg: #FFFFFF;
@@ -64,8 +68,8 @@
       --shadow-elevated: 0 20px 48px rgba(15, 23, 42, 0.09);
       --shadow-glow: 0 0 0 1px var(--border-glow), 0 10px 30px var(--accent-glow);
 
-      --font-display: "Cairo", "Noto Naskh Arabic", system-ui, -apple-system, sans-serif;
-      --font-body: "Inter", "Cairo", system-ui, -apple-system, sans-serif;
+      --font-display: "Noto Naskh Arabic", "Cairo", "Segoe UI", Tahoma, sans-serif;
+      --font-body: "Noto Naskh Arabic", "Inter", "Segoe UI", system-ui, sans-serif;
 
       --ease-fluid: cubic-bezier(0.16, 1, 0.3, 1);
       --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -1304,23 +1308,21 @@
           </svg>
           تنزيل مجاني لويندوز
         </a>
-        <a class="btn btn-ghost btn-lg" href="#features">
+        <a class="btn btn-ghost btn-lg" href="https://github.com/AHKH3/pdf-studio/releases/latest/download/PDFStudio.AppImage" download>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="3" y="3" width="7" height="7"/>
-            <rect x="14" y="3" width="7" height="7"/>
-            <rect x="14" y="14" width="7" height="7"/>
-            <rect x="3" y="14" width="7" height="7"/>
+            <rect x="4" y="4" width="16" height="16" rx="2"/>
+            <path d="M8 12h8M12 8v8"/>
           </svg>
-          استعراض الـ 15 أداة
+          تنزيل Linux (AppImage)
         </a>
       </div>
 
       <div class="hero-platform-info">
-        <span>متوافق مع Windows 10 / 11 (64-bit)</span>
+        <span>Windows 10 / 11 و Linux</span>
         <span class="dot" aria-hidden="true"></span>
-        <span>تثبيت آمن ومجاني للأبد</span>
+        <span>مثبّت أو نسخة محمولة — مجاني للأبد</span>
         <span class="dot" aria-hidden="true"></span>
-        <span>حجم خفيف وتحديثات تلقائية</span>
+        <span>تحديثات تلقائية للنسخة المثبّتة</span>
       </div>
 
       <div class="trust-pills">
@@ -1741,7 +1743,7 @@
             <svg class="faq-icon-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <div class="faq-answer">
-            التطبيق مصمم ومختبر لنظام Windows 10 و Windows 11 (64-bit). كما يتوفر كود المصدر لبنائه على بيئات Linux أيضاً.
+            ويندوز 10 و 11 (64-bit): مثبّت NSIS مع تحديثات تلقائية، أو نسخة محمولة بدون تثبيت. لينكس: ملف AppImage جاهز للتشغيل. التحديثات التلقائية تعمل على النسخة المثبّتة فقط.
           </div>
         </div>
 
@@ -1774,21 +1776,27 @@
             </svg>
             تنزيل مباشر لويندوز (EXE)
           </a>
+          <a class="btn btn-ghost btn-lg" href="https://github.com/AHKH3/pdf-studio/releases/latest/download/PDFStudio-Portable.exe" download>
+            ويندوز محمول (بدون تثبيت)
+          </a>
+          <a class="btn btn-ghost btn-lg" href="https://github.com/AHKH3/pdf-studio/releases/latest/download/PDFStudio.AppImage" download>
+            Linux — AppImage
+          </a>
 
           <div class="dl-meta">
             <span class="dl-meta-tag">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
-              Windows 10 / 11 (64-bit)
+              Windows 10 / 11 و Linux
             </span>
             <span>•</span>
             <span class="dl-meta-tag">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              تثبيت آمن وموقع رسمياً
+              100% محلي — بلا رفع ملفات
             </span>
             <span>•</span>
             <span class="dl-meta-tag">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              تحديثات تلقائية مجانية
+              تحديثات تلقائية للنسخة المثبّتة
             </span>
           </div>
         </div>
