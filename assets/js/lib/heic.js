@@ -51,14 +51,24 @@ export async function ensureDecodableImages(files) {
 }
 
 async function loadHeic2Any() {
-  // vendor/heic2any.min.js يصدّر globalThis.heic2any أو ESM
   if (globalThis.heic2any) return globalThis.heic2any;
-  try {
-    const mod = await import("../../vendor/heic2any.js");
-    return mod.default || mod.heic2any || globalThis.heic2any || null;
-  } catch {
-    return null;
-  }
+  // UMD: ES-module import() binds `this` to undefined, so inject as a classic script.
+  await new Promise((resolve) => {
+    const existing = document.querySelector('script[data-pdfstudio-heic2any]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => resolve(), { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "assets/vendor/heic2any.js";
+    script.async = true;
+    script.dataset.pdfstudioHeic2any = "1";
+    script.onload = () => resolve();
+    script.onerror = () => resolve();
+    document.head.append(script);
+  });
+  return globalThis.heic2any || null;
 }
 
 function canDecodeViaImage(url) {

@@ -17,7 +17,7 @@
     "icons": "node scripts/generate-icon-sprite.mjs",
     "fonts": "node scripts/fetch-fonts.mjs",
     "check": "node scripts/check-syntax.mjs",
-    "test": "node scripts/check-syntax.mjs && node scripts/test-scan.mjs && node scripts/test-experience.mjs && node scripts/test-tools.mjs && node scripts/test-edit.mjs && node scripts/test-protect.mjs && node scripts/test-launch.mjs",
+    "test": "node scripts/check-syntax.mjs && node scripts/test-scan.mjs && node scripts/test-experience.mjs && node scripts/test-tools.mjs && node scripts/test-edit.mjs && node scripts/test-protect.mjs && node scripts/test-launch.mjs && node scripts/test-electron-shell.mjs",
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --win",
@@ -76,7 +76,8 @@
       "allowElevation": true,
       "runAfterFinish": true,
       "createDesktopShortcut": true,
-      "artifactName": "PDFStudio-Setup.${ext}"
+      "artifactName": "PDFStudio-Setup.${ext}",
+      "include": "build/installer.nsh"
     }
   }
 }

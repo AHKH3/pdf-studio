@@ -12,6 +12,16 @@ const fs = require("fs");
 const fsp = require("fs/promises");
 
 const ROOT = path.join(__dirname, "..");
+const BOOT_T0 = Date.now();
+const BACKGROUND_UPDATE_FLAG = "--background-update";
+const EXIT_WATCHDOG_MS = 5000;
+const BACKGROUND_UPDATE_TIMEOUT_MS = 10 * 60 * 1000;
+const UPDATE_CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000;
+const UNSAVED_QUERY_MS = 1000;
+
+function argvHasFlag(argv, flag) {
+  return Array.isArray(argv) && argv.includes(flag);
+}
 
 /** Everything the renderer is allowed to fetch. Anything else 404s. */
 const SERVED_PREFIXES = ["assets/", "index.html"];
@@ -201,15 +211,216 @@ function registerIpc() {
 
 let mainWindow = null;
 let staticServer = null;
+let serverPromise = null;
+let forceClose = false;
+let closeInFlight = false;
+let exitWatchdog = null;
+let updaterWired = false;
+let restartHandlerReady = false;
+let runMode = argvHasFlag(process.argv, BACKGROUND_UPDATE_FLAG) ? "background" : "ui";
 
-async function ensureServerPort() {
-  if (!staticServer) staticServer = await createStaticServer();
-  return staticServer.address().port;
+function bootLog(msg) {
+  console.log(`[boot] ${msg} ${Date.now() - BOOT_T0}ms`);
+}
+
+async function waitRenderer(win, expr, tries = 80) {
+  for (let i = 0; i < tries; i++) {
+    if (!win || win.isDestroyed()) return null;
+    const value = await win.webContents.executeJavaScript(expr, true).catch(() => null);
+    if (value) return value;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  return null;
+}
+
+/** Opt-in probe for scripts/test-electron-shell.mjs — no-op in production. */
+async function runTestProbe(win) {
+  const mode = process.env.PDF_STUDIO_TEST;
+  if (!mode || !win || win.isDestroyed()) return;
+
+  const boot = await waitRenderer(win, "globalThis.__pdfStudioBoot || null");
+  if (boot && typeof boot === "object") {
+    console.log(`[boot] hero-ms ${boot.heroMs} fcp-ms ${boot.fcpMs}`);
+  }
+
+  if (mode === "hold") {
+    console.log("[test] holding");
+    return;
+  }
+
+  if (mode === "boot") {
+    const tools = await waitRenderer(
+      win,
+      "Promise.resolve(globalThis.__pdfStudioToolsLoaded).then((ids) => (Array.isArray(ids) ? ids.length : 0))",
+      120
+    );
+    const unsaved = await win.webContents
+      .executeJavaScript("typeof __pdfStudioHasUnsavedWork==='function'&&__pdfStudioHasUnsavedWork()", true)
+      .catch(() => "err");
+    console.log(`[test] tools ${tools} unsaved ${unsaved}`);
+    forceClose = true;
+    armExitWatchdog();
+    app.exit(0);
+    return;
+  }
+
+  if (mode === "dirty-tools") {
+    await waitRenderer(
+      win,
+      "Promise.resolve(globalThis.__pdfStudioToolsLoaded).then((ids) => (Array.isArray(ids) ? ids.length : 0))",
+      120
+    );
+    const result = await win.webContents
+      .executeJavaScript(
+        `(async () => {
+          const lib = window.PDFLib;
+          if (!lib) return { error: "no-pdflib" };
+          const doc = await lib.PDFDocument.create();
+          const page = doc.addPage([595, 842]);
+          const font = await doc.embedFont(lib.StandardFonts.Helvetica);
+          page.drawText("sample", { x: 72, y: 720, size: 18, font });
+          const bytes = await doc.save();
+          const file = new File([bytes], "sample.pdf", { type: "application/pdf" });
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          const drop = document.getElementById("hub-drop");
+          if (!drop) return { error: "no-drop" };
+          drop.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: dt }));
+          await new Promise((r) => setTimeout(r, 500));
+
+          const ids = ["organize", "split", "compress", "watermark", "numbers", "rasterize", "edit"];
+          const dirty = {};
+          for (const id of ids) {
+            const btn = document.querySelector("[data-route='" + id + "']");
+            if (!btn) {
+              dirty[id] = "missing-button";
+              continue;
+            }
+            btn.click();
+            await new Promise((r) => setTimeout(r, 200));
+            const leave = document.querySelector(".progress.is-open .btn--act");
+            if (leave) {
+              leave.click();
+              await new Promise((r) => setTimeout(r, 400));
+            }
+            await new Promise((r) => setTimeout(r, 700));
+            const idsDirty = typeof __pdfStudioDirtyToolIds === "function" ? __pdfStudioDirtyToolIds() : [];
+            dirty[id] = idsDirty.includes(id);
+          }
+          return { dirty, hasFile: true };
+        })()`,
+        true
+      )
+      .catch((error) => ({ error: String(error) }));
+    console.log("[test] dirty-tools " + JSON.stringify(result));
+    forceClose = true;
+    armExitWatchdog();
+    app.exit(0);
+    return;
+  }
+
+  if (mode === "close-clean" || mode === "close-unsaved-stay" || mode === "close-unsaved-close") {
+    await waitRenderer(win, "typeof __pdfStudioHasUnsavedWork==='function'");
+    if (mode !== "close-clean") {
+      await win.webContents
+        .executeJavaScript("globalThis.__pdfStudioHasUnsavedWork=()=>true", true)
+        .catch(() => {});
+    }
+    if (!win.isDestroyed()) win.close();
+    if (mode === "close-unsaved-stay") {
+      setTimeout(() => {
+        const alive = Boolean(getMainWindow() && !getMainWindow().isDestroyed());
+        console.log(`[test] stayed ${alive}`);
+        forceClose = true;
+        app.exit(alive ? 0 : 1);
+      }, 1200);
+    }
+  }
+}
+
+function ensureServer() {
+  if (!serverPromise) {
+    serverPromise = createStaticServer().then((srv) => {
+      staticServer = srv;
+      bootLog(`server :${srv.address().port}`);
+      return srv;
+    });
+  }
+  return serverPromise;
+}
+
+function armExitWatchdog() {
+  if (exitWatchdog) return;
+  exitWatchdog = setTimeout(() => {
+    console.warn("[close] watchdog — app.exit(0)");
+    app.exit(0);
+  }, EXIT_WATCHDOG_MS);
+}
+
+async function queryRendererUnsaved(win) {
+  if (!win || win.isDestroyed() || win.webContents.isDestroyed()) return false;
+  const script =
+    "typeof __pdfStudioHasUnsavedWork==='function'&&__pdfStudioHasUnsavedWork()===true";
+  try {
+    return await Promise.race([
+      win.webContents.executeJavaScript(script, true),
+      new Promise((resolve) => setTimeout(() => resolve(false), UNSAVED_QUERY_MS))
+    ]);
+  } catch {
+    return false;
+  }
+}
+
+async function confirmCloseIfUnsaved(win) {
+  const testChoice = process.env.PDF_STUDIO_TEST_UNSAVED;
+  if (testChoice === "close") return true;
+  if (testChoice === "stay") {
+    const unsaved = await queryRendererUnsaved(win);
+    return !unsaved;
+  }
+
+  const unsaved = await queryRendererUnsaved(win);
+  if (!unsaved || !win || win.isDestroyed()) return true;
+
+  const { response } = await dialog.showMessageBox(win, {
+    type: "warning",
+    buttons: ["إغلاق", "البقاء"],
+    defaultId: 1,
+    cancelId: 1,
+    noLink: true,
+    title: "عمل غير محفوظ",
+    message: "لديك عمل غير محفوظ.",
+    detail: "الإغلاق يتخلّص من العمل الذي لم يُحفظ."
+  });
+  return response === 0;
+}
+
+function attachCloseGuard(win) {
+  win.on("close", (event) => {
+    if (forceClose) return;
+    event.preventDefault();
+    if (closeInFlight) return;
+    closeInFlight = true;
+    void (async () => {
+      const ok = await confirmCloseIfUnsaved(win);
+      if (!ok) {
+        closeInFlight = false;
+        return;
+      }
+      forceClose = true;
+      armExitWatchdog();
+      if (!win.isDestroyed()) win.close();
+    })().catch(() => {
+      forceClose = true;
+      armExitWatchdog();
+      if (!win.isDestroyed()) win.close();
+      else app.exit(0);
+    });
+  });
 }
 
 async function createWindow() {
-  const port = await ensureServerPort();
-  const origin = `http://127.0.0.1:${port}`;
+  const serverReady = ensureServer();
 
   const iconPath = path.join(ROOT, "assets", "branding", "app-icon-512.png");
   const winOpts = {
@@ -244,6 +455,8 @@ async function createWindow() {
   }
 
   mainWindow = new BrowserWindow(winOpts);
+  attachCloseGuard(mainWindow);
+
   // احتياط: إذا لم يطلق ready-to-show خلال 3 ثوانٍ (خطأ CSP/JS)، أظهر النافذة قسراً حتى لا يبدو التطبيق متوقفاً
   const showFallback = setTimeout(() => {
     if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
@@ -253,9 +466,9 @@ async function createWindow() {
   }, 3500);
   mainWindow.once("ready-to-show", () => {
     clearTimeout(showFallback);
+    bootLog("ready-to-show");
     if (!mainWindow.isDestroyed()) mainWindow.show();
   });
-  // تسجيل أخطاء الـ renderer لتظهر في سجل main
   mainWindow.webContents.on("did-fail-load", (_e, code, desc, url) => {
     console.error("did-fail-load", code, desc, url);
   });
@@ -268,16 +481,21 @@ async function createWindow() {
     return { action: "deny" };
   });
 
-  // The app is a single local origin; nothing may navigate it elsewhere.
+  const srv = await serverReady;
+  const origin = `http://127.0.0.1:${srv.address().port}`;
+
   mainWindow.webContents.on("will-navigate", (event, url) => {
     if (!url.startsWith(origin)) event.preventDefault();
   });
 
   await mainWindow.loadURL(`${origin}/index.html`);
+  bootLog("loadURL");
 
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
+
+  void runTestProbe(mainWindow);
 }
 
 function shutdownServer() {
@@ -287,14 +505,6 @@ function shutdownServer() {
   }
 }
 
-/**
- * Auto-updates: صامت تمامًا، لا يقطع عمل المستخدم أبدًا.
- * - الفحص والتنزيل في الخلفية، مع إرسال الحالة للهيدر.
- * - عند الجاهزية: يظهر شريط هادئ في الهيدر + يثبّت تلقائيًا عند الإغلاق.
- * - لا حوار modal يزعج المستخدم أثناء العمل.
- */
-const UPDATE_CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000;
-
 function sendUpdateStatus(payload) {
   const win = getMainWindow();
   if (win && !win.isDestroyed()) {
@@ -302,24 +512,32 @@ function sendUpdateStatus(payload) {
   }
 }
 
+function finishBackgroundIfStillHeadless() {
+  if (runMode === "background") app.exit(0);
+}
+
 function wireAutoUpdater() {
-  if (!app.isPackaged || !autoUpdater) return;
+  if (!autoUpdater || updaterWired) return;
+  if (!app.isPackaged && runMode === "ui") return;
+  updaterWired = true;
+
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
   autoUpdater.allowPrerelease = false;
-  // يسمح بإعادة المحاولة بدون إزعاج لو فشل التحميل
   autoUpdater.logger = null;
 
   autoUpdater.on("checking-for-update", () => {
-    sendUpdateStatus({ state: "checking" });
+    if (runMode === "ui") sendUpdateStatus({ state: "checking" });
   });
   autoUpdater.on("update-available", (info) => {
-    sendUpdateStatus({ state: "downloading", percent: 0, version: info.version });
+    if (runMode === "ui") sendUpdateStatus({ state: "downloading", percent: 0, version: info.version });
   });
   autoUpdater.on("update-not-available", () => {
-    sendUpdateStatus({ state: "idle" });
+    if (runMode === "ui") sendUpdateStatus({ state: "idle" });
+    else finishBackgroundIfStillHeadless();
   });
   autoUpdater.on("download-progress", (progress) => {
+    if (runMode !== "ui") return;
     sendUpdateStatus({
       state: "downloading",
       percent: Math.round(progress.percent || 0),
@@ -327,57 +545,136 @@ function wireAutoUpdater() {
     });
   });
   autoUpdater.on("update-downloaded", (info) => {
-    sendUpdateStatus({ state: "ready", version: info.version });
-  });
-  autoUpdater.on("error", () => {
-    // فشل صامت — نعيد المحاولة في الفحص الدوري، بدون إزعاج
-    sendUpdateStatus({ state: "idle" });
-  });
-
-  // يسمح للواجهة بطلب إعادة التشغيل فورًا
-  ipcMain.handle("app:restart-to-update", () => {
+    if (runMode === "ui") {
+      sendUpdateStatus({ state: "ready", version: info.version });
+      return;
+    }
     try {
-      autoUpdater.quitAndInstall(false, true);
+      autoUpdater.quitAndInstall(true, false);
     } catch {
-      app.relaunch();
-      app.quit();
+      app.exit(0);
     }
   });
+  autoUpdater.on("error", () => {
+    if (runMode === "ui") sendUpdateStatus({ state: "idle" });
+    else finishBackgroundIfStillHeadless();
+  });
+
+  if (!restartHandlerReady) {
+    restartHandlerReady = true;
+    ipcMain.handle("app:restart-to-update", () => {
+      try {
+        forceClose = true;
+        armExitWatchdog();
+        autoUpdater.quitAndInstall(true, true);
+      } catch {
+        app.relaunch();
+        app.quit();
+      }
+    });
+  }
+}
+
+function startUpdateChecks() {
+  if (!app.isPackaged || !autoUpdater) {
+    if (runMode === "background") {
+      console.log("[update] background-update skipped (unpackaged)");
+      app.exit(0);
+    }
+    return;
+  }
+
+  wireAutoUpdater();
+
+  if (runMode === "background") {
+    setTimeout(() => finishBackgroundIfStillHeadless(), BACKGROUND_UPDATE_TIMEOUT_MS);
+    autoUpdater.checkForUpdates().catch(() => finishBackgroundIfStillHeadless());
+    return;
+  }
 
   const check = () => {
     autoUpdater.checkForUpdates().catch(() => {});
   };
-  // فحص أولي بعد 8 ثوانٍ من الإقلاع (حتى لا يبطّئ فتح النافذة)
   setTimeout(check, 8000);
   setInterval(check, UPDATE_CHECK_INTERVAL_MS);
 }
 
-// ---- أداء: تسريع الإقلاع وتقليل استهلاك الخلفية ----
+function shouldRequestLock() {
+  if (runMode === "background") return true;
+  if (app.isPackaged) return true;
+  if (process.env.PDF_STUDIO_SINGLE_INSTANCE === "1") return true;
+  return false;
+}
+
+function focusMainWindow() {
+  const win = getMainWindow();
+  if (!win) return;
+  if (win.isMinimized()) win.restore();
+  win.show();
+  win.focus();
+}
+
+async function promoteBackgroundToUi() {
+  if (runMode === "ui" && getMainWindow()) {
+    focusMainWindow();
+    return;
+  }
+  runMode = "ui";
+  try {
+    app.dock?.show?.();
+  } catch {
+    /* macOS only */
+  }
+  if (!getMainWindow()) await createWindow();
+  startUpdateChecks();
+}
+
 app.commandLine.appendSwitch("disable-renderer-backgrounding");
 app.commandLine.appendSwitch("disable-background-timer-throttling");
 
-// في التطوير لا نفرض قفل النسخة الواحدة حتى لا يمنع تشغيل npm start بينما النسخة المثبتة تعمل
-const isDev = !app.isPackaged;
-const gotLock = isDev ? true : app.requestSingleInstanceLock();
+const gotLock = shouldRequestLock() ? app.requestSingleInstanceLock() : true;
 if (!gotLock) {
+  console.log("[instance] lock held — quitting this instance");
   app.quit();
 } else {
-  if (!isDev) {
-    app.on("second-instance", () => {
-      if (mainWindow) {
-        if (mainWindow.isMinimized()) mainWindow.restore();
-        mainWindow.focus();
+  app.on("second-instance", (_event, argv) => {
+    const secondIsBackground = argvHasFlag(argv, BACKGROUND_UPDATE_FLAG);
+    if (secondIsBackground) {
+      console.log("[instance] ignoring background-update (app already open)");
+      if (runMode === "ui" && app.isPackaged && autoUpdater) {
+        autoUpdater.checkForUpdates().catch(() => {});
       }
-    });
-  }
+      return;
+    }
+    if (runMode === "background") {
+      console.log("[instance] promoting background-update to UI");
+      void promoteBackgroundToUi();
+      return;
+    }
+    focusMainWindow();
+  });
+
+  if (runMode === "ui") ensureServer();
 
   app.whenReady().then(async () => {
     Menu.setApplicationMenu(null);
     registerIpc();
+    if (runMode === "background") {
+      try {
+        app.dock?.hide?.();
+      } catch {
+        /* macOS only */
+      }
+      startUpdateChecks();
+      return;
+    }
     await createWindow();
-    wireAutoUpdater();
+    startUpdateChecks();
     app.on("activate", async () => {
-      if (BrowserWindow.getAllWindows().length === 0) await createWindow();
+      if (BrowserWindow.getAllWindows().length === 0) {
+        runMode = "ui";
+        await createWindow();
+      }
     });
   });
 
@@ -386,6 +683,7 @@ if (!gotLock) {
   });
 
   app.on("window-all-closed", () => {
+    if (runMode === "background") return;
     if (process.platform !== "darwin") app.quit();
   });
 

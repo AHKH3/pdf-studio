@@ -28,6 +28,7 @@ const tools = new Map();
 let activeId = "";
 let sweepTimer = 0;
 let routing = false;
+let routerStarted = false;
 
 const ACTION_FLOW = {
   scan: ["صور", "PDF"],
@@ -132,7 +133,47 @@ function buildToolButton(tool, { pinned = false } = {}) {
 
 /** @param {Tool[]} list */
 export function registerTools(list) {
-  for (const tool of list) tools.set(tool.id, tool);
+  for (const tool of list) {
+    if (!tool?.id) continue;
+    tools.set(tool.id, tool);
+  }
+}
+
+/**
+ * Register tools after the hub is already on screen (progressive boot).
+ * Each module is set up as it arrives so the legend fills in without blocking the hero.
+ * @param {Tool[]} list
+ */
+export function addTools(list) {
+  const fresh = [];
+  for (const tool of list || []) {
+    if (!tool?.id || tools.has(tool.id)) continue;
+    tools.set(tool.id, tool);
+    fresh.push(tool);
+  }
+  if (!fresh.length) return;
+  if (!routerStarted) return;
+  for (const tool of fresh) {
+    try {
+      tool.setup?.();
+    } catch (error) {
+      console.error(`تعذّر تهيئة الأداة ${tool.id}`, error);
+    }
+  }
+  buildLegend();
+}
+
+export function hasUnsavedWork() {
+  for (const tool of tools.values()) {
+    if (tool.isDirty?.()) return true;
+  }
+  return false;
+}
+
+export function dirtyToolIds() {
+  return Array.from(tools.values())
+    .filter((tool) => tool.isDirty?.())
+    .map((tool) => tool.id);
 }
 
 export function activeTool() {
@@ -205,7 +246,7 @@ function buildLegend() {
   const sortedIds = sortToolIds(eligible.map((tool) => tool.id));
   const byId = new Map(eligible.map((tool) => [tool.id, tool]));
   const sorted = sortedIds.map((id) => byId.get(id)).filter(Boolean);
-  recordOrder(sortedIds);
+  if (sortedIds.length) recordOrder(sortedIds);
 
   const pinnedTools = sorted.filter((tool) => isPinned(tool.id));
   const mainTools = sorted.filter((tool) => !isPinned(tool.id) && !isHidden(tool.id));
@@ -305,6 +346,7 @@ export async function route(id) {
 }
 
 export function initRouter() {
+  routerStarted = true;
   onCaptureChange(buildLegend);
   buildLegend();
   for (const tool of tools.values()) {
@@ -330,14 +372,10 @@ export function initRouter() {
     route(trigger.dataset.route);
   });
 
-  window.addEventListener("beforeunload", (event) => {
-    for (const tool of tools.values()) {
-      if (!tool.isDirty?.()) continue;
-      event.preventDefault();
-      event.returnValue = "";
-      return;
-    }
-  });
+  // Main process queries this on close (native dialog + forceClose). beforeunload
+  // is intentionally absent — it can trap the window and block quitAndInstall.
+  globalThis.__pdfStudioHasUnsavedWork = hasUnsavedWork;
+  globalThis.__pdfStudioDirtyToolIds = dirtyToolIds;
 
   showRoute("start");
   void deliverAndEnter("start");

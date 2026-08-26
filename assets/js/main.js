@@ -5,7 +5,7 @@ import { enterHub, initHub } from "./ui/hub.js";
 import { guardWindowDrops } from "./ui/intake.js";
 import { initKeys } from "./ui/keys.js";
 import { initFilePreview } from "./ui/preview.js";
-import { initRouter, registerTools } from "./ui/router.js";
+import { initRouter, registerTools, addTools } from "./ui/router.js";
 import { initTheme } from "./ui/theme.js";
 import { initTitleBlock } from "./ui/titleblock.js";
 import { initToolMenu } from "./ui/toolprefs.js";
@@ -62,20 +62,32 @@ const TOOL_LOADERS = [
   ["ocr", () => import("./tools/ocr/manifest.js").then((m) => wiredManifest(m.default))]
 ];
 
-async function loadTools() {
-  const loaded = await Promise.all(
-    TOOL_LOADERS.map(async ([id, load]) => {
-      try {
-        const tool = await load();
+function markHero() {
+  const paints = performance.getEntriesByType("paint");
+  const fcp = paints.find((entry) => entry.name === "first-contentful-paint");
+  const heroMs = Math.round(performance.now());
+  globalThis.__pdfStudioBoot = {
+    heroMs,
+    fcpMs: fcp ? Math.round(fcp.startTime) : null,
+    startVisible: Boolean(document.getElementById("view-start")?.classList.contains("view--active"))
+  };
+  console.info("[boot] hero", heroMs, "ms", "fcp", globalThis.__pdfStudioBoot.fcpMs);
+}
+
+function loadToolsProgressively() {
+  const pending = TOOL_LOADERS.map(([id, load]) =>
+    load()
+      .then((tool) => {
         if (!tool?.id) throw new Error("missing tool id");
-        return tool;
-      } catch (error) {
+        addTools([tool]);
+        return id;
+      })
+      .catch((error) => {
         console.error(`تعذّر تحميل الأداة ${id}`, error);
         return null;
-      }
-    })
+      })
   );
-  return loaded.filter(Boolean);
+  globalThis.__pdfStudioToolsLoaded = Promise.all(pending).then((ids) => ids.filter(Boolean));
 }
 
 async function boot() {
@@ -97,15 +109,10 @@ async function boot() {
   initToolMenu();
   initFilePreview();
 
-  const tools = [startTool];
-  try {
-    tools.push(...(await loadTools()));
-  } catch (error) {
-    console.error(error);
-  }
-
-  registerTools(tools);
+  registerTools([startTool]);
   initRouter();
+  markHero();
+  loadToolsProgressively();
 
   window.addEventListener("unhandledrejection", (event) => {
     if (event.reason?.name === "CancelledError") {
