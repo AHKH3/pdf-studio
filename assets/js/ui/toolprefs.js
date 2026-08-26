@@ -118,19 +118,30 @@ function closeMenu() {
   menuFor = "";
 }
 
+/** Updates the pin item copy. Exported so tests can catch a doubled phrase. */
+export function setPinButtonLabel(pinBtn, pinned) {
+  const text = pinned ? "إلغاء التثبيت" : "تثبيت في الأعلى";
+  // HTML fallback used to be a raw text node; leaving it would double the phrase.
+  for (const child of [...pinBtn.childNodes]) {
+    if (child.nodeType === 3) child.remove();
+  }
+  let label = pinBtn.querySelector(".ctxmenu__label");
+  if (!label) {
+    pinBtn.querySelector("span")?.remove();
+    label = document.createElement("span");
+    label.className = "ctxmenu__label";
+    pinBtn.append(label);
+  }
+  label.textContent = text;
+}
+
 function openMenu(x, y, toolId) {
   const node = menu();
   if (!node) return;
   menuFor = toolId;
   const pinBtn = node.querySelector('[data-ctx="pin"]');
   const hideBtn = node.querySelector('[data-ctx="hide"]');
-  if (pinBtn) {
-    const pinned = isPinned(toolId);
-    pinBtn.querySelector("span, .ctxmenu__label")?.remove();
-    const label = document.createElement("span");
-    label.textContent = pinned ? "إلغاء التثبيت" : "تثبيت في الأعلى";
-    pinBtn.append(label);
-  }
+  if (pinBtn) setPinButtonLabel(pinBtn, isPinned(toolId));
   if (hideBtn) hideBtn.hidden = isHidden(toolId);
   node.hidden = false;
   const rect = node.getBoundingClientRect();
