@@ -1,5 +1,17 @@
 # Decisions
 
+## 2026-08-25 — إغلاق حتمي + تحديث صامت/خلفي + تسريع إقلاع (v1.2)
+
+- **الطلب:** الإغلاق لا يُحبس أبدًا (beforeunload كان يعلّق النافذة)، زر التحديث يعيد التشغيل بصمت، تحديث خلفي والتطبيق مغلق، وإقلاع أسرع إلى الهيرو.
+- **القرار:**
+  1. حذف `beforeunload`. العملية الرئيسية تسأل `__pdfStudioHasUnsavedWork()` ثم حوار أصلي إن لزم، وبعدها `forceClose` و`app.exit(0)` خلال 5 ثوانٍ كحارس.
+  2. زر «إعادة التشغيل» يستدعي `quitAndInstall(true, true)` مع الإبقاء على `autoInstallOnAppQuit`.
+  3. `--background-update` بلا نوافذ. إن كان التطبيق مفتوحًا، `second-instance` يتجاهل التركيز ويكتفي بفحص تحديث. مثبّت NSIS (`build/installer.nsh`) يسجّل مهمتي Task Scheduler: كل 6 ساعات + عند Logon.
+  4. تسريع: إزالة heic2any (≈1.3MB) من `<head>` (يُحمَّل عند الحاجة)، `addTools` تدريجي بعد الهيرو، وبدء سيرفر الحلقة المحلية بالتوازي مع إنشاء النافذة.
+  5. التوقيع المؤجّل: Azure Trusted Signing ليس في هذا الإصدار.
+- **التأثير:** `electron/main.cjs`, `assets/js/ui/router.js`, `assets/js/main.js`, `index.html`, `assets/js/lib/heic.js`, `build/installer.nsh`, `package.json` (`nsis.include`).
+- **بأمر:** المستخدم (مالك المشروع) عبر AHK-31.
+
 ## 2026-08-24 — أداة تحرير PDF (طبقة فوق الصفحة)
 
 - **الطلب:** أداة تعديل: حقول نص منسّقة في أي موضع، رسم يدوي، صور مع تدوير/تحجيم، وأشكال هندسية ملونة.

@@ -7,6 +7,13 @@ import { fileURLToPath } from "url";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const mainCjs = fs.readFileSync(path.join(root, "electron", "main.cjs"), "utf8");
+const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+const routerJs = fs.readFileSync(path.join(root, "assets", "js", "ui", "router.js"), "utf8");
+const mainJs = fs.readFileSync(path.join(root, "assets", "js", "main.js"), "utf8");
+const pkg = fs.readFileSync(path.join(root, "package.json"), "utf8");
+const installerNsh = fs.existsSync(path.join(root, "build", "installer.nsh"))
+  ? fs.readFileSync(path.join(root, "build", "installer.nsh"), "utf8")
+  : "";
 
 let ok = 0;
 let fail = 0;
@@ -22,9 +29,21 @@ check("script-src يسمح بـ unsafe-eval (heic2any)", /script-src[^"]*unsafe-
 check("style-src يسمح بـ unsafe-inline", /style-src[^"]*unsafe-inline/.test(mainCjs));
 check("COEP هو credentialless", /Cross-Origin-Embedder-Policy.*credentialless/.test(mainCjs));
 check("يوجد fallback لإظهار النافذة", /ready-to-show لم يطلق|showFallback/.test(mainCjs));
-check("قفل النسخة الواحدة لا يمنع التطوير", /isDev.*requestSingleInstanceLock|!app\.isPackaged/.test(mainCjs));
+check("قفل النسخة الواحدة لا يمنع التطوير", /shouldRequestLock/.test(mainCjs) && /PDF_STUDIO_SINGLE_INSTANCE/.test(mainCjs) && !/isDev \? true : app\.requestSingleInstanceLock/.test(mainCjs));
 check("preload ما زال sandbox/contextIsolation", /contextIsolation:\s*true/.test(mainCjs) && /sandbox:\s*true/.test(mainCjs));
-check("التحديثات لا تعمل إلا في النسخة المعبأة", /!app\.isPackaged\s*\|\|\s*!autoUpdater/.test(mainCjs));
+check("التحديثات لا تعمل إلا في النسخة المعبأة", /!app\.isPackaged/.test(mainCjs) && /autoUpdater/.test(mainCjs));
+check("حذف beforeunload", !/addEventListener\(\s*["']beforeunload["']/.test(routerJs) && !/addEventListener\(\s*["']beforeunload["']/.test(mainJs));
+check("استعلام __pdfStudioHasUnsavedWork", /__pdfStudioHasUnsavedWork/.test(routerJs) && /__pdfStudioHasUnsavedWork/.test(mainCjs));
+check("forceClose + app.exit(0) خلال 5s", /forceClose/.test(mainCjs) && /app\.exit\(0\)/.test(mainCjs) && /EXIT_WATCHDOG_MS = 5000/.test(mainCjs));
+check("quitAndInstall صامت (true, true)", /quitAndInstall\(\s*true\s*,\s*true\s*\)/.test(mainCjs));
+check("--background-update بلا نوافذ", /BACKGROUND_UPDATE_FLAG/.test(mainCjs) && /runMode === "background"/.test(mainCjs));
+check("second-instance يتجاهل التحديث الخلفي", /ignoring background-update \(app already open\)/.test(mainCjs));
+check("heic2any ليس في head", !/<head>[\s\S]*heic2any[\s\S]*<\/head>/.test(html));
+check("addTools تدريجي بعد الهيرو", /export function addTools/.test(routerJs) && /loadToolsProgressively/.test(mainJs) && /initRouter\(\);\s*markHero\(\);\s*loadToolsProgressively/.test(mainJs));
+check("السيرفر يبدأ بالتوازي", /if \(runMode === "ui"\) ensureServer\(\)/.test(mainCjs) && /const serverReady = ensureServer\(\)/.test(mainCjs));
+check("installer.nsh: مهمة كل 6 ساعات", /HOURLY/.test(installerNsh) && /MO 6/.test(installerNsh) && /--background-update/.test(installerNsh));
+check("installer.nsh: مهمة Logon", /ONLOGON/.test(installerNsh));
+check("package.json يضم installer.nsh", /installer\.nsh/.test(pkg));
 
 // 2) فحص Vendor الحرجة موجودة
 console.log("launch — vendor checks");

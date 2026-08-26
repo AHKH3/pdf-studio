@@ -89,9 +89,16 @@ group("release.yml", () => {
 });
 
 group("electron-updater (packaged only)", () => {
-  check("gated on app.isPackaged", /if\s*\(\s*!app\.isPackaged\s*\|\|\s*!autoUpdater\s*\)\s*return/.test(mainCjs));
+  check(
+    "gated on app.isPackaged",
+    /!app\.isPackaged/.test(mainCjs) &&
+      (/if\s*\(\s*!app\.isPackaged\s*&&\s*runMode\s*===\s*"ui"\s*\)\s*return/.test(mainCjs) ||
+        /!app\.isPackaged\s*\|\|\s*!autoUpdater/.test(mainCjs))
+  );
   check("silent download", /autoUpdater\.autoDownload\s*=\s*true/.test(mainCjs));
   check("install on quit", /autoUpdater\.autoInstallOnAppQuit\s*=\s*true/.test(mainCjs));
+  check("background-update flag exists", /BACKGROUND_UPDATE_FLAG\s*=\s*"--background-update"/.test(mainCjs));
+  check("NSIS includes Task Scheduler hook", pkg.build?.nsis?.include === "build/installer.nsh");
   check("preload exposes status + restart", /onUpdateStatus/.test(preload) && /restartToUpdate/.test(preload));
   check("renderer asks to restart", /restartToUpdate/.test(updater) && /إعادة التشغيل/.test(updater));
 });
