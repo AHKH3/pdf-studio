@@ -17,12 +17,12 @@ web
 
 Existing codebase: Electron 34 desktop shell (`electron/main.cjs`) serving a static, vanilla
 HTML/CSS/ES-module front end over a loopback HTTP server. No framework, no bundler. Vendored
-libraries only: pdf-lib, pdf.js, Sortable, OpenCV.js. Targets Windows and Linux; macOS if the build
-host allows.
+libraries only: pdf-lib, pdf.js, Sortable, OpenCV.js. Ships **Windows NSIS installer only**
+(owner policy 2026-08-26: no Portable, no Linux/macOS release builds).
 
 ## Users
 
-Arabic-speaking (Egyptian) individuals handling everyday paperwork on a personal Windows or Linux
+Arabic-speaking (Egyptian) individuals handling everyday paperwork on a personal Windows
 machine: students assembling assignments, employees preparing contracts and reports, people
 digitising ID cards, invoices, and handwritten notes photographed with a phone. They are not
 document professionals, they work alone, and they usually need one specific operation finished and

@@ -26,7 +26,12 @@ async function makeFixture() {
 
 function runHarness(plainB64) {
   return new Promise((resolve, reject) => {
-    const child = spawn(electronPath, [require.resolve("./protect-harness.cjs")], {
+    // Linux CI runners lack a correctly-modeled chrome-sandbox binary; without
+    // --no-sandbox Electron aborts before the harness can print a result.
+    const electronArgs = [];
+    if (process.platform === "linux") electronArgs.push("--no-sandbox");
+    electronArgs.push(require.resolve("./protect-harness.cjs"));
+    const child = spawn(electronPath, electronArgs, {
       stdio: ["ignore", "pipe", "inherit"],
       env: {
         ...process.env,

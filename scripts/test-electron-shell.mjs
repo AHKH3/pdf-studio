@@ -66,7 +66,9 @@ function electronBin() {
 function spawnApp(args, env, { timeoutMs = 25000 } = {}) {
   const bin = electronBin();
   if (!bin) throw new Error("electron binary missing");
-  const child = spawn(bin, args, {
+  // Linux CI: chrome-sandbox SUID is often misconfigured → Electron aborts.
+  const electronArgs = process.platform === "linux" ? ["--no-sandbox", ...args] : args;
+  const child = spawn(bin, electronArgs, {
     cwd: root,
     env: {
       ...process.env,

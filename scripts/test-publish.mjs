@@ -81,6 +81,9 @@ group("landing (GitHub Pages, no external services)", () => {
   check("icon 512 exists", existsSync(path.join(ROOT, "landing/branding/app-icon-512.png")));
   check("local font file exists", existsSync(path.join(ROOT, "landing/fonts/noto-naskh-arabic.woff2")));
   check("Windows Setup download URL", landing.includes("releases/latest/download/PDFStudio-Setup.exe"));
+  check("no Portable download URL (owner policy)", !/PDFStudio-Portable/i.test(landing));
+  check("no Linux AppImage download URL (owner policy)", !/AppImage/i.test(landing));
+  check("hero copy is Windows-only", /Windows 10 \/ 11/.test(landing) && !/Windows 10 \/ 11 و Linux/.test(landing));
 });
 
 group("pages.yml", () => {

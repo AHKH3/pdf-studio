@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-08-26 — قناة النشر = ويندوز NSIS فقط (لا Portable / لا Linux)
+
+- **الطلب:** المالك لا يريد بناء لينكس ولا نسخة محمولة — يهمّه مثبّت ويندوز للتثبيت فقط.
+- **القرار:** `win.target = ["nsis"]` فقط؛ حذف `portable` و`linux` و`dist:linux`؛ `release.yml` على `windows-latest` فقط؛ صفحة الهبوط تعرض رابط Setup.exe وحده.
+- **التأثير:** `package.json`، `.github/workflows/release.yml`، `landing/index.html`، `PRODUCT.md`، `scripts/test-publish.mjs`.
+- **بأمر:** المستخدم (مالك المشروع) صراحة في المحادثة.
+
 ## 2026-08-26 — تحديث NSIS صامت بالكامل (one-click per-user) — AHK-43
 
 - **الطلب:** التحديث على ويندوز يظهر معالج Next/Next وسؤال مستخدم/Global؛ المطلوب صامت بالكامل ويعيد فتح التطبيق بلا نقرات. AHK-31 وُسِم Done خطأً.
@@ -83,6 +90,7 @@
 - **الطلب:** صفحة هبوط تُنشر على الويب بروابط تنزيل، إصدارات تلقائية عند كل push/tag، وقناة تحديثات تلقائية للمستخدمين المثبّتين.
 - **القرار:**
   1. صفحة هبوط ثابتة في `landing/` تُنشر على GitHub Pages (workflow: `.github/workflows/pages.yml`) — بدون أي خدمات خارجية.
-  2. إصدارات تلقائية عبر GitHub Actions عند دفع tag بصيغة `v*` (workflow: `.github/workflows/release.yml`) — بناء ويندوز (NSIS + Portable) ولينكس (AppImage) ونشرها على GitHub Releases.
-  3. تحديثات تلقائية عبر `electron-updater` بمزوّد GitHub — تُفعّل في النسخ المثبّتة فقط (`app.isPackaged`)، تنزيل صامت ثم سؤال المستخدم عن إعادة التشغيل، وتثبيت عند الإغلاق كخيار احتياطي. النسخة المحمولة لا تُحدَّث ذاتيًا (سلوك electron-updater الطبيعي).
-- **التأثير:** النشر يتطلب رفع الكود إلى `github.com/AHKH3/pdf-studio` وتمكين GitHub Pages من الفرع `gh-pages` (أو مصدر workflow). أول إصدار يبدأ بدفع tag مثل `v1.0.1`. حجم الحزمة سيزداد قليلًا بحزمة `electron-updater`.
+  2. إصدارات تلقائية عبر GitHub Actions عند دفع tag بصيغة `v*` (workflow: `.github/workflows/release.yml`) — بناء **ويندوز NSIS فقط** ونشره على GitHub Releases.
+  3. تحديثات تلقائية عبر `electron-updater` بمزوّد GitHub — تُفعّل في النسخ المثبّتة فقط (`app.isPackaged`)، تنزيل صامت ثم تثبيت صامت مع إعادة فتح التطبيق (انظر قرار AHK-43).
+- **تعديل 2026-08-26 بأمر المالك:** إلغاء Portable ولينكس من قناة النشر بالكامل — المثبّت الرسمي لويندوز فقط.
+- **التأثير:** النشر يتطلب رفع الكود إلى `github.com/AHKH3/pdf-studio` وتمكين GitHub Pages. أول إصدار يبدأ بدفع tag مثل `v1.0.1`.
