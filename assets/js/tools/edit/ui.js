@@ -58,11 +58,15 @@ const CSS = `
   display: flex;
   align-items: safe center;
   justify-content: safe center;
-  min-height: 420px;
+  min-height: 360px;
+  height: clamp(360px, calc(100dvh - var(--header-h) - var(--footer-h) - 17rem), 880px);
+  max-height: calc(100dvh - var(--header-h) - var(--footer-h) - 8rem);
   background: var(--surface-2);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-lg);
   overflow: auto;
+  overflow-anchor: none;
+  scrollbar-gutter: stable;
   padding: var(--space-5);
 }
 .edit-board {

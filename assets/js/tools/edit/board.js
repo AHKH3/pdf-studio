@@ -12,6 +12,7 @@ import {
   worldToLocal
 } from "./coords.js";
 import { FONT } from "./text-png.js";
+import { MIN_BOX_PX, fitPageCssWidth, stabilizeFitPx } from "./fit.js";
 
 const CORNER_HANDLES = ["nw", "ne", "sw", "se"];
 const FREE_HANDLES = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
@@ -73,14 +74,29 @@ export function createBoard(options) {
     return canvas.offsetWidth / Math.max(1, visualWidth);
   }
 
+  function wrapIsLaidOut() {
+    if (!wrap) return true;
+    if (wrap.hidden || wrap.closest("[hidden]")) return false;
+    return wrap.clientWidth >= MIN_BOX_PX && wrap.clientHeight >= MIN_BOX_PX;
+  }
+
   function availableBox() {
     if (!wrap) return { w: 760, h: 980 };
+    if (!wrapIsLaidOut()) return { w: 0, h: 0 };
     const cs = getComputedStyle(wrap);
     const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
     const padY = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+    const board = canvas.parentElement;
+    const bs = board ? getComputedStyle(board) : null;
+    const chromeX = bs
+      ? (parseFloat(bs.borderLeftWidth) || 0) + (parseFloat(bs.borderRightWidth) || 0)
+      : 0;
+    const chromeY = bs
+      ? (parseFloat(bs.borderTopWidth) || 0) + (parseFloat(bs.borderBottomWidth) || 0)
+      : 0;
     return {
-      w: Math.max(80, wrap.clientWidth - padX),
-      h: Math.max(80, wrap.clientHeight - padY)
+      w: Math.max(0, wrap.clientWidth - padX - chromeX),
+      h: Math.max(0, wrap.clientHeight - padY - chromeY)
     };
   }
 
@@ -88,20 +104,25 @@ export function createBoard(options) {
   function computeFitPx() {
     if (!visualWidth || !visualHeight) return 0;
     const { w, h } = availableBox();
-    const byHeight = h * (visualWidth / visualHeight);
-    return Math.max(120, Math.min(w, byHeight, visualWidth));
+    return fitPageCssWidth(visualWidth, visualHeight, w, h);
   }
 
   /**
    * Real layout sizing (no CSS transform): the canvas width drives offsetWidth,
    * so displayScale and every coordinate path stay exact at any zoom.
+   * @returns {boolean} whether the displayed CSS width changed
    */
   function applySize() {
-    if (!visualWidth || !visualHeight) return;
-    fitPx = computeFitPx();
+    if (!visualWidth || !visualHeight) return false;
+    if (wrap && !wrapIsLaidOut()) return false;
+    const nextFit = stabilizeFitPx(computeFitPx(), fitPx);
+    if (!nextFit) return false;
+    fitPx = nextFit;
     const nextWidth = `${Math.round(fitPx * zoom)}px`;
-    if (canvas.style.width !== nextWidth) canvas.style.width = nextWidth;
+    const changed = canvas.style.width !== nextWidth;
+    if (changed) canvas.style.width = nextWidth;
     canvas.style.height = "auto";
+    return changed;
   }
 
   function scheduleHiRes() {
@@ -124,6 +145,7 @@ export function createBoard(options) {
 
   /** Ctrl/⌘ + wheel (and trackpad pinch) zooms; plain wheel keeps scrolling. */
   function onWheel(event) {
+    if (!wrapIsLaidOut() || !(fitPx > 0)) return;
     if (!(event.ctrlKey || event.metaKey)) return;
     event.preventDefault();
     const factor = Math.exp(-event.deltaY * 0.0016);
@@ -435,6 +457,11 @@ export function createBoard(options) {
     pageIndex = index;
 
     applySize();
+    if (!fitPx) {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      applySize();
+    }
+    if (!fitPx) return;
 
     // Bitmap resolution follows the on-screen size (zoom × fit) so zoom-in stays crisp.
     const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
@@ -453,6 +480,7 @@ export function createBoard(options) {
     await page.render({ canvasContext: ctx, viewport }).promise;
     page.cleanup();
     if (token !== generation) return;
+    canvas.style.visibility = "";
     paintOverlay();
   }
 
@@ -723,8 +751,16 @@ export function createBoard(options) {
   const sizeTarget = wrap || canvas;
   const observer = new ResizeObserver(() => {
     if (drag) return;
-    applySize();
-    paintOverlay();
+    if (!wrapIsLaidOut()) return;
+    if (pdf && visualWidth && !fitPx) {
+      void renderPage(pageIndex);
+      return;
+    }
+    const changed = applySize();
+    if (changed) {
+      paintOverlay();
+      scheduleHiRes();
+    }
   });
   observer.observe(sizeTarget);
   sizeTarget.addEventListener("wheel", onWheel, { passive: false });
@@ -745,6 +781,9 @@ export function createBoard(options) {
     }
     visualWidth = 0;
     visualHeight = 0;
+    fitPx = 0;
+    canvas.style.width = "";
+    canvas.style.visibility = "";
     const ctx = canvas.getContext("2d");
     ctx?.clearRect(0, 0, canvas.width, canvas.height);
     layer.querySelectorAll(".edit-obj, .edit-ghost").forEach((node) => {
@@ -776,6 +815,8 @@ export function createBoard(options) {
     paintOverlay,
     async load(bytes) {
       await closePdf();
+      canvas.style.visibility = "hidden";
+      if (!wrapIsLaidOut()) canvas.style.width = "0px";
       pdf = await openDocument(bytes);
       return pdf.numPages;
     },
@@ -783,12 +824,38 @@ export function createBoard(options) {
       await closePdf();
     },
     showPage: renderPage,
+    whenLaidOut() {
+      return new Promise((resolve) => {
+        if (wrapIsLaidOut()) {
+          resolve();
+          return;
+        }
+        let settled = false;
+        const node = wrap || canvas;
+        const finish = () => {
+          if (settled) return;
+          settled = true;
+          obs.disconnect();
+          clearTimeout(timer);
+          resolve();
+        };
+        const obs = new ResizeObserver(() => {
+          if (wrapIsLaidOut()) finish();
+        });
+        obs.observe(node);
+        const timer = setTimeout(finish, 400);
+        requestAnimationFrame(() => {
+          if (wrapIsLaidOut()) finish();
+        });
+      });
+    },
     setZoom: setZoomValue,
     getZoom() {
       return zoom;
     },
     /** Re-fit the page into the wrap at zoom 1 (recomputes the fit base). */
     fit() {
+      fitPx = 0;
       return setZoomValue(1, true);
     },
     syncTool() {
