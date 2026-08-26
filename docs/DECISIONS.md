@@ -1,5 +1,16 @@
 # Decisions
 
+## 2026-08-26 — تحديث NSIS صامت بالكامل (one-click per-user) — AHK-43
+
+- **الطلب:** التحديث على ويندوز يظهر معالج Next/Next وسؤال مستخدم/Global؛ المطلوب صامت بالكامل ويعيد فتح التطبيق بلا نقرات. AHK-31 وُسِم Done خطأً.
+- **القرار:**
+  1. `nsis.oneClick: true` + `allowToChangeInstallationDirectory: false` + `perMachine: false` + `allowElevation: false` — مسار per-user one-click بلا معالج وبلا صفحة وضع التثبيت.
+  2. كل مسارات التثبيت تستدعي `quitAndInstall(true, true)` (`/S` + `--force-run`): زر إعادة التشغيل، الإغلاق مع تحديث جاهز، و`--background-update`.
+  3. تعطيل `autoInstallOnAppQuit` لأن معالج electron-updater الداخلي يستخدم `install(true, false)` فيفوت إعادة التشغيل؛ نستبدله بـ `before-quit` / إغلاق النافذة عبر نفس المساعد.
+  4. سياسة المالك: ويندوز NSIS فقط — لا إعادة Portable/Linux.
+- **التأثير:** `package.json` (`build.nsis`)، `electron/main.cjs`، `scripts/test-publish.mjs`، هذا الملف.
+- **بأمر:** المستخدم (مالك المشروع) عبر AHK-43؛ تصحيح لحالة AHK-31.
+
 ## 2026-08-26 — إصلاح تشوه نص معاينة PDF تحت dir=rtl (AHK-41)
 
 - **الطلب:** في بعض أوضاع معاينة PDF (مثل التحرير) النص المعروض يتخرب/يتشوه بسبب اتجاه الصفحة RTL.

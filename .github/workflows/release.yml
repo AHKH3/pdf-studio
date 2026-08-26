@@ -11,18 +11,8 @@ permissions:
 
 jobs:
   build:
-    name: Build (${{ matrix.name }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            name: Windows NSIS+Portable
-            args: --win
-          - os: ubuntu-latest
-            name: Linux AppImage
-            args: --linux
+    name: Build Windows NSIS
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -36,14 +26,10 @@ jobs:
       - name: Install dependencies
         run: npm ci --omit=optional
 
-      - name: Linux AppImage fuse
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libfuse2
-
       - name: Run tests
         run: npm test
 
-      - name: Build and publish
+      - name: Build and publish Windows installer
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder ${{ matrix.args }} --publish always
+        run: npx electron-builder --win nsis --publish always

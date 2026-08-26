@@ -1,6 +1,9 @@
 ; Scheduled background updates while the app is closed.
 ; electron-builder includes this via nsis.include (defaults to build/installer.nsh).
 ; APP_EXECUTABLE_FILENAME is defined in electron-builder's common.nsh.
+;
+; Silent updates require package.json nsis.oneClick=true (no assisted wizard / no
+; multi-user page). electron-updater then runs the setup with /S --force-run.
 
 !define PDFSTUDIO_TASK_PERIODIC "PDFStudioBackgroundUpdate"
 !define PDFSTUDIO_TASK_LOGON "PDFStudioBackgroundUpdateLogon"

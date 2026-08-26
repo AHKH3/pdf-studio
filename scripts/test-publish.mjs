@@ -1,7 +1,7 @@
 /**
  * Guards the publish channel: static landing (GitHub Pages, no third-party
- * services), tag-driven GitHub Releases (Win NSIS+Portable + Linux AppImage),
- * and electron-updater for installed builds only.
+ * services), tag-driven GitHub Releases (Windows NSIS only), and
+ * electron-updater silent install + relaunch for installed builds.
  */
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -37,9 +37,10 @@ const releaseYml = read(".github/workflows/release.yml");
 const mainCjs = read("electron/main.cjs");
 const preload = read("electron/preload.cjs");
 const updater = read("assets/js/ui/updater.js");
+const decisions = read("docs/DECISIONS.md");
 
 group("package.json", () => {
-  check("version is 1.0.14", pkg.version === "1.0.14", pkg.version);
+  check("version is semver", /^\d+\.\d+\.\d+$/.test(pkg.version), pkg.version);
   check(
     "description is Arabic UTF-8",
     pkg.description.includes("أدوات PDF") && pkg.description.includes("سطح مكتب"),
@@ -48,15 +49,24 @@ group("package.json", () => {
   check("electron-updater is a runtime dependency", Boolean(pkg.dependencies?.["electron-updater"]));
   check("publish provider is GitHub AHKH3/pdf-studio", pkg.build?.publish?.provider === "github" && pkg.build.publish.owner === "AHKH3" && pkg.build.publish.repo === "pdf-studio");
   const winTargets = pkg.build?.win?.target || [];
-  check("Windows targets include NSIS", winTargets.includes("nsis"));
-  check("Windows targets include Portable", winTargets.includes("portable"));
+  check("Windows target is NSIS only", winTargets.length === 1 && winTargets[0] === "nsis", JSON.stringify(winTargets));
+  check("Portable target is absent (owner policy)", !winTargets.includes("portable"));
   check("NSIS artifact is PDFStudio-Setup", pkg.build?.nsis?.artifactName === "PDFStudio-Setup.${ext}");
-  check("Portable artifact is PDFStudio-Portable", pkg.build?.portable?.artifactName === "PDFStudio-Portable.${ext}");
-  check("win-level artifactName is unset (avoids colliding Setup/Portable names)", !pkg.build?.win?.artifactName);
-  const linuxTargets = pkg.build?.linux?.target || [];
-  check("Linux target is AppImage", linuxTargets.includes("AppImage"));
-  check("Linux artifact is PDFStudio.${ext}", pkg.build?.linux?.artifactName === "PDFStudio.${ext}");
-  check("dist:linux script exists", typeof pkg.scripts?.["dist:linux"] === "string");
+  check("win-level artifactName is unset", !pkg.build?.win?.artifactName);
+  check("Linux build config is absent (owner policy)", !pkg.build?.linux);
+  check("dist:linux script is absent (owner policy)", !pkg.scripts?.["dist:linux"]);
+  check("dist script is Windows NSIS", pkg.scripts?.dist === "electron-builder --win nsis");
+});
+
+group("NSIS silent one-click (AHK-43)", () => {
+  const nsis = pkg.build?.nsis || {};
+  check("oneClick is true (no Next/Next wizard)", nsis.oneClick === true, JSON.stringify(nsis.oneClick));
+  check("allowToChangeInstallationDirectory is false", nsis.allowToChangeInstallationDirectory === false);
+  check("perMachine is false (per-user)", nsis.perMachine === false);
+  check("allowElevation is false (no UAC/global prompt path)", nsis.allowElevation === false);
+  check("runAfterFinish is true", nsis.runAfterFinish === true);
+  check("NSIS includes Task Scheduler hook", nsis.include === "build/installer.nsh");
+  check("decision recorded", /تحديث NSIS صامت بالكامل/.test(decisions));
 });
 
 group("landing (GitHub Pages, no external services)", () => {
@@ -71,8 +81,6 @@ group("landing (GitHub Pages, no external services)", () => {
   check("icon 512 exists", existsSync(path.join(ROOT, "landing/branding/app-icon-512.png")));
   check("local font file exists", existsSync(path.join(ROOT, "landing/fonts/noto-naskh-arabic.woff2")));
   check("Windows Setup download URL", landing.includes("releases/latest/download/PDFStudio-Setup.exe"));
-  check("Windows Portable download URL", landing.includes("releases/latest/download/PDFStudio-Portable.exe"));
-  check("Linux AppImage download URL", landing.includes("releases/latest/download/PDFStudio.AppImage"));
 });
 
 group("pages.yml", () => {
@@ -84,11 +92,12 @@ group("pages.yml", () => {
 group("release.yml", () => {
   check("triggers on v* tags", /tags:[\s\S]*v\*/.test(releaseYml));
   check("Windows runner", /windows-latest/.test(releaseYml));
-  check("Linux runner", /ubuntu-latest/.test(releaseYml));
+  check("publishes Windows NSIS only", /electron-builder --win nsis/.test(releaseYml));
+  check("no Linux release job", !/ubuntu-latest/.test(releaseYml));
   check("publishes with electron-builder", /electron-builder/.test(releaseYml) && /--publish always/.test(releaseYml));
 });
 
-group("electron-updater (packaged only)", () => {
+group("electron-updater silent + relaunch", () => {
   check(
     "gated on app.isPackaged",
     /!app\.isPackaged/.test(mainCjs) &&
@@ -96,9 +105,11 @@ group("electron-updater (packaged only)", () => {
         /!app\.isPackaged\s*\|\|\s*!autoUpdater/.test(mainCjs))
   );
   check("silent download", /autoUpdater\.autoDownload\s*=\s*true/.test(mainCjs));
-  check("install on quit", /autoUpdater\.autoInstallOnAppQuit\s*=\s*true/.test(mainCjs));
+  check("autoInstallOnAppQuit disabled (we force relaunch)", /autoUpdater\.autoInstallOnAppQuit\s*=\s*false/.test(mainCjs));
+  check("helper uses quitAndInstall(true, true)", /quitAndInstall\(\s*true\s*,\s*true\s*\)/.test(mainCjs));
+  check("no quitAndInstall(true, false) paths", !/quitAndInstall\(\s*true\s*,\s*false\s*\)/.test(mainCjs));
+  check("installDownloadedUpdateAndRelaunch helper exists", /function installDownloadedUpdateAndRelaunch\s*\(/.test(mainCjs));
   check("background-update flag exists", /BACKGROUND_UPDATE_FLAG\s*=\s*"--background-update"/.test(mainCjs));
-  check("NSIS includes Task Scheduler hook", pkg.build?.nsis?.include === "build/installer.nsh");
   check("preload exposes status + restart", /onUpdateStatus/.test(preload) && /restartToUpdate/.test(preload));
   check("renderer asks to restart", /restartToUpdate/.test(updater) && /إعادة التشغيل/.test(updater));
 });

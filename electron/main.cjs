@@ -217,6 +217,8 @@ let closeInFlight = false;
 let exitWatchdog = null;
 let updaterWired = false;
 let restartHandlerReady = false;
+let updateReadyToInstall = false;
+let updateInstallStarted = false;
 let runMode = argvHasFlag(process.argv, BACKGROUND_UPDATE_FLAG) ? "background" : "ui";
 
 function bootLog(msg) {
@@ -407,10 +409,12 @@ function attachCloseGuard(win) {
         closeInFlight = false;
         return;
       }
+      if (updateReadyToInstall && installDownloadedUpdateAndRelaunch()) return;
       forceClose = true;
       armExitWatchdog();
       if (!win.isDestroyed()) win.close();
     })().catch(() => {
+      if (updateReadyToInstall && installDownloadedUpdateAndRelaunch()) return;
       forceClose = true;
       armExitWatchdog();
       if (!win.isDestroyed()) win.close();
@@ -516,13 +520,30 @@ function finishBackgroundIfStillHeadless() {
   if (runMode === "background") app.exit(0);
 }
 
+/** Silent NSIS install (/S) + force relaunch (--force-run). All install paths use this. */
+function installDownloadedUpdateAndRelaunch() {
+  if (!autoUpdater || updateInstallStarted) return false;
+  updateInstallStarted = true;
+  forceClose = true;
+  armExitWatchdog();
+  try {
+    autoUpdater.quitAndInstall(true, true);
+    return true;
+  } catch {
+    updateInstallStarted = false;
+    return false;
+  }
+}
+
 function wireAutoUpdater() {
   if (!autoUpdater || updaterWired) return;
   if (!app.isPackaged && runMode === "ui") return;
   updaterWired = true;
 
   autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = true;
+  // We install ourselves via quitAndInstall(true, true) so the app always relaunches.
+  // electron-updater's quit handler uses install(true, false) which skips --force-run.
+  autoUpdater.autoInstallOnAppQuit = false;
   autoUpdater.allowPrerelease = false;
   autoUpdater.logger = null;
 
@@ -545,15 +566,12 @@ function wireAutoUpdater() {
     });
   });
   autoUpdater.on("update-downloaded", (info) => {
+    updateReadyToInstall = true;
     if (runMode === "ui") {
       sendUpdateStatus({ state: "ready", version: info.version });
       return;
     }
-    try {
-      autoUpdater.quitAndInstall(true, false);
-    } catch {
-      app.exit(0);
-    }
+    if (!installDownloadedUpdateAndRelaunch()) app.exit(0);
   });
   autoUpdater.on("error", () => {
     if (runMode === "ui") sendUpdateStatus({ state: "idle" });
@@ -563,13 +581,12 @@ function wireAutoUpdater() {
   if (!restartHandlerReady) {
     restartHandlerReady = true;
     ipcMain.handle("app:restart-to-update", () => {
+      if (installDownloadedUpdateAndRelaunch()) return;
       try {
-        forceClose = true;
-        armExitWatchdog();
-        autoUpdater.quitAndInstall(true, true);
-      } catch {
         app.relaunch();
         app.quit();
+      } catch {
+        app.exit(0);
       }
     });
   }
@@ -687,5 +704,17 @@ if (!gotLock) {
     if (process.platform !== "darwin") app.quit();
   });
 
-  app.on("before-quit", shutdownServer);
+  app.on("before-quit", (event) => {
+    shutdownServer();
+    if (
+      runMode === "ui" &&
+      updateReadyToInstall &&
+      !updateInstallStarted &&
+      autoUpdater &&
+      app.isPackaged
+    ) {
+      event.preventDefault();
+      if (!installDownloadedUpdateAndRelaunch()) app.exit(0);
+    }
+  });
 }
