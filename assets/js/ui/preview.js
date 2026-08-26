@@ -1,6 +1,6 @@
 import { el } from "../dom.js";
 import { isImageFile } from "../lib/files.js";
-import { openDocument } from "../pdf/core.js";
+import { openDocument, pdfRenderContext } from "../pdf/core.js";
 import { captureFiles } from "./capture.js";
 
 /**
@@ -107,7 +107,7 @@ async function renderPdfPage() {
     const scaled = page.getViewport({ scale: renderScale });
     canvas.width = Math.max(1, Math.round(scaled.width));
     canvas.height = Math.max(1, Math.round(scaled.height));
-    const ctx = canvas.getContext("2d");
+    const ctx = pdfRenderContext(canvas, {});
     await page.render({ canvasContext: ctx, viewport: scaled }).promise;
     if (token !== renderToken) return;
     canvas.hidden = false;
@@ -179,7 +179,7 @@ async function renderPageThumbs() {
       const canvas = document.createElement("canvas");
       canvas.width = Math.max(1, Math.round(scaled.width));
       canvas.height = Math.max(1, Math.round(scaled.height));
-      const ctx = canvas.getContext("2d");
+      const ctx = pdfRenderContext(canvas, {});
       await page.render({ canvasContext: ctx, viewport: scaled }).promise;
       page.cleanup();
       if (token !== pageThumbToken) return;

@@ -1,7 +1,7 @@
 import { el, yieldToUi } from "../../dom.js";
 import { baseName, humanSize, saveFile, withExtension } from "../../lib/files.js";
 import { uniqueIndexes } from "../../lib/ranges.js";
-import { loadWritable, openDocument } from "../../pdf/core.js";
+import { loadWritable, openDocument, pdfRenderContext } from "../../pdf/core.js";
 import { endProgress, startProgress, throwIfCancelled, updateProgress } from "../../ui/feedback.js";
 import { wireIntake } from "../../ui/intake.js";
 import { getName, setName, setRunEnabled, setSource, setState } from "../../ui/titleblock.js";
@@ -150,7 +150,7 @@ async function renderForOcr(page, renderDpi) {
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.ceil(viewport.width));
   canvas.height = Math.max(1, Math.ceil(viewport.height));
-  const ctx = canvas.getContext("2d", { alpha: false });
+  const ctx = pdfRenderContext(canvas);
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   await page.render({ canvasContext: ctx, viewport }).promise;

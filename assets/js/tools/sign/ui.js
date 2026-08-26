@@ -22,6 +22,7 @@ const CSS = `
   background: var(--sheet);
   border: 1px solid var(--rule-strong);
   border-radius: var(--radius-sm);
+  direction: ltr;
 }
 .sign-layer {
   position: absolute;
