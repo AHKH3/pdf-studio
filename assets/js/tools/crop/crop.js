@@ -1,6 +1,6 @@
 import { el } from "../../dom.js";
 import { baseName, humanSize, readBytes, saveFile, withExtension } from "../../lib/files.js";
-import { lib, openDocument } from "../../pdf/core.js";
+import { lib, openDocument, pdfRenderContext } from "../../pdf/core.js";
 import { endProgress, startProgress, throwIfCancelled, updateProgress } from "../../ui/feedback.js";
 import { wireIntake } from "../../ui/intake.js";
 import { getName, setName, setRunEnabled, setSource, setState } from "../../ui/titleblock.js";
@@ -137,7 +137,7 @@ async function paintPage(canvas, page) {
   canvas.width = Math.max(1, Math.ceil(view.width));
   canvas.height = Math.max(1, Math.ceil(view.height));
   canvas.style.aspectRatio = `${canvas.width} / ${canvas.height}`;
-  const ctx = canvas.getContext("2d", { alpha: false });
+  const ctx = pdfRenderContext(canvas);
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   await page.render({ canvasContext: ctx, viewport: view }).promise;

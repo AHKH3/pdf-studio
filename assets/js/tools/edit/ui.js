@@ -84,6 +84,7 @@ const CSS = `
   height: auto;
   background: #fff;
   border-radius: 4px;
+  direction: ltr;
 }
 .edit-layer {
   position: absolute;

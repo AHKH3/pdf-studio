@@ -3,7 +3,7 @@
  * drag and resize. Stamp rectangles are stored in visual PDF space
  * (origin at the bottom-left of the upright page).
  */
-import { openDocument } from "../../pdf/core.js";
+import { openDocument, pdfRenderContext } from "../../pdf/core.js";
 
 const HANDLES = ["nw", "ne", "sw", "se"];
 const MIN_PT = 22;
@@ -140,7 +140,7 @@ export function createBoard(options) {
     canvas.height = Math.max(1, Math.ceil(viewport.height));
     canvas.style.aspectRatio = `${canvas.width} / ${canvas.height}`;
 
-    const ctx = canvas.getContext("2d", { alpha: false });
+    const ctx = pdfRenderContext(canvas);
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     await page.render({ canvasContext: ctx, viewport }).promise;

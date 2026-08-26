@@ -47,6 +47,20 @@ export function openDocument(bytes, password = "") {
   }).promise;
 }
 
+/**
+ * 2D context for pdf.js page.render. The app is `dir="rtl"`; if a canvas
+ * inherits that, fillText glyph advances collapse and Latin (and other)
+ * text looks shredded while paths/images stay fine (AHK-41 / pdf.js#11457).
+ * @param {HTMLCanvasElement} canvas
+ * @param {CanvasRenderingContext2DSettings} [options]
+ */
+export function pdfRenderContext(canvas, options = { alpha: false }) {
+  canvas.dir = "ltr";
+  const ctx = canvas.getContext("2d", options);
+  if (ctx) ctx.direction = "ltr";
+  return ctx;
+}
+
 /** @param {Uint8Array} bytes @param {string} [password] */
 export async function countPages(bytes, password = "") {
   const doc = await openDocument(bytes, password);
@@ -87,7 +101,7 @@ export async function renderPageToBlob(page, scale, mime = "image/png", quality)
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.ceil(viewport.width));
   canvas.height = Math.max(1, Math.ceil(viewport.height));
-  const ctx = canvas.getContext("2d", { alpha: false });
+  const ctx = pdfRenderContext(canvas);
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   await page.render({ canvasContext: ctx, viewport }).promise;
@@ -109,7 +123,7 @@ export async function renderPageAtDpi(page, dpi, grayscale, quality) {
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.ceil(viewport.width));
   canvas.height = Math.max(1, Math.ceil(viewport.height));
-  const ctx = canvas.getContext("2d", { alpha: false });
+  const ctx = pdfRenderContext(canvas);
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   await page.render({ canvasContext: ctx, viewport }).promise;

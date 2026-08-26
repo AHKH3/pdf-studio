@@ -2,7 +2,7 @@
  * Interactive page board for the edit overlay.
  * Object rectangles live in visual PDF space (origin bottom-left, upright).
  */
-import { openDocument } from "../../pdf/core.js";
+import { openDocument, pdfRenderContext } from "../../pdf/core.js";
 import {
   MIN_PT,
   bboxFromPoints,
@@ -474,7 +474,7 @@ export function createBoard(options) {
     canvas.height = Math.max(1, Math.ceil(viewport.height));
     canvas.style.aspectRatio = `${canvas.width} / ${canvas.height}`;
 
-    const ctx = canvas.getContext("2d", { alpha: false });
+    const ctx = pdfRenderContext(canvas);
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     await page.render({ canvasContext: ctx, viewport }).promise;

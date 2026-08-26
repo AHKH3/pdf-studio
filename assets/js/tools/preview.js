@@ -1,5 +1,5 @@
 import { el } from "../dom.js";
-import { openDocument } from "../pdf/core.js";
+import { openDocument, pdfRenderContext } from "../pdf/core.js";
 
 /**
  * Renders page one once and keeps it as a bitmap, so dragging a slider only
@@ -30,7 +30,7 @@ export class PagePreview {
       const buffer = document.createElement("canvas");
       buffer.width = Math.ceil(viewport.width);
       buffer.height = Math.ceil(viewport.height);
-      const ctx = buffer.getContext("2d", { alpha: false });
+      const ctx = pdfRenderContext(buffer);
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, buffer.width, buffer.height);
       await page.render({ canvasContext: ctx, viewport }).promise;
