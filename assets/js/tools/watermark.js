@@ -67,7 +67,7 @@ function drawPreview() {
   }
 
   preview.draw((ctx, scale) => {
-    const font = `600 ${config.size * scale}px "Playfair Display", "Noto Naskh Arabic", serif`;
+    const font = `600 ${config.size * scale}px "Noto Naskh Arabic", "Amiri", "Playfair Display", serif`;
     ctx.font = font;
     ctx.direction = "rtl";
     ctx.textAlign = "center";

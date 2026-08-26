@@ -34,33 +34,33 @@ colors:
   night-glow: "rgba(99,102,241,0.35)"
 typography:
   display:
-    fontFamily: "Cairo, Noto Naskh Arabic, sans-serif"
+    fontFamily: "Amiri, Noto Naskh Arabic, serif"
     fontSize: "clamp(2rem, 5vw, 3rem)"
-    fontWeight: 800
+    fontWeight: 700
     lineHeight: 1.15
   headline:
-    fontFamily: "Cairo, Noto Naskh Arabic, sans-serif"
+    fontFamily: "Amiri, Noto Naskh Arabic, serif"
     fontSize: "1.45rem"
-    fontWeight: 800
+    fontWeight: 700
     lineHeight: 1.2
   wordmark:
-    fontFamily: "Inter, sans-serif"
+    fontFamily: "Playfair Display, serif"
     fontSize: "1rem"
     fontWeight: 700
     letterSpacing: "-0.01em"
     lineHeight: 1
   body:
-    fontFamily: "Inter, Cairo, sans-serif"
+    fontFamily: "Noto Naskh Arabic, Amiri, serif"
     fontSize: "0.92rem"
     fontWeight: 400
     lineHeight: 1.6
   label:
-    fontFamily: "Inter, Cairo, sans-serif"
+    fontFamily: "Noto Naskh Arabic, Amiri, serif"
     fontSize: "0.78rem"
     fontWeight: 600
     lineHeight: 1.3
   data:
-    fontFamily: "Inter, monospace"
+    fontFamily: "Playfair Display, Noto Naskh Arabic, serif"
     fontSize: "0.78rem"
     fontWeight: 400
     lineHeight: 1.3
@@ -110,8 +110,7 @@ components:
 
 ## Typography
 
-- عناوين: `Cairo 800` (يفضّل) يسقط إلى `Noto Naskh Arabic` المضمّن محليًا.
-- واجهة ونص: `Inter` يسقط إلى النظام.
+- **عناوين / شعار عربي:** `Amiri` 700؛ **واجهة ونص:** `Noto Naskh Arabic` 400–700؛ **لاتيني (شعار PDF Studio، أرقام):** `Playfair Display`. مضمّنة محليًا عبر `assets/css/fonts.css` — لا Cairo ولا Inter.
 - سلم: `display clamp(2rem,5vw,3rem)` للهيرو فقط، `title 1.45rem` للأدوات، `body 0.92rem / 1.6` للعربي.
 
 ## Layout

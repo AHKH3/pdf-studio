@@ -82,7 +82,7 @@ kind: evolved minimal glow — white / black + single indigo halo
 
 ## 3) التايبوغرافي
 
-- **عناوين / شعار:** `Cairo` 700–800 (عربي)، `Inter` 700 لللاتيني — نفس Aurora.
+- **عناوين عربي:** `Amiri` 700؛ **واجهة:** `Noto Naskh Arabic` 400–700؛ **لاتيني:** `Playfair Display` — مضمّنة محليًا فقط.
 - **نص الواجهة:** `Inter` 400–600.
 - **سلم مقاسات مطوّر:**
 
@@ -147,7 +147,7 @@ kind: evolved minimal glow — white / black + single indigo halo
 - تبقى `pill 999px` لكن `height 64px` (كانت 72 — أرشق).
 - `padding: 10px 16px 10px 20px`، `gap 12px`.
 - الزجاج: `background: var(--surface-1); border: 1px solid var(--border-soft); backdrop-filter: blur(20px) saturate(160%);`
-- الشعار: `Cairo 800 1.2rem` + أيقونة 22px داخل مربع 36px بلمسة `accent-soft`.
+- الشعار اللاتيني: `Playfair Display 700`؛ العناوين العربية: `Amiri 700`.
 - زر الأدوات في الشريط العلوي (legend) يتحول من `pill شفافة` إلى `accent` عند النشاط فقط — لا ألوان متعددة.
 
 ---

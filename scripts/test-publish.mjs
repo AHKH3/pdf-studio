@@ -76,10 +76,16 @@ group("landing (GitHub Pages, no external services)", () => {
   check("favicon is inside landing/", /rel="icon"[^>]+href="branding\/app-icon-192\.png"/.test(landing));
   check("apple-touch-icon is inside landing/", /rel="apple-touch-icon"[^>]+href="branding\/app-icon-512\.png"/.test(landing));
   check("no parent-folder asset URLs", !/\.\.\/assets\//.test(landing));
+  check("local Amiri @font-face", /fonts\/amiri\.woff2/.test(landing));
   check("local Noto Naskh @font-face", /fonts\/noto-naskh-arabic\.woff2/.test(landing));
+  check("local Playfair @font-face", /fonts\/playfair-display\.woff2/.test(landing));
   check("icon 192 exists", existsSync(path.join(ROOT, "landing/branding/app-icon-192.png")));
   check("icon 512 exists", existsSync(path.join(ROOT, "landing/branding/app-icon-512.png")));
-  check("local font file exists", existsSync(path.join(ROOT, "landing/fonts/noto-naskh-arabic.woff2")));
+  check("Amiri font file exists", existsSync(path.join(ROOT, "landing/fonts/amiri.woff2")));
+  check("Amiri bold font file exists", existsSync(path.join(ROOT, "landing/fonts/amiri-bold.woff2")));
+  check("Noto font file exists", existsSync(path.join(ROOT, "landing/fonts/noto-naskh-arabic.woff2")));
+  check("Playfair font file exists", existsSync(path.join(ROOT, "landing/fonts/playfair-display.woff2")));
+  check("no Cairo/Inter fallbacks in landing stacks", !/"Cairo"/.test(landing) && !/"Inter"/.test(landing));
   check("Windows Setup download URL", landing.includes("releases/latest/download/PDFStudio-Setup.exe"));
   check("no Portable download URL (owner policy)", !/PDFStudio-Portable/i.test(landing));
   check("no Linux AppImage download URL (owner policy)", !/AppImage/i.test(landing));

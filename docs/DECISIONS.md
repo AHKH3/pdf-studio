@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-08-26 — خطوط التطبيق: Amiri + Noto Naskh Arabic + Playfair Display
+
+- **الطلب:** تظبيط خطوط التطبيق كله؛ للعربي أميري ونوتو نسخ عربي فقط؛ وللإنجليزي خط مناسب إن وُجد؛ ثم كوميت ونشر مع بناء مثبت ويندوز.
+- **القرار:**
+  1. عربي عرض: `Amiri`؛ عربي واجهة/نص: `Noto Naskh Arabic` — ممنوع Cairo أو أي خط عربي آخر في الستاك.
+  2. لاتيني (شعار PDF Studio، أرقام، بيانات): `Playfair Display` المضمّن أصلًا — بدل Inter غير المحمّل.
+  3. نفس الستاك في الواجهة، الـ canvas/PDF overlays، والـ landing (ملفات woff2 محلية).
+- **التأثير:** `assets/css/app.css`، `assets/js/**`، `landing/`، `DESIGN.md`، `docs/design-system-lumen.md`، `scripts/test-publish.mjs`.
+- **بأمر:** المستخدم صراحة في المحادثة.
+
 ## 2026-08-26 — قناة النشر = ويندوز NSIS فقط (لا Portable / لا Linux)
 
 - **الطلب:** المالك لا يريد بناء لينكس ولا نسخة محمولة — يهمّه مثبّت ويندوز للتثبيت فقط.

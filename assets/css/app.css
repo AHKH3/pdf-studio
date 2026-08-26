@@ -68,12 +68,12 @@
   --radius-xl: 28px;
   --radius-pill: 999px;
   --radius-sheet: 16px;
-  /* typography */
-  --display: "Cairo", "Noto Naskh Arabic", system-ui, sans-serif;
-  --latin-display: "Inter", system-ui, sans-serif;
-  --ui: "Inter", "Cairo", system-ui, sans-serif;
-  --copy: "Inter", "Cairo", system-ui, sans-serif;
-  --data: "Inter", ui-monospace, monospace;
+  /* typography — Arabic: Amiri (display) + Noto Naskh Arabic (UI); Latin: Playfair Display */
+  --display: "Amiri", "Noto Naskh Arabic", serif;
+  --latin-display: "Playfair Display", serif;
+  --ui: "Noto Naskh Arabic", "Amiri", serif;
+  --copy: "Noto Naskh Arabic", "Amiri", serif;
+  --data: "Playfair Display", "Noto Naskh Arabic", serif;
   --lettering: var(--display);
   --body: var(--ui);
   --t-2xs: 0.70rem;

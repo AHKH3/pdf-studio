@@ -71,13 +71,13 @@ function drawPreview() {
     if (skip) {
       ctx.globalAlpha = 0.35;
       ctx.fillStyle = "#000000";
-      ctx.font = `500 ${13 * Math.max(1, scale * 0.9)}px "Playfair Display", "Noto Naskh Arabic", serif`;
+      ctx.font = `500 ${13 * Math.max(1, scale * 0.9)}px "Playfair Display", "Noto Naskh Arabic", "Amiri", serif`;
       ctx.direction = "rtl";
       ctx.textAlign = "center";
       ctx.fillText("الصفحة الأولى بلا رقم", preview.canvas.width / 2, preview.canvas.height - 12);
       return;
     }
-    ctx.font = `500 ${config.size * scale}px "Playfair Display", "Noto Naskh Arabic", serif`;
+    ctx.font = `500 ${config.size * scale}px "Playfair Display", "Noto Naskh Arabic", "Amiri", serif`;
     ctx.fillStyle = config.color;
     ctx.direction = config.template === "page" ? "rtl" : "ltr";
     ctx.textBaseline = "alphabetic";

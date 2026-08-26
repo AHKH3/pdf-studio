@@ -199,7 +199,7 @@ function draw() {
     ctx.strokeStyle = ink;
     ctx.stroke();
     ctx.fillStyle = ink;
-    ctx.font = `${11 * (window.devicePixelRatio || 1)}px "Playfair Display", serif`;
+    ctx.font = `${11 * (window.devicePixelRatio || 1)}px "Playfair Display", "Noto Naskh Arabic", serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(String(i + 1), point.x, point.y);

@@ -3,7 +3,7 @@
  * pdf-lib's standard fonts have no Arabic coverage.
  */
 
-export const FONT = `"Noto Naskh Arabic", "Playfair Display", serif`;
+export const FONT = `"Noto Naskh Arabic", "Amiri", "Playfair Display", serif`;
 
 /** @param {HTMLCanvasElement} canvas */
 export async function canvasToPngBytes(canvas) {

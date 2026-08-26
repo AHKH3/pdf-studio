@@ -99,7 +99,7 @@ const CSS = `
   touch-action: none;
   outline: 1px solid transparent;
   transform-origin: center center;
-  font-family: "Noto Naskh Arabic", "Playfair Display", serif;
+  font-family: "Noto Naskh Arabic", "Amiri", "Playfair Display", serif;
   line-height: 1.45;
   border-radius: 2px;
 }
