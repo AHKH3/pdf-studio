@@ -31,6 +31,7 @@ check("COEP هو credentialless", /Cross-Origin-Embedder-Policy.*credentialless/
 check("يوجد fallback لإظهار النافذة", /ready-to-show لم يطلق|showFallback/.test(mainCjs));
 check("قفل النسخة الواحدة لا يمنع التطوير", /shouldRequestLock/.test(mainCjs) && /PDF_STUDIO_SINGLE_INSTANCE/.test(mainCjs) && !/isDev \? true : app\.requestSingleInstanceLock/.test(mainCjs));
 check("preload ما زال sandbox/contextIsolation", /contextIsolation:\s*true/.test(mainCjs) && /sandbox:\s*true/.test(mainCjs));
+check("التحديثات لا تعمل إلا في النسخة المعبأة", /!app\.isPackaged/.test(mainCjs) && /autoUpdater/.test(mainCjs));
 check("حذف beforeunload", !/addEventListener\(\s*["']beforeunload["']/.test(routerJs) && !/addEventListener\(\s*["']beforeunload["']/.test(mainJs));
 check("استعلام __pdfStudioHasUnsavedWork", /__pdfStudioHasUnsavedWork/.test(routerJs) && /__pdfStudioHasUnsavedWork/.test(mainCjs));
 check("forceClose + app.exit(0) خلال 5s", /forceClose/.test(mainCjs) && /app\.exit\(0\)/.test(mainCjs) && /EXIT_WATCHDOG_MS = 5000/.test(mainCjs));

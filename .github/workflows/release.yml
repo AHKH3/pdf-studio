@@ -11,8 +11,18 @@ permissions:
 
 jobs:
   build:
-    name: Build Windows installer
-    runs-on: windows-latest
+    name: Build (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: Windows NSIS+Portable
+            args: --win
+          - os: ubuntu-latest
+            name: Linux AppImage
+            args: --linux
     steps:
       - uses: actions/checkout@v4
 
@@ -22,9 +32,13 @@ jobs:
           cache: npm
 
       # canvas is an unused optional peer of pdfjs-dist and would demand a
-      # Visual Studio build; nothing else optional is needed at package time.
+      # native toolchain; nothing else optional is needed at package time.
       - name: Install dependencies
         run: npm ci --omit=optional
+
+      - name: Linux AppImage fuse
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libfuse2
 
       - name: Run tests
         run: npm test
@@ -32,4 +46,4 @@ jobs:
       - name: Build and publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder --win --publish always
+        run: npx electron-builder ${{ matrix.args }} --publish always

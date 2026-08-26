@@ -1,8 +1,8 @@
 {
   "name": "pdf-studio",
   "productName": "PDF Studio",
-  "version": "1.0.12",
-  "description": "Ø£Ø¯ÙˆØ§Øª PDF Ø¹Ø±Ø¨ÙŠØ© â€” ØªØ·Ø¨ÙŠÙ‚ Ø³Ø·Ø­ Ù…ÙƒØªØ¨",
+  "version": "1.0.14",
+  "description": "أدوات PDF عربية — تطبيق سطح مكتب",
   "homepage": "https://github.com/AHKH3/pdf-studio",
   "author": "abdo3342",
   "main": "electron/main.cjs",
@@ -17,11 +17,12 @@
     "icons": "node scripts/generate-icon-sprite.mjs",
     "fonts": "node scripts/fetch-fonts.mjs",
     "check": "node scripts/check-syntax.mjs",
-    "test": "node scripts/check-syntax.mjs && node scripts/test-scan.mjs && node scripts/test-experience.mjs && node scripts/test-tools.mjs && node scripts/test-edit.mjs && node scripts/test-protect.mjs && node scripts/test-launch.mjs && node scripts/test-electron-shell.mjs",
+    "test": "node scripts/check-syntax.mjs && node scripts/test-scan.mjs && node scripts/test-experience.mjs && node scripts/test-tools.mjs && node scripts/test-edit.mjs && node scripts/test-protect.mjs && node scripts/test-launch.mjs && node scripts/test-electron-shell.mjs && node scripts/test-publish.mjs",
     "start": "electron .",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder --win",
-    "dist:win": "electron-builder --win"
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:linux": "electron-builder --linux"
   },
   "dependencies": {
     "@tensorflow/tfjs": "~4.11.0",
@@ -60,11 +61,11 @@
     "icon": "assets/branding/app-icon-512.png",
     "win": {
       "target": [
-        "nsis"
+        "nsis",
+        "portable"
       ],
       "icon": "assets/branding/app-icon-512.png",
       "signAndEditExecutable": false,
-      "artifactName": "PDFStudio-Setup.${ext}",
       "publisherName": "AHKH3",
       "verifyUpdateCodeSignature": false,
       "requestedExecutionLevel": "asInvoker"
@@ -78,6 +79,18 @@
       "createDesktopShortcut": true,
       "artifactName": "PDFStudio-Setup.${ext}",
       "include": "build/installer.nsh"
+    },
+    "portable": {
+      "artifactName": "PDFStudio-Portable.${ext}"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Office",
+      "maintainer": "abdo3342",
+      "icon": "assets/branding/app-icon-512.png",
+      "artifactName": "PDFStudio.${ext}"
     }
   }
 }
