@@ -154,6 +154,10 @@ console.log("\nedit fit (page CSS width must not oscillate on open)");
     "never wider than the pane even when minPx would overflow",
     fitPageCssWidth(A4W, A4H, 100, 80) <= 100
   );
+  check(
+    "tiny pane is height-limited instead of forced to 120px",
+    fitPageCssWidth(A4W, A4H, 100, 80) < 120 && fitPageCssWidth(A4W, A4H, 100, 80) > 0
+  );
 
   check(
     "stabilize ignores 1px jitter that used to retrigger ResizeObserver",

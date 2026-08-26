@@ -461,6 +461,7 @@ export function createBoard(options) {
       await new Promise((resolve) => requestAnimationFrame(resolve));
       applySize();
     }
+    if (!fitPx) return;
 
     // Bitmap resolution follows the on-screen size (zoom × fit) so zoom-in stays crisp.
     const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
@@ -751,6 +752,10 @@ export function createBoard(options) {
   const observer = new ResizeObserver(() => {
     if (drag) return;
     if (!wrapIsLaidOut()) return;
+    if (pdf && visualWidth && !fitPx) {
+      void renderPage(pageIndex);
+      return;
+    }
     const changed = applySize();
     if (changed) {
       paintOverlay();
@@ -810,8 +815,8 @@ export function createBoard(options) {
     paintOverlay,
     async load(bytes) {
       await closePdf();
-      canvas.style.width = "0px";
       canvas.style.visibility = "hidden";
+      if (!wrapIsLaidOut()) canvas.style.width = "0px";
       pdf = await openDocument(bytes);
       return pdf.numPages;
     },
@@ -825,22 +830,23 @@ export function createBoard(options) {
           resolve();
           return;
         }
+        let settled = false;
         const node = wrap || canvas;
-        const obs = new ResizeObserver(() => {
-          if (!wrapIsLaidOut()) return;
+        const finish = () => {
+          if (settled) return;
+          settled = true;
           obs.disconnect();
+          clearTimeout(timer);
           resolve();
+        };
+        const obs = new ResizeObserver(() => {
+          if (wrapIsLaidOut()) finish();
         });
         obs.observe(node);
+        const timer = setTimeout(finish, 400);
         requestAnimationFrame(() => {
-          if (!wrapIsLaidOut()) return;
-          obs.disconnect();
-          resolve();
+          if (wrapIsLaidOut()) finish();
         });
-        setTimeout(() => {
-          obs.disconnect();
-          resolve();
-        }, 400);
       });
     },
     setZoom: setZoomValue,

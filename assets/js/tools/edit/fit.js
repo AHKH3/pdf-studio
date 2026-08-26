@@ -28,7 +28,8 @@ export function fitPageCssWidth(pageWidthPt, pageHeightPt, boxWidthPx, boxHeight
   const byHeight = boxHeightPx * (pageWidthPt / pageHeightPt);
   const fitted = Math.min(boxWidthPx, byHeight, pageWidthPt);
   if (!(fitted > 0)) return 0;
-  return Math.min(boxWidthPx, Math.max(minPx, fitted));
+  if (boxWidthPx >= minPx && byHeight >= minPx) return Math.max(minPx, fitted);
+  return fitted;
 }
 
 /**
