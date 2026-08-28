@@ -722,6 +722,9 @@ html.is-desktop[data-platform="linux"] .win-controls { display:flex; }
 .readout__cell:last-child { border-inline-end:0; }
 .readout__label { font-size: var(--t-xs); font-weight:600; color: var(--ink-3); }
 .readout__value { font-family: var(--data); font-variant-numeric: tabular-nums; font-weight:600; font-size: var(--t-sm); direction:ltr; }
+.readout__value:not(.num) { font-family: var(--ui); direction:rtl; }
+.readout__cell--after .readout__value, .readout__cell--gain .readout__value { color: var(--success); }
+.readout__cell--loss .readout__value { color: var(--warning); }
 .preview { margin-bottom: var(--space-4); }
 .preview__label { display:block; margin-bottom: var(--space-2); font-size: var(--t-xs); font-weight:600; color: var(--ink-3); }
 .preview__stage { display:grid; place-items:center; padding: var(--space-3); background: var(--surface-0); border:1px solid var(--border-soft); border-radius: var(--radius-md); }

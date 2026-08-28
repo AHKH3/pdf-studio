@@ -53,7 +53,8 @@ call, no queue, no size ceiling other than the machine's own memory, no paywall.
 
 Shipping today: document scan (perspective correction + enhancement + upscale), images → PDF,
 merge PDFs, page organiser (insert / delete / rotate / reorder), split (ranges / every-N / extract),
-compress, text watermark, page numbering, PDF → images, sign (draw/name/image/date + flatten),
+compress (recompress embedded images while keeping searchable text, or rasterize like a scan),
+text watermark, page numbering, PDF → images, sign (draw/name/image/date + flatten),
 edit / markup (text, freehand, images, shapes flattened onto pages),
 protect / unlock (AES-256 via qpdf-wasm), crop, extract embedded images, OCR (Arabic + English
 via local Tesseract.js WASM).

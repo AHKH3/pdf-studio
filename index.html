@@ -474,7 +474,7 @@
           <section id="view-compress" class="view" aria-labelledby="compress-title" role="region" hidden>
             <div class="view__head">
               <h2 class="view__title" id="compress-title" tabindex="-1">ضغط</h2>
-              <p class="view__lede">يعيد بناء الصفحات كصور مضغوطة بدقة تختارها. مناسب للمستندات الممسوحة والمصوّرة.</p>
+              <p class="view__lede">اضغط الصور داخل الملف مع الإبقاء على النص، أو حوّل الصفحات لصور مثل المسح الضوئي.</p>
             </div>
 
             <div class="view__body">
@@ -490,6 +490,19 @@
 
               <div id="compress-panel" hidden>
                 <div class="fieldset">
+                  <div class="field field--wide">
+                    <span id="compress-mode-label">طريقة الضغط</span>
+                    <div class="choice-grid" role="radiogroup" aria-labelledby="compress-mode-label">
+                      <label class="choice">
+                        <input id="compress-mode-text" type="radio" name="compress-mode" value="text" checked />
+                        <span>يحافظ على النص</span>
+                      </label>
+                      <label class="choice">
+                        <input id="compress-mode-raster" type="radio" name="compress-mode" value="raster" />
+                        <span>مثل المسح الضوئي</span>
+                      </label>
+                    </div>
+                  </div>
                   <div class="field">
                     <label for="compress-level">مستوى الضغط</label>
                     <select id="compress-level">
@@ -507,9 +520,12 @@
                     </select>
                   </div>
                 </div>
-                <p class="note">
-                  الضغط يحوّل كل صفحة إلى صورة، فيصغُر الحجم كثيراً لكن النص يفقد قابلية البحث والتحديد.
-                  استخدمه للمستندات الممسوحة، لا للتقارير النصية.
+                <p class="note" id="compress-note-text">
+                  نعيد ضغط الصور داخل الصفحات فقط. النص يبقى قابلاً للبحث والنسخ، والرسوم المتجهة لا تُمس.
+                </p>
+                <p class="note" id="compress-note-raster" hidden>
+                  هذا المسار يحوّل كل صفحة إلى صورة، فيصغُر الحجم كثيراً لكن النص يفقد قابلية البحث والتحديد.
+                  استخدمه للمستندات الممسوحة والمصوّرة، لا للتقارير النصية.
                 </p>
                 <div class="readout" id="compress-readout"></div>
                 <button id="compress-clear" type="button" class="btn">
