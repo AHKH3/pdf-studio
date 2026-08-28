@@ -143,3 +143,10 @@ export function humanSize(bytes) {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+/** Length of a saved payload. Uint8Array is not a number — never pass it to humanSize. */
+export function byteSize(value) {
+  if (value && typeof value.byteLength === "number") return value.byteLength;
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}

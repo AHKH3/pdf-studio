@@ -1,6 +1,6 @@
 import { COMPRESS_LEVELS } from "../config.js";
 import { el, yieldToUi } from "../dom.js";
-import { baseName, humanSize, saveFile, withExtension } from "../lib/files.js";
+import { baseName, byteSize, humanSize, saveFile, withExtension } from "../lib/files.js";
 import { lib, loadWritable, openDocument, renderPageAtDpi } from "../pdf/core.js";
 import { confirmDiscard, confirmReplace } from "../ui/dialog.js";
 import { endProgress, startProgress, throwIfCancelled, updateProgress } from "../ui/feedback.js";
@@ -213,11 +213,12 @@ async function run() {
   setState("busy");
   try {
     const result = mode === "raster" ? await runRaster(level, grayscale) : await runPreserve(level, grayscale);
+    const size = byteSize(result.bytes);
     endProgress();
-    renderReadout({ bytes: result.bytes, replaced: result.replaced });
+    renderReadout({ bytes: size, replaced: result.replaced });
     const written = await saveFile(result.bytes, withExtension(el("tb-name").value, "pdf"), "pdf");
     if (written) saved = true;
-    reportSave(written, saveMessage(result, mode));
+    reportSave(written, saveMessage({ bytes: size, replaced: result.replaced }, mode));
   } catch (error) {
     reportFailure(error, "تعذّر الضغط.");
   } finally {

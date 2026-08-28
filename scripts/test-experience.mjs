@@ -3,7 +3,7 @@
  * error mapping. No DOM. Run via npm test.
  */
 import { friendlyMessage, isEncryptedError, isPasswordError } from "../assets/js/lib/errors.js";
-import { humanSize } from "../assets/js/lib/files.js";
+import { byteSize, humanSize } from "../assets/js/lib/files.js";
 import { pad, parseRanges, rangesToIndexes, uniqueIndexes } from "../assets/js/lib/ranges.js";
 import { createZip, createZipWriter } from "../assets/js/lib/zip.js";
 
@@ -102,6 +102,13 @@ group("humanSize", () => {
   check("kilobytes", humanSize(2048) === "2 KB");
   check("megabytes", humanSize(2.5 * 1024 * 1024) === "2.5 MB");
   check("empty", humanSize(0) === "—");
+  check("rejects a Uint8Array payload", humanSize(new Uint8Array(12)) === "—");
+});
+
+group("byteSize", () => {
+  check("reads Uint8Array.byteLength", byteSize(new Uint8Array(126967)) === 126967);
+  check("passes a number through", byteSize(368) === 368);
+  check("empty is 0", byteSize(0) === 0);
 });
 
 console.log(`\n${checks - failures}/${checks} checks passed`);
