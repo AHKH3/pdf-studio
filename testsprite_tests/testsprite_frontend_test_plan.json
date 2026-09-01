@@ -1,0 +1,1624 @@
+[
+  {
+    "id": "TC001",
+    "title": "Route multiple PDFs into merge workspace",
+    "description": "This verifies that dropping multiple PDF files into the hub routes the user into the merge workspace with the files loaded for merging.",
+    "category": "Central Hub",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-start"
+      },
+      {
+        "type": "action",
+        "description": "Drop multiple PDF files into the central hub"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the merge workspace is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dropped files are loaded for merging"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Route image files to scanning or image conversion",
+    "description": "This verifies that dropping image files into the hub routes the user to a scan or images-to-PDF workspace with the images loaded.",
+    "category": "Central Hub",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-start"
+      },
+      {
+        "type": "action",
+        "description": "Drop image files into the central hub"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify image intake routing options are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a scan or images-to-PDF workspace is displayed with the images loaded"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Route dropped PDFs to the merge workspace",
+    "description": "This verifies that dropping multiple PDF files on the central hub routes the user to the merge workspace and prepares the files for combining.",
+    "category": "Central Hub intake/routing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the central hub"
+      },
+      {
+        "type": "action",
+        "description": "Drop multiple PDF files into the intake area"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the merge workspace is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dropped files are listed for merging"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Route a single PDF to suggested tools",
+    "description": "This verifies that dropping one PDF into the hub shows appropriate tool suggestions and lets the user open a selected PDF workspace.",
+    "category": "Central Hub",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-start"
+      },
+      {
+        "type": "action",
+        "description": "Drop a single PDF file into the central hub"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify tool suggestions for PDF actions are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a PDF workspace can be opened from the hub"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Reject unsupported files in the hub",
+    "description": "This verifies that dropping an unsupported file type into the hub shows a validation error and keeps the user on the start screen.",
+    "category": "Central Hub",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-start"
+      },
+      {
+        "type": "action",
+        "description": "Drop an unsupported file into the central hub"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a validation error is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the start screen remains visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Route dropped images to the scan workflow",
+    "description": "This verifies that dropping image files on the central hub routes the user to the scanning workflow instead of a PDF-only workspace.",
+    "category": "Central Hub intake/routing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the central hub"
+      },
+      {
+        "type": "action",
+        "description": "Drop an image file into the intake area"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the document scanner workspace is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the image input is ready for processing"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Handle unsupported file types in the hub",
+    "description": "This verifies that unsupported files dropped into the central hub are rejected with a validation error and no workspace is opened.",
+    "category": "Central Hub intake/routing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the central hub"
+      },
+      {
+        "type": "action",
+        "description": "Drop an unsupported file into the intake area"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a file validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no document workspace is opened"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Merge PDFs offline and export the combined document",
+    "description": "This verifies that multiple PDFs can be reordered, merged, and exported as one document without leaving the local workspace.",
+    "category": "Merge PDFs",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the central hub"
+      },
+      {
+        "type": "action",
+        "description": "Drop multiple PDF files into the intake area"
+      },
+      {
+        "type": "action",
+        "description": "Reorder the files in the merge workspace"
+      },
+      {
+        "type": "action",
+        "description": "Start the merge"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the merged PDF preview is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an export option for the combined document is available"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Convert multiple images into a formatted PDF",
+    "description": "This verifies that selected images can be arranged in the images-to-PDF workspace and exported as a combined PDF with chosen page settings.",
+    "category": "Images to PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-images"
+      },
+      {
+        "type": "action",
+        "description": "Add multiple supported images to the workspace"
+      },
+      {
+        "type": "action",
+        "description": "Select A4 page size and portrait orientation"
+      },
+      {
+        "type": "action",
+        "description": "Set page margins"
+      },
+      {
+        "type": "action",
+        "description": "Generate the PDF"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the combined PDF output is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected page layout settings are reflected in the output"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Merge multiple PDFs into one document",
+    "description": "This verifies that a user can load multiple PDFs into the merge workspace, reorder them, and produce a single merged PDF.",
+    "category": "Merge PDFs",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-merge"
+      },
+      {
+        "type": "action",
+        "description": "Add multiple PDF files to the merge workspace"
+      },
+      {
+        "type": "action",
+        "description": "Reorder the files in the desired sequence"
+      },
+      {
+        "type": "action",
+        "description": "Start the merge"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a merged PDF is generated"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the merged document is available for export"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Process a scan into a searchable PDF",
+    "description": "This verifies that the scanner can detect a document from an image, correct it, apply cleanup, and produce a searchable PDF output.",
+    "category": "Document Scanner",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the central hub"
+      },
+      {
+        "type": "action",
+        "description": "Drop an image file into the intake area"
+      },
+      {
+        "type": "action",
+        "description": "Adjust the scan framing and perspective controls"
+      },
+      {
+        "type": "action",
+        "description": "Apply a cleanup filter"
+      },
+      {
+        "type": "action",
+        "description": "Start the scan export"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a searchable PDF output is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the scan result appears cleaned and ready to save"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Apply OCR to a PDF and export a searchable result",
+    "description": "Verifies that a user can run Arabic and English OCR on a PDF and obtain a searchable PDF output.",
+    "category": "OCR Text Recognition",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-ocr"
+      },
+      {
+        "type": "action",
+        "description": "Provide a PDF document to the OCR workspace"
+      },
+      {
+        "type": "action",
+        "description": "Select Arabic as an OCR language"
+      },
+      {
+        "type": "action",
+        "description": "Select English as an OCR language"
+      },
+      {
+        "type": "action",
+        "description": "Start OCR recognition"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a searchable PDF export is available"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "Scan an imported image into a clean PDF",
+    "description": "This verifies that importing an image into the scanner detects page boundaries, allows correction, and exports a cleaned scanned PDF.",
+    "category": "Document Scanner",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-scan"
+      },
+      {
+        "type": "action",
+        "description": "Import a document image into the scanner"
+      },
+      {
+        "type": "action",
+        "description": "Adjust the detected page corners if needed"
+      },
+      {
+        "type": "action",
+        "description": "Apply a scan filter"
+      },
+      {
+        "type": "action",
+        "description": "Export the scanned document as PDF"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the scanned PDF output is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cleaned scanned pages are included in the output"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "Protect a PDF with encryption and permissions",
+    "description": "This verifies that a user can encrypt a PDF with passwords and permissions and successfully export a protected file.",
+    "category": "Protect and Unlock PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-protect"
+      },
+      {
+        "type": "action",
+        "description": "Upload an unprotected PDF"
+      },
+      {
+        "type": "action",
+        "description": "Enter a user password"
+      },
+      {
+        "type": "action",
+        "description": "Enter an owner password"
+      },
+      {
+        "type": "action",
+        "description": "Select the desired permissions"
+      },
+      {
+        "type": "action",
+        "description": "Run the protection action"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a protected PDF export is available"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the protected document is reflected in the workspace"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC015",
+    "title": "Create a PDF from images",
+    "description": "This verifies that image files can be combined into a PDF and exported as a document from the local workspace.",
+    "category": "Images to PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the central hub"
+      },
+      {
+        "type": "action",
+        "description": "Drop multiple image files into the intake area"
+      },
+      {
+        "type": "action",
+        "description": "Open the images to PDF workspace"
+      },
+      {
+        "type": "action",
+        "description": "Arrange the image order"
+      },
+      {
+        "type": "action",
+        "description": "Start the PDF creation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the PDF output preview is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the document is ready for export"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC016",
+    "title": "Organize PDF pages and save the updated document",
+    "description": "This verifies that a PDF can be opened in the organizer, pages can be reordered, rotated, deleted, and then saved as an updated PDF.",
+    "category": "Organize Pages",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-organize"
+      },
+      {
+        "type": "action",
+        "description": "Open a PDF in the organizer"
+      },
+      {
+        "type": "action",
+        "description": "Reorder two pages in the thumbnail grid"
+      },
+      {
+        "type": "action",
+        "description": "Rotate a selected page"
+      },
+      {
+        "type": "action",
+        "description": "Delete one page"
+      },
+      {
+        "type": "action",
+        "description": "Save the updated PDF"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated page arrangement is saved"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the modified PDF is available for export"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC017",
+    "title": "Open a PDF in the editor and save an edit",
+    "description": "This verifies that a user can enter the PDF editor with a PDF, make an allowed markup or annotation change, and save the edited document successfully.",
+    "category": "PDF Editor",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-edit"
+      },
+      {
+        "type": "action",
+        "description": "Open a PDF using the editor's file input"
+      },
+      {
+        "type": "action",
+        "description": "Add a markup or annotation to the document"
+      },
+      {
+        "type": "action",
+        "description": "Save the edited PDF"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the edited document is saved successfully"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the PDF editor remains usable after saving"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC018",
+    "title": "Scan a clipboard image and export a cleaned page",
+    "description": "This verifies that pasting an image from the clipboard opens the scanner with detected edges, allows enhancement, and exports a cleaned single-page PDF.",
+    "category": "Document Scanner",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-scan"
+      },
+      {
+        "type": "action",
+        "description": "Paste a clipboard image into the scanner"
+      },
+      {
+        "type": "action",
+        "description": "Apply a grayscale or high-contrast filter"
+      },
+      {
+        "type": "action",
+        "description": "Export the scanned page as PDF"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the scanned page preview is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a cleaned PDF output is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC019",
+    "title": "Split a PDF into single-page files and export as ZIP",
+    "description": "This verifies that a user can split a PDF into one-page documents and export the results as a ZIP archive.",
+    "category": "Split PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-split"
+      },
+      {
+        "type": "action",
+        "description": "Open a PDF in the split workspace"
+      },
+      {
+        "type": "action",
+        "description": "Choose to split every 1 page"
+      },
+      {
+        "type": "action",
+        "description": "Start the split"
+      },
+      {
+        "type": "action",
+        "description": "Export the split results as a ZIP archive"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify split outputs are generated"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a ZIP export is available"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC020",
+    "title": "Split a PDF into selected output ranges",
+    "description": "This verifies that a PDF can be split into separate documents using valid ranges and that the split outputs are created.",
+    "category": "Split PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the central hub"
+      },
+      {
+        "type": "action",
+        "description": "Drop a PDF file into the intake area"
+      },
+      {
+        "type": "action",
+        "description": "Open the split PDF workspace"
+      },
+      {
+        "type": "action",
+        "description": "Define valid split ranges"
+      },
+      {
+        "type": "action",
+        "description": "Start the split operation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify split output documents are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the split results are available for export"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC021",
+    "title": "Unlock a protected PDF with the correct password",
+    "description": "This verifies that a user can remove restrictions from a password-protected PDF and export the unlocked result.",
+    "category": "Protect and Unlock PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-protect"
+      },
+      {
+        "type": "action",
+        "description": "Upload a password-protected PDF"
+      },
+      {
+        "type": "action",
+        "description": "Enter the correct password"
+      },
+      {
+        "type": "action",
+        "description": "Run the unlock action"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an unlocked PDF export is available"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the document is available without restrictions"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC022",
+    "title": "Apply OCR to an image and export recognized text",
+    "description": "Verifies that a user can run OCR on an image input and obtain recognized text output.",
+    "category": "OCR Text Recognition",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-ocr"
+      },
+      {
+        "type": "action",
+        "description": "Provide an image document to the OCR workspace"
+      },
+      {
+        "type": "action",
+        "description": "Select Arabic as an OCR language"
+      },
+      {
+        "type": "action",
+        "description": "Select English as an OCR language"
+      },
+      {
+        "type": "action",
+        "description": "Start OCR recognition"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify recognized text output is available"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC023",
+    "title": "Open a supported PDF and begin editing without errors",
+    "description": "This verifies that a user can load a normal PDF into the editor workspace and reach an editable state successfully.",
+    "category": "PDF Editor",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-edit"
+      },
+      {
+        "type": "action",
+        "description": "Open a PDF using the editor's file input"
+      },
+      {
+        "type": "action",
+        "description": "Wait for the PDF to finish loading"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the PDF editor workspace is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the document is ready for editing"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC024",
+    "title": "Reorder merged PDFs before combining",
+    "description": "This verifies that the user can change the file order in the merge workspace and the merge completes using the updated order.",
+    "category": "Merge PDFs",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-merge"
+      },
+      {
+        "type": "action",
+        "description": "Add multiple PDF files to the merge workspace"
+      },
+      {
+        "type": "action",
+        "description": "Reorder the files in the merge list"
+      },
+      {
+        "type": "action",
+        "description": "Start the merge"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a merged PDF is generated"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the merged document reflects the selected file order"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC025",
+    "title": "Compress a PDF with reduced quality settings",
+    "description": "This verifies that a PDF can be compressed using a low DPI preset and quality controls and that the output preview reflects a smaller file.",
+    "category": "Compress PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the central hub"
+      },
+      {
+        "type": "action",
+        "description": "Drop a PDF file into the intake area"
+      },
+      {
+        "type": "action",
+        "description": "Open the compress PDF workspace"
+      },
+      {
+        "type": "action",
+        "description": "Select the lowest DPI preset"
+      },
+      {
+        "type": "action",
+        "description": "Set a valid JPEG quality value"
+      },
+      {
+        "type": "action",
+        "description": "Start the compression"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the compressed PDF preview is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a size comparison is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC026",
+    "title": "Apply a signature and export the signed PDF",
+    "description": "This verifies that a user can draw a signature, place it on the page, and export a flattened signed PDF.",
+    "category": "Sign PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-sign"
+      },
+      {
+        "type": "action",
+        "description": "Upload a PDF"
+      },
+      {
+        "type": "action",
+        "description": "Draw a signature on the signature canvas"
+      },
+      {
+        "type": "action",
+        "description": "Place the signature on the page"
+      },
+      {
+        "type": "action",
+        "description": "Apply the signing action"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a signed PDF export is available"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the signature is reflected in the document preview"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC027",
+    "title": "Convert mixed images into a landscape PDF",
+    "description": "This verifies that a mixed image batch can be auto-fitted and exported as a PDF using a landscape layout.",
+    "category": "Images to PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-images"
+      },
+      {
+        "type": "action",
+        "description": "Add a mixed set of supported images to the workspace"
+      },
+      {
+        "type": "action",
+        "description": "Select Letter page size and landscape orientation"
+      },
+      {
+        "type": "action",
+        "description": "Choose the auto-fit layout option"
+      },
+      {
+        "type": "action",
+        "description": "Generate the PDF"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the PDF output is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the images are fitted into the generated document"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC028",
+    "title": "Split a PDF into custom page ranges",
+    "description": "This verifies that a user can enter valid custom page ranges and generate grouped split outputs.",
+    "category": "Split PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-split"
+      },
+      {
+        "type": "action",
+        "description": "Open a PDF in the split workspace"
+      },
+      {
+        "type": "action",
+        "description": "Select custom range splitting"
+      },
+      {
+        "type": "action",
+        "description": "Enter valid custom page ranges"
+      },
+      {
+        "type": "action",
+        "description": "Start the split"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify grouped split jobs are generated"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the split outputs are available"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC029",
+    "title": "Protect a PDF and confirm the secured output",
+    "description": "This verifies that a PDF can be protected with a password and that the secured export is produced successfully.",
+    "category": "Protect/Unlock PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the central hub"
+      },
+      {
+        "type": "action",
+        "description": "Drop a PDF file into the intake area"
+      },
+      {
+        "type": "action",
+        "description": "Open the protect PDF workspace"
+      },
+      {
+        "type": "action",
+        "description": "Set a protection password"
+      },
+      {
+        "type": "action",
+        "description": "Start the protection process"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the protected PDF output is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the secure export option is available"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC030",
+    "title": "Add a text overlay to a PDF page",
+    "description": "This verifies that a user can add a text-based overlay in the editor and keep the change in the current document view.",
+    "category": "PDF Editor",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-edit"
+      },
+      {
+        "type": "action",
+        "description": "Open a PDF using the editor's file input"
+      },
+      {
+        "type": "action",
+        "description": "Add a text overlay to the page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new overlay is visible in the document"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the edit is reflected in the current PDF"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC031",
+    "title": "Block unsupported images in image conversion",
+    "description": "This verifies that unsupported image formats are rejected in the images-to-PDF workspace and no PDF is generated.",
+    "category": "Images to PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-images"
+      },
+      {
+        "type": "action",
+        "description": "Add an unsupported image file to the workspace"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a file type validation error is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no PDF output is generated"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC032",
+    "title": "Add a page annotation to a PDF",
+    "description": "This verifies that a user can place an annotation on a PDF page and see it persist in the editor view.",
+    "category": "PDF Editor",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-edit"
+      },
+      {
+        "type": "action",
+        "description": "Open a PDF using the editor's file input"
+      },
+      {
+        "type": "action",
+        "description": "Add a page annotation to the document"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the annotation is visible on the page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the document shows the applied annotation"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC033",
+    "title": "Apply a text watermark and export the stamped PDF",
+    "description": "This verifies that a user can add a watermark with placement and appearance settings and export the stamped document.",
+    "category": "Watermark PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the central hub"
+      },
+      {
+        "type": "action",
+        "description": "Drop a PDF file into the intake area"
+      },
+      {
+        "type": "action",
+        "description": "Open the watermark PDF workspace"
+      },
+      {
+        "type": "action",
+        "description": "Enter watermark text"
+      },
+      {
+        "type": "action",
+        "description": "Adjust the watermark placement and appearance settings"
+      },
+      {
+        "type": "action",
+        "description": "Start the watermark preview"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the watermark preview is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the stamped PDF is ready for export"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC034",
+    "title": "Crop a PDF page and prepare the cropped output",
+    "description": "Verifies that a user can load a PDF, adjust the crop region, and apply the crop to produce an edited PDF.",
+    "category": "Crop PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-crop"
+      },
+      {
+        "type": "action",
+        "description": "Provide a PDF document to the crop workspace"
+      },
+      {
+        "type": "action",
+        "description": "Adjust the crop boundaries on the page"
+      },
+      {
+        "type": "action",
+        "description": "Apply the crop to the current page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cropped PDF output is available"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC035",
+    "title": "Rasterize PDF pages to a ZIP of images",
+    "description": "This verifies that a user can rasterize a PDF into images at a higher scale and export the result as a ZIP file.",
+    "category": "Rasterize PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-rasterize"
+      },
+      {
+        "type": "action",
+        "description": "Upload a PDF"
+      },
+      {
+        "type": "action",
+        "description": "Select PNG output"
+      },
+      {
+        "type": "action",
+        "description": "Select 2x scale"
+      },
+      {
+        "type": "action",
+        "description": "Choose ZIP export"
+      },
+      {
+        "type": "action",
+        "description": "Run the rasterize action"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an image ZIP export is available"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify rasterized page images are shown in the workspace"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC036",
+    "title": "Handle a non-document scan as a detection failure",
+    "description": "This verifies that importing a blurry or non-document image shows a boundary detection error and still allows the user to retry or adjust the scan manually.",
+    "category": "Document Scanner",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-scan"
+      },
+      {
+        "type": "action",
+        "description": "Import a blurry or non-document image into the scanner"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a detection or preview error is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify retry or manual corner adjustment remains available"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC037",
+    "title": "Block merging when no PDFs are selected",
+    "description": "This verifies that the merge workspace prevents starting a merge when no input files are selected and shows a validation error.",
+    "category": "Merge PDFs",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-merge"
+      },
+      {
+        "type": "action",
+        "description": "Leave the merge workspace without adding files"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to start the merge"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the merge action is blocked"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC038",
+    "title": "Add page numbers with a footer-center layout",
+    "description": "This verifies that page numbers can be generated with a chosen numeral format, placement, and starting offset and exported as a numbered PDF.",
+    "category": "Page Numbers",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the central hub"
+      },
+      {
+        "type": "action",
+        "description": "Drop a PDF file into the intake area"
+      },
+      {
+        "type": "action",
+        "description": "Open the page numbers workspace"
+      },
+      {
+        "type": "action",
+        "description": "Choose a numeral format"
+      },
+      {
+        "type": "action",
+        "description": "Set the numbering position and starting value"
+      },
+      {
+        "type": "action",
+        "description": "Start the numbering process"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the numbered PDF preview is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the numbered document is ready for export"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC039",
+    "title": "Edit a PDF after opening it from the editor workspace",
+    "description": "This verifies that a user can open a document, perform an edit, and continue working without leaving the editor workspace.",
+    "category": "PDF Editor",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-edit"
+      },
+      {
+        "type": "action",
+        "description": "Open a PDF using the editor's file input"
+      },
+      {
+        "type": "action",
+        "description": "Add a markup to the document"
+      },
+      {
+        "type": "action",
+        "description": "Continue interacting with the editor workspace"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the editor workspace remains open"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the markup is still present"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC040",
+    "title": "Apply cropping to the whole document",
+    "description": "Verifies that a user can crop one page and then apply the same crop to all pages in the document.",
+    "category": "Crop PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-crop"
+      },
+      {
+        "type": "action",
+        "description": "Provide a multi-page PDF document to the crop workspace"
+      },
+      {
+        "type": "action",
+        "description": "Adjust the crop boundaries on the page"
+      },
+      {
+        "type": "action",
+        "description": "Apply the crop to all pages"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cropped PDF output is available"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC041",
+    "title": "Complete OCR on a low-quality scan with a warning",
+    "description": "Verifies that a user can attempt OCR on a poor scan and see a recognition warning while text output remains available.",
+    "category": "OCR Text Recognition",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-ocr"
+      },
+      {
+        "type": "action",
+        "description": "Provide a low-quality scanned document to the OCR workspace"
+      },
+      {
+        "type": "action",
+        "description": "Select Arabic as an OCR language"
+      },
+      {
+        "type": "action",
+        "description": "Select English as an OCR language"
+      },
+      {
+        "type": "action",
+        "description": "Start OCR recognition"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a recognition warning is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify plain text output is available"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC042",
+    "title": "Extract embedded images from a PDF",
+    "description": "Verifies that a user can open the image extraction tool and see extracted thumbnails from a PDF containing images.",
+    "category": "Extract Images",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-extract-images"
+      },
+      {
+        "type": "action",
+        "description": "Provide a PDF document with embedded images to the extraction workspace"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify extracted image thumbnails are displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC043",
+    "title": "Block splitting when the range text is invalid",
+    "description": "This verifies that invalid custom range text produces a range parsing error and prevents the split from starting.",
+    "category": "Split PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-split"
+      },
+      {
+        "type": "action",
+        "description": "Open a PDF in the split workspace"
+      },
+      {
+        "type": "action",
+        "description": "Select custom range splitting"
+      },
+      {
+        "type": "action",
+        "description": "Enter invalid range text"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to start the split"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a range parsing error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the split job does not start"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC044",
+    "title": "Export selected extracted image and remaining images as a ZIP",
+    "description": "Verifies that a user can review extracted images, save one image, and export the rest in a ZIP archive.",
+    "category": "Extract Images",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-extract-images"
+      },
+      {
+        "type": "action",
+        "description": "Provide a PDF document with embedded images to the extraction workspace"
+      },
+      {
+        "type": "action",
+        "description": "Select one extracted image for review"
+      },
+      {
+        "type": "action",
+        "description": "Download the selected image"
+      },
+      {
+        "type": "action",
+        "description": "Export the remaining images as a ZIP archive"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify image export options are available"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC045",
+    "title": "Reject an unsupported edit operation on a protected document",
+    "description": "This verifies that a user attempting an unsupported edit on a restricted PDF is blocked and shown a permission-related error state.",
+    "category": "PDF Editor",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-edit"
+      },
+      {
+        "type": "action",
+        "description": "Open a restricted PDF using the editor's file input"
+      },
+      {
+        "type": "action",
+        "description": "Attempt an unsupported edit operation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the editing action is denied"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a protected-scope or permission error is visible"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC046",
+    "title": "Reject OCR when no document is provided",
+    "description": "Verifies that OCR cannot be started until the user provides a document to process.",
+    "category": "OCR Text Recognition",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-ocr"
+      },
+      {
+        "type": "action",
+        "description": "Start OCR recognition"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a document required validation message is visible"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC047",
+    "title": "Reject unlocking with an incorrect password",
+    "description": "This verifies that entering a wrong password prevents unlocking and shows a validation error.",
+    "category": "Protect and Unlock PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-protect"
+      },
+      {
+        "type": "action",
+        "description": "Upload a password-protected PDF"
+      },
+      {
+        "type": "action",
+        "description": "Enter an incorrect password"
+      },
+      {
+        "type": "action",
+        "description": "Run the unlock action"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a password validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the document remains locked"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC048",
+    "title": "Show an error when an unreadable PDF is opened in the organizer",
+    "description": "This verifies that opening an unreadable or encrypted PDF does not create page thumbnails and prompts the user to fix or unlock the file first.",
+    "category": "Organize Pages",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-organize"
+      },
+      {
+        "type": "action",
+        "description": "Open an unreadable or encrypted PDF in the organizer"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a load error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the thumbnail grid is not displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC049",
+    "title": "Reject an invalid watermark configuration",
+    "description": "This verifies that leaving watermark text empty or choosing an out-of-range rotation blocks watermark generation and shows validation feedback.",
+    "category": "Watermark PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the central hub"
+      },
+      {
+        "type": "action",
+        "description": "Drop a PDF file into the intake area"
+      },
+      {
+        "type": "action",
+        "description": "Open the watermark PDF workspace"
+      },
+      {
+        "type": "action",
+        "description": "Leave the watermark text empty"
+      },
+      {
+        "type": "action",
+        "description": "Set the watermark rotation outside the allowed range"
+      },
+      {
+        "type": "action",
+        "description": "Start the watermark preview"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a watermark validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify watermark generation is blocked"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC050",
+    "title": "Block signing with an empty signature",
+    "description": "This verifies that the app prevents signing when the signature area is empty and shows a validation error.",
+    "category": "Sign PDF",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to #view-sign"
+      },
+      {
+        "type": "action",
+        "description": "Upload a PDF"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to place an empty signature"
+      },
+      {
+        "type": "action",
+        "description": "Apply the signing action"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a signature validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no signed export is available"
+      }
+    ],
+    "priority": "Low"
+  }
+]

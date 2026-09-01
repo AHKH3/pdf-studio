@@ -12,3 +12,6 @@ tmp/
 .impeccable/critique/
 .impeccable/live/
 .impeccable/questions/
+.agents/
+testsprite_tests/tmp/
+testsprite_tests/tmp/config.json

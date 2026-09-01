@@ -423,6 +423,18 @@ function attachCloseGuard(win) {
   });
 }
 
+function revealWindow(win) {
+  if (!win || win.isDestroyed()) return;
+  if (win.isMinimized()) win.restore();
+  win.show();
+  win.focus();
+  if (process.platform === "win32") {
+    win.setAlwaysOnTop(true);
+    win.focus();
+    win.setAlwaysOnTop(false);
+  }
+}
+
 async function createWindow() {
   const serverReady = ensureServer();
 
@@ -460,18 +472,24 @@ async function createWindow() {
 
   mainWindow = new BrowserWindow(winOpts);
   attachCloseGuard(mainWindow);
+  mainWindow.center();
 
   // احتياط: إذا لم يطلق ready-to-show خلال 3 ثوانٍ (خطأ CSP/JS)، أظهر النافذة قسراً حتى لا يبدو التطبيق متوقفاً
   const showFallback = setTimeout(() => {
     if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
       console.warn("ready-to-show لم يطلق — إظهار قسري للنافذة");
-      mainWindow.show();
+      revealWindow(mainWindow);
     }
   }, 3500);
   mainWindow.once("ready-to-show", () => {
     clearTimeout(showFallback);
     bootLog("ready-to-show");
-    if (!mainWindow.isDestroyed()) mainWindow.show();
+    revealWindow(mainWindow);
+  });
+  mainWindow.webContents.on("console-message", (_e, level, message, line, sourceId) => {
+    if (level >= 2 || !app.isPackaged) {
+      console.log(`[renderer:${level}] ${message} (${sourceId || ""}:${line})`);
+    }
   });
   mainWindow.webContents.on("did-fail-load", (_e, code, desc, url) => {
     console.error("did-fail-load", code, desc, url);
@@ -494,6 +512,9 @@ async function createWindow() {
 
   await mainWindow.loadURL(`${origin}/index.html`);
   bootLog("loadURL");
+  if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
+    revealWindow(mainWindow);
+  }
 
   mainWindow.on("closed", () => {
     mainWindow = null;
@@ -626,9 +647,7 @@ function shouldRequestLock() {
 function focusMainWindow() {
   const win = getMainWindow();
   if (!win) return;
-  if (win.isMinimized()) win.restore();
-  win.show();
-  win.focus();
+  revealWindow(win);
 }
 
 async function promoteBackgroundToUi() {
@@ -644,6 +663,15 @@ async function promoteBackgroundToUi() {
   }
   if (!getMainWindow()) await createWindow();
   startUpdateChecks();
+}
+
+if (
+  process.env.PDF_STUDIO_DISABLE_GPU === "1" ||
+  process.env.ELECTRON_DISABLE_GPU === "1" ||
+  argvHasFlag(process.argv, "--disable-gpu") ||
+  argvHasFlag(process.argv, "--disable-software-rasterizer")
+) {
+  app.disableHardwareAcceleration();
 }
 
 app.commandLine.appendSwitch("disable-renderer-backgrounding");
@@ -693,6 +721,12 @@ if (!gotLock) {
         await createWindow();
       }
     });
+  });
+
+  app.on("child-process-gone", (_event, details) => {
+    if (details?.type === "GPU") {
+      console.warn(`[gpu] GPU process exited (${details.reason || details.exitCode})`);
+    }
   });
 
   app.on("web-contents-created", (_event, contents) => {
