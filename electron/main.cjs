@@ -444,10 +444,9 @@ async function createWindow() {
     height: 880,
     minWidth: 940,
     minHeight: 640,
-    show: false,
+    show: true,
     backgroundColor: "#FFFFFF",
     autoHideMenuBar: true,
-    titleBarStyle: "hidden",
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
@@ -458,13 +457,6 @@ async function createWindow() {
       backgroundThrottling: false
     }
   };
-  if (process.platform === "win32") {
-    winOpts.titleBarOverlay = {
-      color: "#FFFFFF",
-      symbolColor: "#475569",
-      height: 40
-    };
-  }
   if (fs.existsSync(iconPath)) {
     const icon = nativeImage.createFromPath(iconPath);
     if (!icon.isEmpty()) winOpts.icon = icon;
