@@ -118,8 +118,17 @@ export function createBoard(options) {
     const centerPx = (bbox.x + bbox.width / 2) * z;
 
     floatingBar.hidden = false;
-    floatingBar.style.top = `${Math.max(10, topPx)}px`;
     floatingBar.style.left = `${centerPx}px`;
+
+    // Smart position: if object is near the top edge, show bar below instead
+    if (topPx < 50) {
+      const bottomPx = (h - bbox.y) * z;
+      floatingBar.style.top = `${bottomPx}px`;
+      floatingBar.classList.add("is-below");
+    } else {
+      floatingBar.style.top = `${Math.max(10, topPx)}px`;
+      floatingBar.classList.remove("is-below");
+    }
   }
 
   function startInlineEditor(obj) {
@@ -212,6 +221,8 @@ export function createBoard(options) {
       if (rotateEl && selectedIds.length === 1) {
         const obj = getObjects().find((o) => o.id === selectedIds[0]);
         if (obj && !obj.locked) {
+          // Push history BEFORE the rotate begins
+          setObjects(getObjects(), true);
           activeOp = {
             type: "rotate",
             objId: obj.id,
@@ -228,6 +239,8 @@ export function createBoard(options) {
         const obj = getObjects().find((o) => o.id === selectedIds[0]);
         if (obj && !obj.locked) {
           const handle = handleEl.dataset.handle;
+          // Push history BEFORE the resize begins
+          setObjects(getObjects(), true);
           activeOp = {
             type: "resize",
             handle,
@@ -258,6 +271,8 @@ export function createBoard(options) {
           updateFloatingBar();
 
           if (!obj.locked) {
+            // Push history BEFORE the move begins so undo restores original position
+            setObjects(getObjects(), true);
             activeOp = {
               type: "move",
               startPt: pt,
@@ -427,7 +442,8 @@ export function createBoard(options) {
     activeOp = null;
 
     if (op.type === "move" || op.type === "resize" || op.type === "rotate") {
-      setObjects(getObjects(), true);
+      // History was already pushed in onPointerDown; just commit the final state
+      setObjects(getObjects(), false);
       updateFloatingBar();
       return;
     }
@@ -668,24 +684,18 @@ export function createBoard(options) {
   }
 
   layer?.addEventListener?.("pointerdown", onPointerDown);
-  layer?.addEventListener?.("mousedown", onPointerDown);
   if (typeof window !== "undefined") {
     window.addEventListener?.("pointermove", onPointerMove);
-    window.addEventListener?.("mousemove", onPointerMove);
     window.addEventListener?.("pointerup", onPointerUp);
-    window.addEventListener?.("mouseup", onPointerUp);
   }
   layer?.addEventListener?.("dblclick", onDoubleClick);
 
   return {
     destroy() {
       layer?.removeEventListener?.("pointerdown", onPointerDown);
-      layer?.removeEventListener?.("mousedown", onPointerDown);
       if (typeof window !== "undefined") {
         window.removeEventListener?.("pointermove", onPointerMove);
-        window.removeEventListener?.("mousemove", onPointerMove);
         window.removeEventListener?.("pointerup", onPointerUp);
-        window.removeEventListener?.("mouseup", onPointerUp);
       }
       layer?.removeEventListener?.("dblclick", onDoubleClick);
     },

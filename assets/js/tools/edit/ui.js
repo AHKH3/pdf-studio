@@ -197,7 +197,7 @@ const CSS = `
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1.414;
-  background: #FFFFFF;
+  background: var(--surface-3, #FFFFFF);
   border-radius: 4px;
   overflow: hidden;
   display: grid;
@@ -348,14 +348,14 @@ const CSS = `
   align-items: center !important;
   justify-content: center !important;
   gap: 3px !important;
-  height: 24px !important;
-  min-height: 24px !important;
-  max-height: 24px !important;
-  padding: 0 6px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+  padding: 0 8px !important;
   width: auto !important;
   border-radius: var(--radius-pill) !important;
   color: var(--text-muted) !important;
-  font-size: 0.68rem !important;
+  font-size: 0.75rem !important;
   font-weight: 600 !important;
   transition: all var(--dur-fast, 140ms) !important;
   user-select: none !important;
@@ -397,12 +397,12 @@ const CSS = `
   align-items: center !important;
   justify-content: center !important;
   gap: 2px !important;
-  height: 24px !important;
-  min-height: 24px !important;
-  padding: 0 6px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 8px !important;
   border-radius: var(--radius-pill) !important;
   color: var(--text-muted) !important;
-  font-size: 0.68rem !important;
+  font-size: 0.75rem !important;
   font-weight: 600 !important;
   transition: all var(--dur-fast, 140ms) !important;
   user-select: none !important;
@@ -472,13 +472,13 @@ const CSS = `
   align-items: center !important;
   justify-content: center !important;
   gap: 2px !important;
-  height: 24px !important;
-  min-height: 24px !important;
-  padding: 0 6px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 8px !important;
   border: 1px solid var(--border-soft) !important;
   background: var(--surface-2) !important;
   color: var(--text-primary) !important;
-  font-size: 0.68rem !important;
+  font-size: 0.75rem !important;
   font-weight: 600 !important;
   border-radius: var(--radius-pill) !important;
   cursor: pointer !important;
@@ -497,8 +497,8 @@ const CSS = `
 }
 
 .edit-btn-icon-only {
-  width: 24px !important;
-  height: 24px !important;
+  width: 30px !important;
+  height: 30px !important;
   padding: 0 !important;
   border-radius: 50% !important;
 }
@@ -602,7 +602,7 @@ const CSS = `
 .edit-board {
   position: relative;
   display: inline-block;
-  background: #FFFFFF;
+  background: var(--surface-3, #FFFFFF);
   border-radius: 4px;
   box-shadow: 0 14px 40px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.06);
   transition: box-shadow var(--dur-base, 180ms);
@@ -616,7 +616,7 @@ const CSS = `
   display: block;
   max-width: none;
   height: auto;
-  background: #FFFFFF;
+  background: var(--surface-3, #FFFFFF);
   border-radius: 4px;
   direction: ltr;
 }
@@ -693,7 +693,7 @@ const CSS = `
   padding: 4px;
   resize: none;
   border: 1.5px solid var(--accent);
-  background: rgba(255, 255, 255, 0.98);
+  background: var(--surface-3, rgba(255, 255, 255, 0.98));
   color: inherit;
   font: inherit;
   line-height: 1.42;
@@ -822,6 +822,9 @@ const CSS = `
   transform: translate(-50%, -100%) translateY(-10px);
   pointer-events: auto;
   white-space: nowrap;
+}
+.edit-floating-bar.is-below {
+  transform: translate(-50%, 0) translateY(10px);
 }
 .edit-floating-bar .btn {
   height: 26px;
@@ -1245,9 +1248,9 @@ export function buildUi(root) {
                 <span class="edit-tool-divider"></span>
 
                 <!-- Annotation group -->
-                ${choice("edit-tool", "text", "نص", "icon-file")}
+                ${choice("edit-tool", "text", "نص", "icon-align-right")}
                 ${choice("edit-tool", "highlight", "تظليل", "icon-highlighter")}
-                ${choice("edit-tool", "whiteout", "حجب", "icon-crop")}
+                ${choice("edit-tool", "whiteout", "حجب", "icon-eye-off")}
                 ${choice("edit-tool", "pen", "قلم", "icon-sign")}
                 ${choice("edit-tool", "eraser", "ممحاة", "icon-eraser")}
                 <span class="edit-tool-divider"></span>
@@ -1255,12 +1258,12 @@ export function buildUi(root) {
                 <!-- Consolidated Shapes Dropdown -->
                 <div class="edit-dropdown-wrap" id="edit-shapes-wrap">
                   <button id="edit-shapes-btn" type="button" class="edit-dropdown-btn" title="الأشكال والخطوط">
-                    ${icon("icon-crop")}
+                    ${icon("icon-contrast")}
                     <span id="edit-shapes-label">أشكال</span>
                     <svg class="icon chev" aria-hidden="true"><use href="#icon-chev"></use></svg>
                   </button>
                   <div class="edit-popover-menu" id="edit-shapes-menu" hidden>
-                    <button type="button" class="edit-popover-item is-active" data-shape="rect">${icon("icon-crop")} مستطيل</button>
+                    <button type="button" class="edit-popover-item is-active" data-shape="rect">${icon("icon-ruler")} مستطيل</button>
                     <button type="button" class="edit-popover-item" data-shape="ellipse">${icon("icon-contrast")} دائرة</button>
                     <button type="button" class="edit-popover-item" data-shape="triangle">${icon("icon-alert")} مثلث</button>
                     <button type="button" class="edit-popover-item" data-shape="arrow">${icon("icon-arrow-line")} سهم</button>
@@ -1316,10 +1319,10 @@ export function buildUi(root) {
             <div class="edit-stage__status-end">
               <!-- Precision Zoom Controls in Footer -->
               <div class="edit-zoom-group edit-stage__zoom">
-                <button id="edit-zoom-out" type="button" class="edit-nav-btn" title="تصغير">${icon("icon-rotate")}</button>
+                <button id="edit-zoom-out" type="button" class="edit-nav-btn" title="تصغير">${icon("icon-compress")}</button>
                 <span class="edit-zoom-label num" id="edit-zoom-label">100%</span>
                 <button id="edit-zoom-in" type="button" class="edit-nav-btn" title="تكبير">${icon("icon-plus")}</button>
-                <button id="edit-zoom-fit" type="button" class="edit-nav-btn" title="ملء الشاشة">${icon("icon-crop")}</button>
+                <button id="edit-zoom-fit" type="button" class="edit-nav-btn" title="ملء الشاشة">${icon("icon-expand")}</button>
               </div>
               <span id="edit-status-info" class="num">جاهز</span>
             </div>

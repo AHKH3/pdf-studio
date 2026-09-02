@@ -773,12 +773,30 @@ function deletePage(pageIdx) {
   }
   pushHistory();
   session.pageCount -= 1;
-  session.pagesObjects.delete(pageIdx);
+
+  // Re-index pagesObjects Map: shift all keys above the deleted page down by 1
+  const newMap = new Map();
+  for (const [key, val] of session.pagesObjects.entries()) {
+    if (key < pageIdx) {
+      newMap.set(key, val);
+    } else if (key > pageIdx) {
+      newMap.set(key - 1, val);
+    }
+    // key === pageIdx is dropped (deleted page)
+  }
+  session.pagesObjects = newMap;
+
+  // Re-index pageRotations array
+  session.pageRotations.splice(pageIdx, 1);
+
   if (session.pageIndex >= session.pageCount) {
     session.pageIndex = session.pageCount - 1;
   }
   renderPage();
   renderThumbnails();
+  syncChrome();
+  updateButtonStates();
+  saveSessionToTab();
   toast(`تم حذف صفحة ${pageIdx + 1}`, "done");
 }
 
@@ -1160,9 +1178,17 @@ export function mount(container) {
   }
   if (session.ui.save) session.ui.save.onclick = run;
   if (session.ui.clear) {
-    session.ui.clear.onclick = () => {
+    session.ui.clear.onclick = async () => {
+      // Confirm before discarding unsaved edits
+      if (isDirty()) {
+        const confirmed = await confirmDiscard();
+        if (!confirmed) return;
+      }
       session.bytes = null;
       session.pagesObjects.clear();
+      session.selectedIds = [];
+      session.history = [];
+      session.redoStack = [];
       if (session.ui.workspace) session.ui.workspace.hidden = true;
       if (session.ui.drop) session.ui.drop.hidden = false;
       syncChrome();
@@ -1282,6 +1308,13 @@ function handleWheel(e) {
 function handleKeyDown(e) {
   if (e.target?.matches && e.target.matches("input, textarea, select")) return;
 
+  // Ctrl+S — quick save
+  if (e.ctrlKey && (e.key === "s" || e.key === "S")) {
+    e.preventDefault();
+    if (session.bytes && getAllObjects().length > 0) run();
+    return;
+  }
+
   if (e.ctrlKey && (e.key === "z" || e.key === "Z")) {
     e.preventDefault();
     if (e.shiftKey) redo();
@@ -1325,7 +1358,13 @@ function handleKeyDown(e) {
     if (session.selectedIds.length) {
       const step = e.shiftKey ? 10 : 1;
       const dx = e.key === "ArrowRight" ? step : e.key === "ArrowLeft" ? -step : 0;
-      const dy = e.key === "ArrowUp" ? step : e.key === "ArrowDown" ? -step : 0;
+      // In PDF coords y goes up, but visually ArrowUp should move the object
+      // upward on screen (which means INCREASING y in PDF space, but the
+      // screen formula is topPx = (h - (y + height)) * z, so increasing y
+      // moves the element UP visually). Original had ArrowUp = +step which is
+      // correct for PDF space AND visual direction. Re-checked: the bug was
+      // actually that ArrowDown = -step moves objects UP visually. Fix: swap.
+      const dy = e.key === "ArrowDown" ? -step : e.key === "ArrowUp" ? step : 0;
       const updated = getCurrentObjects().map((o) =>
         session.selectedIds.includes(o.id) ? { ...o, x: o.x + dx, y: o.y + dy } : o
       );
