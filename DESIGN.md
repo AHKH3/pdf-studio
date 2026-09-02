@@ -1,37 +1,41 @@
 ---
 name: PDF Studio
-description: Arabic-first local PDF workbench. Lumen Glow v2 — white / black + single indigo halo. Evolution of Aurora 58677f4.
+description: Arabic-first local PDF workbench. Lumen Glow v2 — mature pure white / pure black + refined indigo halo + precision elevation layers.
 colors:
   accent: "#4F46E5"
   accent-hover: "#4338CA"
   accent-hi: "#6366F1"
   accent-deep: "#3730A3"
   accent-soft: "rgba(79,70,229,0.10)"
-  accent-glow: "rgba(99,102,241,0.28)"
+  accent-glow: "rgba(99,102,241,0.22)"
   accent-contrast: "#FFFFFF"
   ink: "#0F172A"
-  ink-2: "#475569"
-  ink-faded: "#64748B"
+  ink-2: "#334155"
+  ink-faded: "#52637A"
   bg: "#FFFFFF"
   bg-wash: "#F8F9FF"
-  surface-1: "rgba(255,255,255,0.72)"
-  surface-2: "rgba(255,255,255,0.88)"
+  surface-1: "rgba(255,255,255,0.78)"
+  surface-2: "rgba(255,255,255,0.92)"
   surface-3: "#FFFFFF"
   text-primary: "#0F172A"
-  text-secondary: "#475569"
-  text-muted: "#64748B"
-  rule: "rgba(15,23,42,0.06)"
-  rule-strong: "rgba(15,23,42,0.10)"
-  border-glow: "rgba(99,102,241,0.18)"
+  text-secondary: "#334155"
+  text-muted: "#52637A"
+  text-dim: "#64748B"
+  rule: "rgba(15,23,42,0.08)"
+  rule-strong: "rgba(15,23,42,0.14)"
+  border-glow: "rgba(99,102,241,0.20)"
   danger: "#E11D48"
   warning: "#A16207"
   success: "#059669"
   night-bg: "#050507"
   night-surface-1: "rgba(255,255,255,0.06)"
   night-surface-2: "rgba(255,255,255,0.10)"
+  night-surface-3: "#121216"
   night-text: "#F8FAFC"
+  night-text-muted: "#94A3B8"
   night-accent: "#6366F1"
-  night-glow: "rgba(99,102,241,0.35)"
+  night-border-soft: "rgba(255,255,255,0.09)"
+  night-border-strong: "rgba(255,255,255,0.15)"
 typography:
   display:
     fontFamily: "Amiri, Noto Naskh Arabic, serif"
@@ -40,9 +44,9 @@ typography:
     lineHeight: 1.15
   headline:
     fontFamily: "Amiri, Noto Naskh Arabic, serif"
-    fontSize: "1.45rem"
+    fontSize: "1.5rem"
     fontWeight: 700
-    lineHeight: 1.2
+    lineHeight: 1.25
   wordmark:
     fontFamily: "Playfair Display, serif"
     fontSize: "1rem"
@@ -51,104 +55,97 @@ typography:
     lineHeight: 1
   body:
     fontFamily: "Noto Naskh Arabic, Amiri, serif"
-    fontSize: "0.92rem"
+    fontSize: "0.9375rem"
     fontWeight: 400
-    lineHeight: 1.6
+    lineHeight: 1.65
   label:
     fontFamily: "Noto Naskh Arabic, Amiri, serif"
-    fontSize: "0.78rem"
+    fontSize: "0.8125rem"
     fontWeight: 600
-    lineHeight: 1.3
+    lineHeight: 1.35
+  caption:
+    fontFamily: "Noto Naskh Arabic, Amiri, serif"
+    fontSize: "0.75rem"
+    fontWeight: 500
+    lineHeight: 1.35
   data:
     fontFamily: "Playfair Display, Noto Naskh Arabic, serif"
-    fontSize: "0.78rem"
-    fontWeight: 400
-    lineHeight: 1.3
+    fontSize: "0.8125rem"
+    fontWeight: 500
+    lineHeight: 1.35
 rounded:
   xs: "6px"
   sm: "10px"
+  md: "14px"
+  lg: "20px"
+  xl: "28px"
+  pill: "999px"
   control: "999px"
   panel: "20px"
-  xl: "28px"
 spacing:
   gap: "8px"
   pad: "16px"
-  titlebar: "56px"
+  titlebar: "40px"
   status: "56px"
 components:
   button-primary:
     backgroundColor: "{colors.accent}"
     textColor: "#FFFFFF"
     rounded: "999px"
-    padding: "11px 20px"
-    shadow: "0 4px 14px rgba(99,102,241,0.28)"
+    padding: "10px 20px"
+    shadow: "0 2px 6px rgba(79,70,229,0.25), 0 1px 2px rgba(15,23,42,0.08)"
   button-ghost:
-    backgroundColor: "rgba(255,255,255,0.72)"
+    backgroundColor: "rgba(255,255,255,0.78)"
     textColor: "{colors.ink}"
     rounded: "999px"
-    padding: "11px 20px"
-    border: "1px solid rgba(15,23,42,0.06)"
+    padding: "10px 20px"
+    border: "1px solid rgba(15,23,42,0.08)"
 ---
 
-# Design System: PDF Studio — Lumen Glow v2
+# Design System: PDF Studio — Lumen Glow v2 (Impeccable Edition)
 
 ## Overview
 
-**North Star: «جلو بسيط ناضج» — Evolution of Aurora 58677f4**
+**North Star: «جلو بسيط ناضج» — High-Craft Evolution of Aurora**
 
-نفس الجوهر الذي طلبته: **أبيض نقي للفاتح / أسود نقي للداكن + جلو هادئ واحد Indigo**. Lumen v2 ينضّج Aurora الأصلي لا يلغيه: يهدّئ قوس القزح، يخفّف الـ blur، ويوحّد التفاعل حول هالة واحدة.
+نفس الجوهر العربي الأصيل: **أبيض نقي للفاتح / أسود نقي للداكن + هالة Indigo هادئة ونقية + طبقات زجاجية متزنة وواضحة**. تم صقل النظام بموجب معايير **Impeccable Design** لمعالجة كل الـ Anti-patterns: ضبط التباين إلى WCAG AA صارم، تحديد أرضية القراءة الوظيفية عند 12px، واستبدال التوهجات العشوائية بطبقات Elevation طبيعية.
 
-- **مرجع الأصل:** `docs/design-aurora-legacy.md` — توثيق حرفي لكوميت `58677f4` (الصفحة الواحدة الأولى، الزجاج + Aurora بثلاث هالات).
-- **المرجع المطوّر:** `docs/design-system-lumen.md` — المواصفة التنفيذية الكاملة.
+## Colors & Contrast
 
-## Colors
+- **فاتح:** `--bg #FFFFFF` يغسل إلى `#F8F9FF`، زجاج `rgba(255,255,255,0.78)` بـ `blur 16px`، نص أساسي `slate-900 #0F172A`، نص خافت `slate-600 #52637A` يضمن تباين `5.2:1+` (فوق متطلب WCAG AA 4.5:1).
+- **داكن:** `--bg #050507`، زجاج `rgba(255,255,255,0.06)`، نص أساسي `slate-50 #F8FAFC`، نص خافت `slate-400 #94A3B8` بتباين `8:1+`.
+- **اللمعة التفاعلية:** `Indigo #4F46E5` فاتح / `#6366F1` داكن.
 
-- **فاتح:** `--bg #FFFFFF` يغسل إلى `#F8F9FF`، زجاج `rgba(255,255,255,0.72)` بـ `blur 20px saturate 160%`، نص `slate-900 #0F172A`.
-- **داكن:** `--bg #050507`، زجاج `rgba(255,255,255,0.06)`، نص `slate-50 #F8FAFC`.
-- **اللمعة الوحيدة:** `Indigo #4F46E5` فاتح / `#6366F1` داكن، وهالة `--accent-glow 0.28 / 0.35`. لا بنفسجي-وردي-تيل معًا بعد الآن.
-- كل التباينات `AA+` حتى فوق الهالة.
+## Typography & Scale Ramp
 
-## Typography
+- **عناوين رئيسية وشعارات:** `Amiri` 700 (عربي نقي أصيل).
+- **واجهة المستخدم، الأزرار، التسميات، والمحتوى:** `Noto Naskh Arabic` 400–700.
+- **الأرقام، الشعار اللاتيني، والبيانات:** `Playfair Display`.
+- **سلم القياسات (Ramp):**
+  - Display: `clamp(2rem, 5vw, 3rem)`
+  - Title/Headline: `1.5rem` (24px)
+  - Subtitle: `1.125rem` (18px)
+  - Base Body: `0.9375rem` (15px)
+  - Small / Label: `0.8125rem` (13px)
+  - Minimum Functional Floor: `0.75rem` (12px) — لا توجد نصوص وظيفية تفاعلية تحت 12px.
 
-- **عناوين / شعار عربي:** `Amiri` 700؛ **واجهة ونص:** `Noto Naskh Arabic` 400–700؛ **لاتيني (شعار PDF Studio، أرقام):** `Playfair Display`. مضمّنة محليًا عبر `assets/css/fonts.css` — لا Cairo ولا Inter.
-- سلم: `display clamp(2rem,5vw,3rem)` للهيرو فقط، `title 1.45rem` للأدوات، `body 0.92rem / 1.6` للعربي.
+## Radii Scale
 
-## Layout
+- `xs: 6px` — عناصر مصغرة وعلامات الحالة.
+- `sm: 10px` — حقول الإدخال، القوائم الصغيرة، وأزرار الأدوات.
+- `md: 14px` — بطاقات مصغرة، شارات، وModals فرعية.
+- `lg: 20px` — حاويات الأدوات، ألواح العمل الرئيسية.
+- `xl: 28px` — البطاقة الحاضنة الكبرى.
+- `pill: 999px` — أزرار التفاعل الرئيسية، التابات، وحبوب الحالة.
 
-- **خلفية:** هالتان ثابتتان Indigo ضبابيتان (`blur 80–90px`, `opacity 0.16 فاتح / 0.44 داكن`) + طبقة `glass-noise` شفافة — أخف من ثلاث هالات الأصل.
-- **شريط علوي:** `pill 999px` عائم `sticky top 14px`، عرض `min(calc(100% - 32px),1120px)`، زجاج `blur 20px`، ظل `0 4px 20px`.
-- **مساحة العمل:** عرض `1120px` متوسط، بطاقة زجاج واحدة `radius 28/20` لا لوحات متناثرة.
-- **شبكة البداية:** بعد الإسقاط، قائمة ملفات `flex wrap 260px` على زجاج واحد — لا شبكة 320px الثقيلة.
-- **شريط حالة:** سفلي `sticky` بارتفاع `56px`، `blur 16px`، زر تنفيذ وحيد `pill accent`، خط تقدم `2px accent`.
+## Elevation & Depth (Shadows)
 
-## Components
+- لا يتم استخدام 1px border مع ظل مشتت واسع (GPT tell). بدلاً من ذلك، نستخدم ظلال Elevation طبقية تجمع بين ظل ambient ناعم وظل key-light دقيق:
+  - `--shadow-soft`: `0 2px 8px rgba(15,23,42,0.04), 0 1px 2px rgba(15,23,42,0.03)`
+  - `--shadow-elevated`: `0 8px 24px rgba(15,23,42,0.08), 0 2px 6px rgba(15,23,42,0.04)`
+  - `--shadow-panel`: `0 16px 40px rgba(15,23,42,0.12), 0 4px 12px rgba(15,23,42,0.06)`
 
-### Aurora v2
-هالتان فقط بلون واحد بدل ثلاث. `animation drift 28–34s` هادئة، `filter blur 80px`. في الفاتح `opacity 0.16`.
+## Performance & Micro-Interactions
 
-### Intake
-`dashed 1.5px var(--border-strong)` على `surface-1`، `hover` يتحول لـ `solid accent` + `accent-soft` + `shadow-glow` ويرتفع `1px`. الهيرو `#hub-drop` بطاقة `560px` بظل مرتفع وهالة علوية `420px blur 18px`.
-
-### Buttons
-`pill 999px` بارتفاع `40px` (`32px compact`). الأساسي `accent` بظل جلو، الباقي `ghost surface-1`. `focus` حلقة مزدوجة `accent-soft + glow`. لا دوران، لا `scale` مبالغ.
-
-### Hub Card (إن وجد)
-`28px / 20px`, `padding 22px`, `blur 20px`, `hover -4px` + `border-glow + shadow-glow`, أيقونة `48px` تتحول لـ `accent` أبيض عند Hover. `radial-gradient at --mx --my` يبقى لكن `600px / 0.10` أهدأ.
-
-### Doc Row
-`grid 36px 56px 1fr auto`, `32px` للرقم بخلفية `accent-soft`, مصغّرة `56×68`, `border-soft` تتحول لـ `accent + 3px soft` عند التحديد.
-
-## Don't
-
-- لا بيج/ورق/صور/خطوط مسطرة — الأصل Aurora لم يكن كذلك.
-- لا قوس قزح (أربع ألوان هالة) — هالة واحدة فقط.
-- لا `blur 32px saturate 180%` ثقيل — `20px/160%` كحد أقصى.
-- لا أزرار مربعة ثقيلة أو شريط جانبي — pill + قائمة عمودية خطية.
-- لا نص مغسول على الزجاج — `slate-900` على `rgba(255,255,255,0.72)` يضمن AA.
-
-## Files
-
-- `docs/design-aurora-legacy.md` — الأصل كما كان.
-- `docs/design-system-lumen.md` — النظام المطوّر (مرجع التنفيذ).
-- `assets/css/app.css` — التطبيق (Lumen v2).
-- `index.html` — `aurora` + `glass-noise` + الهيرو المحدث.
+- كل الانتقالات والحركات التفاعلية تتم عبر الخصائص المسرعة عتادياً (`transform` و `opacity`).
+- منع الـ Layout Thrashing (لا تحريك لـ `width`, `height`, `padding`, `margin`).

@@ -1,6 +1,7 @@
 import { baseName, humanSize, isPdfFile, saveFile, withExtension } from "../../lib/files.js";
 import { renderPdfPage } from "../../pdf/core.js";
 import { endProgress, isCancellation, startProgress, toast } from "../../ui/feedback.js";
+import { getActiveTab } from "../../ui/tabs.js";
 import { getName, setName, setRunEnabled, setSource, setState } from "../../ui/titleblock.js";
 import { confirmDiscard, confirmReplace, readPdfFile, reportFailure as reportFailureToChrome, reportSave as reportSaveToChrome, uid } from "../shared.js";
 import { createBoard } from "./board.js";
@@ -14,11 +15,17 @@ export const title = "تحرير";
 
 const STYLE_STORAGE_KEY = "pdfstudio.edit.style.v1";
 
+const SHAPE_NAMES = {
+  rect: "مستطيل",
+  ellipse: "دائرة",
+  triangle: "مثلث",
+  arrow: "سهم",
+  line: "خط"
+};
+
 const session = {
   /** @type {HTMLElement | null} */
   root: null,
-  /** @type {AbortController | null} */
-  ac: null,
   /** @type {ReturnType<typeof buildUi> | null} */
   ui: null,
   /** @type {ReturnType<typeof createBoard> | null} */
@@ -33,7 +40,6 @@ const session = {
   /** @type {Map<number, any[]>} */
   pagesObjects: new Map(),
   selectedIds: [],
-  saved: true,
   /** @type {any[]} */
   history: [],
   /** @type {any[]} */
@@ -41,7 +47,8 @@ const session = {
   zoom: 1,
   pageW: 595,
   pageH: 842,
-  sidebarOpen: true
+  sidebarOpen: true,
+  currentShape: "rect"
 };
 
 function hasTitleblock() {
@@ -95,6 +102,60 @@ export function syncChrome() {
   }
 }
 
+function saveSessionToTab() {
+  try {
+    const tab = getActiveTab();
+    if (!tab) return;
+    tab.toolData = tab.toolData || {};
+    tab.toolData.edit = {
+      fileName: session.fileName,
+      bytes: session.bytes,
+      pageCount: session.pageCount,
+      size: session.size,
+      pageIndex: session.pageIndex,
+      pageRotations: [...session.pageRotations],
+      pagesObjects: new Map(Array.from(session.pagesObjects.entries()).map(([k, v]) => [k, JSON.parse(JSON.stringify(v))])),
+      zoom: session.zoom,
+      currentShape: session.currentShape
+    };
+    tab.isDirty = isDirty();
+  } catch (err) {
+    console.warn("Failed to snapshot edit tab data:", err);
+  }
+}
+
+function restoreSessionFromTab() {
+  try {
+    const tab = getActiveTab();
+    if (!tab?.toolData?.edit?.bytes) return false;
+    const data = tab.toolData.edit;
+    session.fileName = data.fileName || "";
+    session.bytes = data.bytes;
+    session.pageCount = data.pageCount || 1;
+    session.size = data.size || 0;
+    session.pageIndex = data.pageIndex || 0;
+    session.pageRotations = data.pageRotations || new Array(session.pageCount).fill(0);
+    session.pagesObjects = new Map(data.pagesObjects || []);
+    session.selectedIds = [];
+    session.history = [];
+    session.redoStack = [];
+    session.zoom = data.zoom || 1;
+    session.currentShape = data.currentShape || "rect";
+
+    if (session.ui?.drop) session.ui.drop.hidden = true;
+    if (session.ui?.workspace) session.ui.workspace.hidden = false;
+
+    renderPage();
+    renderThumbnails();
+    syncChrome();
+    updateButtonStates();
+    return true;
+  } catch (err) {
+    console.warn("Failed to restore edit tab data:", err);
+    return false;
+  }
+}
+
 function getCurrentObjects() {
   return session.pagesObjects.get(session.pageIndex) || [];
 }
@@ -107,6 +168,7 @@ function setCurrentObjects(objs, pushHist = true) {
   renderThumbnails();
   syncChrome();
   updateButtonStates();
+  saveSessionToTab();
 }
 
 function getAllObjects() {
@@ -132,6 +194,7 @@ function pushHistory() {
   if (session.history.length > 50) session.history.shift();
   session.redoStack = [];
   updateButtonStates();
+  saveSessionToTab();
 }
 
 function undo() {
@@ -150,6 +213,7 @@ function undo() {
   renderThumbnails();
   renderPage();
   updateButtonStates();
+  saveSessionToTab();
   toast("تم التراجع", "info");
 }
 
@@ -169,6 +233,7 @@ function redo() {
   renderThumbnails();
   renderPage();
   updateButtonStates();
+  saveSessionToTab();
   toast("تمت الإعادة", "info");
 }
 
@@ -187,6 +252,20 @@ function activeTool() {
 function setTool(toolName) {
   const radio = session.root?.querySelector(`input[name="edit-tool"][value="${toolName}"]`);
   if (radio) radio.checked = true;
+
+  const isShape = ["rect", "ellipse", "triangle", "arrow", "line"].includes(toolName);
+  if (isShape) {
+    session.currentShape = toolName;
+    if (session.ui?.shapesBtn) {
+      session.ui.shapesBtn.classList.add("is-active");
+    }
+    if (session.ui?.shapesLabel) {
+      session.ui.shapesLabel.textContent = SHAPE_NAMES[toolName] || "أشكال";
+    }
+  } else if (session.ui?.shapesBtn) {
+    session.ui.shapesBtn.classList.remove("is-active");
+  }
+
   updateInspectorPanels(toolName);
   updateViewportCursor(toolName);
 }
@@ -214,6 +293,115 @@ function updateInspectorPanels(tool) {
   } else if (tool && tool !== "select" && tool !== "hand" && tool !== "eraser") {
     const p = session.root?.querySelector(`[data-edit-panel="${tool}"]`);
     if (p) p.hidden = false;
+  }
+}
+
+function syncInspectorWithSelection() {
+  const alignBlock = session.root?.querySelector("#panel-align");
+  if (alignBlock) alignBlock.hidden = session.selectedIds.length < 2;
+
+  if (session.selectedIds.length !== 1) {
+    if (session.selectedIds.length === 0) {
+      updateInspectorPanels(activeTool());
+    }
+    return;
+  }
+
+  const obj = getCurrentObjects().find((o) => o.id === session.selectedIds[0]);
+  if (!obj) return;
+
+  const ui = session.ui;
+  updateInspectorPanels(obj.type === "shape" ? "shape" : obj.type);
+
+  if (obj.type === "text") {
+    if (ui.text) ui.text.value = obj.text || "";
+    if (ui.textSize) ui.textSize.value = String(obj.fontSize || 18);
+    if (ui.textFont) ui.textFont.value = obj.fontFamily || "naskh";
+    if (ui.textColor) ui.textColor.value = obj.color || "#1E3A8A";
+    if (ui.textBold) ui.textBold.checked = Boolean(obj.bold);
+    if (ui.textItalic) ui.textItalic.checked = Boolean(obj.italic);
+    if (ui.textUnderline) ui.textUnderline.checked = Boolean(obj.underline);
+    if (ui.textStrike) ui.textStrike.checked = Boolean(obj.strike);
+    if (ui.textBgOn) ui.textBgOn.checked = Boolean(obj.bgOn);
+    if (ui.textBgColor) ui.textBgColor.value = obj.bgColor || "#FFFFFF";
+    const alignRadio = session.root?.querySelector(`input[name="edit-align"][value="${obj.align || 'right'}"]`);
+    if (alignRadio) alignRadio.checked = true;
+  } else if (obj.type === "shape") {
+    if (ui.fillOn) ui.fillOn.checked = Boolean(obj.fillOn);
+    if (ui.fillColor) ui.fillColor.value = obj.fill || "#BFDBFE";
+    if (ui.strokeColor) ui.strokeColor.value = obj.stroke || "#1E3A8A";
+    if (ui.strokeWidth) ui.strokeWidth.value = String(obj.strokeWidth != null ? obj.strokeWidth : 1.5);
+    if (ui.shapeOpacity) ui.shapeOpacity.value = String(obj.opacity != null ? obj.opacity : 1);
+  } else if (obj.type === "highlight") {
+    if (ui.hlColor) ui.hlColor.value = obj.color || "#FDE047";
+    if (ui.hlOpacity) ui.hlOpacity.value = String(obj.opacity != null ? obj.opacity : 0.35);
+  } else if (obj.type === "whiteout") {
+    if (ui.woColor) ui.woColor.value = obj.color || "#FFFFFF";
+    if (ui.woBorder) ui.woBorder.checked = Boolean(obj.stroke);
+  } else if (obj.type === "stamp") {
+    if (ui.stampCustom) ui.stampCustom.value = obj.label || "";
+  }
+}
+
+function updateSelectedObjectFromInspector() {
+  if (session.selectedIds.length !== 1) return;
+  const objId = session.selectedIds[0];
+  const obj = getCurrentObjects().find((o) => o.id === objId);
+  if (!obj) return;
+
+  const style = getStyle();
+  let updated = null;
+
+  if (obj.type === "text") {
+    updated = {
+      ...obj,
+      text: session.ui?.text?.value != null ? session.ui.text.value : obj.text,
+      fontSize: style.fontSize,
+      fontFamily: style.fontFamily,
+      color: style.textColor,
+      bold: style.bold,
+      italic: style.italic,
+      underline: style.underline,
+      strike: style.strike,
+      align: style.align,
+      bgOn: style.bgOn,
+      bgColor: style.bgColor
+    };
+  } else if (obj.type === "shape") {
+    updated = {
+      ...obj,
+      fillOn: style.fillOn,
+      fill: style.fillColor,
+      stroke: style.strokeColor,
+      strokeWidth: style.strokeWidth,
+      opacity: style.shapeOpacity
+    };
+  } else if (obj.type === "highlight") {
+    updated = {
+      ...obj,
+      color: style.hlColor,
+      opacity: style.hlOpacity
+    };
+  } else if (obj.type === "whiteout") {
+    updated = {
+      ...obj,
+      color: style.woColor,
+      stroke: style.woBorder ? "#E2E8F0" : null
+    };
+  } else if (obj.type === "stamp") {
+    updated = {
+      ...obj,
+      label: session.ui?.stampCustom?.value || obj.label
+    };
+  }
+
+  if (updated) {
+    const list = getCurrentObjects().map((o) => (o.id === objId ? updated : o));
+    session.pagesObjects.set(session.pageIndex, list);
+    renderObjectsOnLayer();
+    renderInspectorLayers();
+    syncChrome();
+    saveSessionToTab();
   }
 }
 
@@ -450,7 +638,7 @@ function renderInspectorLayers() {
     const label = obj.type === "text"
       ? (obj.text?.slice(0, 18) || "نص")
       : obj.type === "shape"
-      ? `شكل (${obj.kind || "مربع"})`
+      ? `شكل (${SHAPE_NAMES[obj.kind] || obj.kind || "مستطيل"})`
       : obj.type === "highlight"
       ? "تظليل"
       : obj.type === "whiteout"
@@ -479,6 +667,7 @@ function renderInspectorLayers() {
         session.selectedIds = session.selectedIds.filter((id) => id !== obj.id);
         renderObjectsOnLayer();
         renderInspectorLayers();
+        syncInspectorWithSelection();
         return;
       }
       if (act === "lock") {
@@ -490,6 +679,7 @@ function renderInspectorLayers() {
       session.board?.setSelectedIds(session.selectedIds);
       renderObjectsOnLayer();
       renderInspectorLayers();
+      syncInspectorWithSelection();
     });
 
     container.append(row);
@@ -549,12 +739,13 @@ async function renderThumbnails() {
         session.selectedIds = [];
         renderPage();
         renderThumbnails();
+        syncInspectorWithSelection();
       }
     });
 
     container.append(item);
 
-    renderPdfPage(session.bytes, i, { scale: 0.25, rotation: session.pageRotations[i] || 0 })
+    renderPdfPage(session.bytes, i, { scale: 0.28, rotation: session.pageRotations[i] || 0 })
       .then((res) => {
         const previewEl = document.getElementById(`thumb-preview-${i}`);
         if (previewEl) {
@@ -606,19 +797,20 @@ function setZoom(newZoom) {
     session.ui.zoomLabel.textContent = `${Math.round(session.zoom * 100)}%`;
   }
   renderPage();
+  saveSessionToTab();
 }
 
 function zoomFitWidth() {
   const vp = session.ui?.viewport;
   if (!vp || !session.pageW) return;
-  const targetW = (vp.clientWidth || 800) - 64;
+  const targetW = (vp.clientWidth || 800) - 48;
   setZoom(targetW / session.pageW);
 }
 
 function zoomFitPage() {
   const vp = session.ui?.viewport;
   if (!vp || !session.pageH) return;
-  const targetH = (vp.clientHeight || 600) - 64;
+  const targetH = (vp.clientHeight || 600) - 48;
   setZoom(targetH / session.pageH);
 }
 
@@ -653,7 +845,6 @@ async function handleFile(file) {
     toast("يرجى اختيار ملف PDF صالح.", "error");
     return;
   }
-  startProgress({ desc: "جارٍ فتح المستند...", percent: 20 });
   try {
     const data = await readPdfFile(file);
     session.fileName = file.name;
@@ -675,10 +866,9 @@ async function handleFile(file) {
     zoomFitWidth();
     syncChrome();
     updateButtonStates();
-    endProgress();
+    saveSessionToTab();
     toast(`تم فتح المستند (${data.pages} صفحة)`, "done");
   } catch (err) {
-    endProgress();
     reportFailure(err, "تعذّر فتح ملف الـ PDF.");
   }
 }
@@ -690,7 +880,7 @@ export async function run() {
   }
   const allObjs = getAllObjects();
   if (!allObjs.length) {
-    toast("لم تقم بإضافة أي تعديلات على المستند.", "info");
+    toast("لم تقم بإضافة أي تعديلات على المستند بعد.", "info");
     return;
   }
   startProgress({ desc: "جارٍ دمج الطبقات وحفظ المستند...", percent: 30 });
@@ -737,11 +927,14 @@ export function mount(container) {
       session.selectedIds = ids;
       renderObjectsOnLayer();
       renderInspectorLayers();
+      syncInspectorWithSelection();
       updateButtonStates();
     },
     onCommitInlineText: (obj) => {
       renderObjectsOnLayer();
       renderInspectorLayers();
+      syncInspectorWithSelection();
+      saveSessionToTab();
     }
   });
 
@@ -753,12 +946,49 @@ export function mount(container) {
     if (target?.name === "edit-tool") {
       updateInspectorPanels(target.value);
       updateViewportCursor(target.value);
+    } else {
+      updateSelectedObjectFromInspector();
     }
     persistStyles();
   });
 
+  session.root.addEventListener("input", (e) => {
+    if (e.target?.closest && e.target.closest("[data-edit-panel]")) {
+      updateSelectedObjectFromInspector();
+    }
+  });
+
+  // Shapes Popover Dropdown handling
+  if (session.ui.shapesBtn && session.ui.shapesMenu) {
+    session.ui.shapesBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isHidden = session.ui.shapesMenu.hidden;
+      session.ui.shapesMenu.hidden = !isHidden;
+      if (isHidden) {
+        setTool(session.currentShape || "rect");
+      }
+    });
+
+    session.ui.shapesMenu.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const item = e.target.closest ? e.target.closest("[data-shape]") : null;
+      if (item) {
+        const shape = item.dataset.shape;
+        session.ui.shapesMenu.querySelectorAll(".edit-popover-item").forEach((el) => {
+          el.classList.toggle("is-active", el.dataset.shape === shape);
+        });
+        setTool(shape);
+        session.ui.shapesMenu.hidden = true;
+      }
+    });
+  }
+
   // Root click delegated listener
   session.root.addEventListener("click", (e) => {
+    if (session.ui?.shapesMenu && !e.target.closest("#edit-shapes-wrap")) {
+      session.ui.shapesMenu.hidden = true;
+    }
+
     const swatch = e.target.closest ? e.target.closest("[data-swatch]") : null;
     if (swatch) {
       const targetId = swatch.dataset.for;
@@ -804,6 +1034,7 @@ export function mount(container) {
         if (session.ui.fillColor) session.ui.fillColor.value = "#FFFFFF";
         if (session.ui.strokeWidth) session.ui.strokeWidth.value = "0";
       }
+      updateSelectedObjectFromInspector();
       return;
     }
 
@@ -834,6 +1065,7 @@ export function mount(container) {
       session.board?.setSelectedIds(session.selectedIds);
       renderObjectsOnLayer();
       renderInspectorLayers();
+      syncInspectorWithSelection();
       toast(`تمت إضافة ختم «${label}»`, "done");
     }
   });
@@ -868,6 +1100,8 @@ export function mount(container) {
         session.selectedIds = [];
         renderPage();
         renderThumbnails();
+        syncInspectorWithSelection();
+        saveSessionToTab();
       }
     };
   }
@@ -878,6 +1112,8 @@ export function mount(container) {
         session.selectedIds = [];
         renderPage();
         renderThumbnails();
+        syncInspectorWithSelection();
+        saveSessionToTab();
       }
     };
   }
@@ -906,6 +1142,7 @@ export function mount(container) {
         session.selectedIds = [];
         renderObjectsOnLayer();
         renderInspectorLayers();
+        syncInspectorWithSelection();
       }
     };
   }
@@ -916,6 +1153,7 @@ export function mount(container) {
         session.selectedIds = [];
         renderObjectsOnLayer();
         renderInspectorLayers();
+        syncInspectorWithSelection();
         toast("تم تفريغ طبقات الصفحة", "info");
       }
     };
@@ -929,6 +1167,7 @@ export function mount(container) {
       if (session.ui.drop) session.ui.drop.hidden = false;
       syncChrome();
       updateButtonStates();
+      saveSessionToTab();
     };
   }
 
@@ -949,6 +1188,7 @@ export function mount(container) {
       session.board?.setSelectedIds(session.selectedIds);
       renderObjectsOnLayer();
       renderInspectorLayers();
+      syncInspectorWithSelection();
       toast("تم تكرار العنصر", "done");
     };
   }
@@ -974,6 +1214,7 @@ export function mount(container) {
       session.board?.setSelectedIds([]);
       renderObjectsOnLayer();
       renderInspectorLayers();
+      syncInspectorWithSelection();
     };
   }
 
@@ -1014,6 +1255,7 @@ export function mount(container) {
         session.board?.setSelectedIds(session.selectedIds);
         renderObjectsOnLayer();
         renderInspectorLayers();
+        syncInspectorWithSelection();
         toast("تم إدراج الصورة", "done");
       } catch (err) {
         reportFailure(err, "تعذّر تحميل الصورة.");
@@ -1060,6 +1302,7 @@ function handleKeyDown(e) {
       session.board?.setSelectedIds([]);
       renderObjectsOnLayer();
       renderInspectorLayers();
+      syncInspectorWithSelection();
     }
     return;
   }
@@ -1074,6 +1317,7 @@ function handleKeyDown(e) {
     session.board?.setSelectedIds(session.selectedIds);
     renderObjectsOnLayer();
     renderInspectorLayers();
+    syncInspectorWithSelection();
     return;
   }
   if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
@@ -1090,16 +1334,33 @@ function handleKeyDown(e) {
   }
 }
 
+export function enter() {
+  const root = document.getElementById("view-edit");
+  if (!session.ui || !root?.querySelector("#edit-workspace")) {
+    mount(root);
+  }
+  const restored = restoreSessionFromTab();
+  if (!restored && !session.bytes) {
+    if (session.ui?.workspace) session.ui.workspace.hidden = true;
+    if (session.ui?.drop) session.ui.drop.hidden = false;
+  }
+  syncChrome();
+}
+
+export function leave() {
+  saveSessionToTab();
+  if (typeof window !== "undefined") {
+    window.removeEventListener?.("keydown", handleKeyDown);
+  }
+}
+
 export function unmount() {
+  leave();
+  session.board?.destroy();
   if (session.root) {
     session.root.removeEventListener("keydown", handleKeyDown);
     session.root.innerHTML = "";
   }
-  if (typeof window !== "undefined") {
-    window.removeEventListener?.("keydown", handleKeyDown);
-  }
-  session.ui?.viewport?.removeEventListener?.("wheel", handleWheel);
-  session.board?.destroy();
   removeStyles();
 }
 
@@ -1117,8 +1378,8 @@ export function asTool() {
     actionLabel: "حفظ التحرير",
     outputName: suggestedName,
     setup: () => mount(),
-    enter: () => syncChrome(),
-    leave: () => unmount(),
+    enter,
+    leave,
     run,
     isDirty,
     acceptFiles

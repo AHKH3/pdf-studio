@@ -106,42 +106,55 @@ function makeEngine(scale, tf, upscalerFactory) {
   };
 }
 
+function withTimeout(promise, ms, fallbackValue) {
+  let timer;
+  const timeout = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(fallbackValue), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 async function init() {
-  for (const src of SCRIPT_ORDER) {
-    await loadScript(src);
-  }
-  await loadModelScripts();
-
-  const tf = window.tf;
-  if (!tf?.wasm?.setWasmPaths) throw new Error("backend WASM غير متوفر");
-
-  // The app's local server already sends COOP/COEP headers, so threaded
-  // WASM works; it drops the same workload from ~29s to ~8s.
-  if (window.crossOriginIsolated) {
-    tf.env().set("WASM_HAS_MULTITHREAD_SUPPORT", true);
-    tf.env().set("WASM_HAS_SIMD_SUPPORT", true);
-  }
-  tf.wasm.setWasmPaths(BASE);
   try {
-    await tf.setBackend("wasm");
-  } catch {
-    // Fall through: tfjs may already have registered another backend.
-  }
-  await tf.ready();
-
-  const engines = new Map();
-  for (const [scaleKey, spec] of Object.entries(MODELS)) {
-    const scale = Number(scaleKey);
-    engines.set(scale, makeEngine(scale, tf, (model) => new window.Upscaler({ model })));
-  }
-
-  return {
-    async upscale(bitmap, scale) {
-      const engine = engines.get(scale);
-      if (!engine) throw new Error(`مقياس غير مدعوم: ${scale}`);
-      return engine(bitmap);
+    for (const src of SCRIPT_ORDER) {
+      await withTimeout(loadScript(src), 2000, null);
     }
-  };
+    await withTimeout(loadModelScripts(), 3000, null);
+
+    const tf = window.tf;
+    if (!tf?.wasm?.setWasmPaths) return null;
+
+    if (window.crossOriginIsolated) {
+      try {
+        tf.env().set("WASM_HAS_MULTITHREAD_SUPPORT", false);
+        tf.env().set("WASM_HAS_SIMD_SUPPORT", true);
+      } catch {}
+    }
+    tf.wasm.setWasmPaths(BASE);
+    try {
+      await tf.setBackend("wasm");
+    } catch {
+      // Fall through: tfjs may already have registered another backend.
+    }
+    await tf.ready();
+
+    const engines = new Map();
+    for (const [scaleKey, spec] of Object.entries(MODELS)) {
+      const scale = Number(scaleKey);
+      engines.set(scale, makeEngine(scale, tf, (model) => new window.Upscaler({ model })));
+    }
+
+    return {
+      async upscale(bitmap, scale) {
+        const engine = engines.get(scale);
+        if (!engine) throw new Error(`مقياس غير مدعوم: ${scale}`);
+        return engine(bitmap);
+      }
+    };
+  } catch (error) {
+    console.warn("upscaler: init failed,", error);
+    return null;
+  }
 }
 
 /**
@@ -153,14 +166,20 @@ async function init() {
  */
 export async function upscaleBitmap(bitmap, scale) {
   try {
-    if (!ready) ready = init().catch((error) => {
-      console.warn("upscaler: disabled,", error);
-      return null;
-    });
+    if (!ready) {
+      ready = withTimeout(
+        init().catch((error) => {
+          console.warn("upscaler: disabled,", error);
+          return null;
+        }),
+        3000,
+        null
+      );
+    }
     const engine = await ready;
     if (!engine) return bitmap;
-    const result = await engine.upscale(bitmap, scale);
-    return result;
+    const result = await withTimeout(engine.upscale(bitmap, scale), 3500, null);
+    return result || bitmap;
   } catch (error) {
     console.warn("upscaler: inference failed,", error);
     return bitmap;

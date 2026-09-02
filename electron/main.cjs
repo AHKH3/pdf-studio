@@ -96,7 +96,7 @@ function createStaticServer() {
               "default-src 'none'",
               // wasm-unsafe-eval: يسمح لـ pdf.js/tesseract/heic2any بتجميع WASM دون فتح eval الكامل
               // unsafe-eval: مطلوب لـ heic2any (يستخدم new Function داخليًا)
-              "script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval'",
+              "script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' blob:",
               "worker-src 'self' blob:",
               // unsafe-inline: حقن <style> عبر JS (injectStyles) وإسناد element.style
               "style-src 'self' 'unsafe-inline'",

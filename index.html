@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="PDF Studio — أسقط صوراً أو PDF، ثم اختر إجراءً. كل شيء على جهازك." />
+  <meta name="description" content="PDF Studio : أسقط صوراً أو PDF، ثم اختر إجراءً. كل شيء على جهازك." />
   <meta name="color-scheme" content="light dark" />
-  <title>PDF Studio — استوديو المستندات</title>
+  <title>PDF Studio : استوديو المستندات</title>
   <link rel="icon" type="image/png" sizes="192x192" href="assets/branding/app-icon-192.png" />
   <link rel="stylesheet" href="assets/css/fonts.css" />
   <link rel="stylesheet" href="assets/css/app.css" />
@@ -13,19 +13,19 @@
 
 <body>
 <!--
-  DIRECTION CONTRACT — Lumen Glow v2 (evolved Aurora 58677f4)
-  THESIS: نفس روح Aurora الأصلية — أبيض نقي / أسود نقي + جلو هادئ واحد Indigo. لا بيج، لا ورق، لا صور. زجاج خفيف blur(20px) + هالتان Indigo ضبابيتان فقط.
+  DIRECTION CONTRACT : Lumen Glow v2 (evolved Aurora 58677f4)
+  THESIS: نفس روح Aurora الأصلية : أبيض نقي / أسود نقي + جلو هادئ واحد Indigo. لا بيج، لا ورق، لا صور. زجاج خفيف blur(20px) + هالتان Indigo ضبابيتان فقط.
   TOKENS: --bg #FFFFFF / #050507, --surface-1 rgba(255,255,255,0.72/0.06), --accent #4F46E5/#6366F1, --accent-glow 0.28/0.35. Amiri / Noto Naskh Arabic / Playfair Display.
   STORY: Aurora v1 كانت قوس قزح وblur ثقيل. Lumen v2 تهدّئ: هالة واحدة، blur أخف، بطاقات 28px/20px، حركة -4px لا -8px.
   SOURCES: docs/design-aurora-legacy.md (الأصل حرفيًا) + docs/design-system-lumen.md (المطوّر).
   FIRST VIEWPORT: هالة هادئة خلف pill nav عائم؛ هيرو واحد centered بعنوان كبير + زر تصفّح وحيد؛ الأدوات تظهر كـ pills في الشريط العلوي بعد الإسقاط.
-  FORM: evolution not rejection — نفس الجلو البسيط منضج.
+  FORM: evolution not rejection : نفس الجلو البسيط منضج.
 -->
   <div class="aurora" aria-hidden="true">
     <div class="aurora__blob aurora__blob--1"></div>
     <div class="aurora__blob aurora__blob--2"></div>
   </div>
-  <div class="glass-noise" aria-hidden="true"></div>
+  
 
   <a class="skip-link" href="#work">تخطٍّ إلى مساحة العمل</a>
 
@@ -125,7 +125,7 @@
         <main class="work" id="work">
           <section id="view-start" class="view view--active" aria-labelledby="start-title" role="region">
             <div class="start">
-              <!-- Field: لا يوجد مربع — الشاشة كلها هي مكان الإسقاط -->
+              <!-- Field: لا يوجد مربع : الشاشة كلها هي مكان الإسقاط -->
               <div id="hub-drop" class="field-drop" data-kind="any" aria-label="أسقط الملفات" tabindex="0" role="button">
                 <div class="field-drop__glow" aria-hidden="true"></div>
                 <div class="field-drop__center">
@@ -141,7 +141,7 @@
               </div>
               <input id="hub-input" type="file" accept="image/*,application/pdf,.pdf,.heic,.heif" multiple hidden />
 
-              <!-- Files: has-files state — تصميم hub الجديد: ملفات + حاوية أدوات جانبية -->
+              <!-- Files: has-files state : تصميم hub الجديد: ملفات + حاوية أدوات جانبية -->
               <div id="hub-panel" class="files-panel hub-panel" hidden>
                 <div class="hub-layout">
                   <section class="hub-files" aria-labelledby="hub-mix">
@@ -163,7 +163,7 @@
                       </div>
                     </div>
                     <div id="hub-list" class="hub-files__grid" role="list"></div>
-                    <p class="hub-files__hint" id="hub-hint">اضغط زر المعاينة على البطاقة لرؤية الملف كاملاً — كليك يمين على الأداة لتثبيتها أو إخفائها.</p>
+                    <div class="hub-files__hint" id="hub-hint">اضغط زر المعاينة على البطاقة لرؤية الملف كاملاً : كليك يمين على الأداة لتثبيتها أو إخفائها.</p>
                   </section>
 
                   <aside class="hub-tools" aria-labelledby="hub-tools-title">
@@ -180,7 +180,7 @@
                     </section>
                     <div id="hub-empty-tools" class="hub-tools__empty" hidden>
                       <svg class="icon" aria-hidden="true"><use href="#icon-alert"></use></svg>
-                      <p>لا أدوات لهذا المزيج — جرّب إضافة PDF أو صور.</p>
+                      <span class="hub-tools__empty-text">لا أدوات لهذا المزيج : جرّب إضافة PDF أو صور.</span>
                     </div>
                     <details class="hub-tools__hidden" id="hub-tools-hidden-details">
                       <summary class="hub-tools__hidden-summary">
@@ -188,7 +188,7 @@
                         مخفية <span class="hub-tools__hidden-count num" id="hub-hidden-count"></span>
                       </summary>
                       <div id="hub-legend-hidden" class="hub-tools__grid" role="list" aria-label="الأدوات المخفية"></div>
-                      <p class="hub-tools__hidden-hint">اضغط على أداة مخفية لإعادتها للقائمة.</p>
+                      <div class="hub-tools__hidden-hint">اضغط على أداة مخفية لإعادتها للقائمة.</p>
                     </details>
                   </aside>
                 </div>
@@ -228,7 +228,7 @@
                   <canvas id="scan-canvas" class="scan__canvas" width="800" height="600"
                           aria-label="معاينة الصورة مع أركان المستند القابلة للسحب"
                           tabindex="0"></canvas>
-                  <p class="scan__overlay-hint" id="scan-hint">اسحب الأركان على الصورة الأصلية. التدوير والألوان تظهر فوراً.</p>
+                  <span class="scan__overlay-hint" id="scan-hint">اسحب الأركان على الصورة الأصلية. التدوير والألوان تظهر فوراً.</p>
                   <div class="scan__pager">
                     <button id="scan-prev" type="button" class="btn btn--compact">
                       <svg class="icon" aria-hidden="true"><use href="#icon-arrow"></use></svg> السابقة
@@ -409,7 +409,7 @@
               <div id="organize-drop" class="intake" data-kind="pdf">
                 <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-organize"></use></svg>
                 <span class="intake__title">أسقط ملف PDF هنا</span>
-                <span class="intake__hint">ملف واحد — تُعرض صفحاته للتعديل</span>
+                <span class="intake__hint">ملف واحد : تُعرض صفحاته للتعديل</span>
                 <button id="organize-browse" type="button" class="btn">
                   تصفّح
                 </button>
@@ -510,10 +510,10 @@
                   <div class="field">
                     <label for="compress-level">مستوى الضغط</label>
                     <select id="compress-level">
-                      <option value="light">خفيف — 150 نقطة/بوصة</option>
-                      <option value="balanced" selected>متوازن — 120 نقطة/بوصة</option>
-                      <option value="strong">قوي — 96 نقطة/بوصة</option>
-                      <option value="extreme">أقصى — 72 نقطة/بوصة</option>
+                      <option value="light">خفيف : 150 نقطة/بوصة</option>
+                      <option value="balanced" selected>متوازن : 120 نقطة/بوصة</option>
+                      <option value="strong">قوي : 96 نقطة/بوصة</option>
+                      <option value="extreme">أقصى : 72 نقطة/بوصة</option>
                     </select>
                   </div>
                   <div class="field">
@@ -557,7 +557,7 @@
                 <div class="fieldset">
                   <div class="field field--wide">
                     <label for="watermark-text">النص</label>
-                    <input id="watermark-text" type="text" value="نسخة غير مصرّح بها — سري" />
+                    <input id="watermark-text" type="text" value="نسخة غير مصرّح بها : سري" />
                   </div>
                   <div class="field">
                     <label for="watermark-position">الموضع</label>
@@ -701,10 +701,10 @@
                   <div class="field">
                     <label for="rasterize-scale">الدقة (مضاعف)</label>
                     <select id="rasterize-scale">
-                      <option value="1">×1 — عرض</option>
-                      <option value="2" selected>×2 — قياسي</option>
-                      <option value="3">×3 — طباعة</option>
-                      <option value="4">×4 — أقصى</option>
+                      <option value="1">×1 : عرض</option>
+                      <option value="2" selected>×2 : قياسي</option>
+                      <option value="3">×3 : طباعة</option>
+                      <option value="4">×4 : أقصى</option>
                     </select>
                   </div>
                   <div class="field">
@@ -758,7 +758,7 @@
               <div id="protect-drop" class="intake" data-kind="pdf">
                 <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-lock"></use></svg>
                 <span class="intake__title">أسقط ملف PDF هنا</span>
-                <span class="intake__hint">ملف واحد — محلي</span>
+                <span class="intake__hint">ملف واحد : محلي</span>
                 <button id="protect-browse" type="button" class="btn">
                   تصفّح
                 </button>
@@ -767,7 +767,7 @@
               <div id="protect-panel" hidden>
                 <div class="readout" id="protect-readout"></div>
                 <p class="note" id="protect-lock-note">إن نسيت كلمة السر فلن يمكن فتح الملف لاحقاً.</p>
-                <p class="note" id="protect-unlock-note" hidden>لا تخمين ولا كسر — كلمة السر المعروفة فقط.</p>
+                <p class="note" id="protect-unlock-note" hidden>لا تخمين ولا كسر : كلمة السر المعروفة فقط.</p>
                 <p class="note" id="protect-status-note" hidden></p>
                 <div class="fieldset" id="protect-lock-fields">
                   <div class="field">
@@ -868,7 +868,7 @@
                   </div>
                 </div>
                 <div class="readout" id="crop-readout" aria-live="polite"></div>
-                <p class="note">المحتوى خارج المربع يبقى في الملف — ليس حذفاً سرياً.</p>
+                <p class="note">المحتوى خارج المربع يبقى في الملف : ليس حذفاً سرياً.</p>
                 <div class="btn-row">
                   <button id="crop-save" type="button" class="btn btn--act">
 قص
@@ -884,7 +884,7 @@
           <section id="view-extract-images" class="view" aria-labelledby="extract-images-title" role="region" hidden>
             <div class="view__head">
               <h2 class="view__title" id="extract-images-title" tabindex="-1">صور أصلية</h2>
-              <p class="view__lede">XObject كما خُزّن — ليس رسم الصفحة.</p>
+              <p class="view__lede">XObject كما خُزّن : ليس رسم الصفحة.</p>
             </div>
             <div class="view__body">
               <div id="extract-images-drop" class="intake" data-kind="pdf">
@@ -927,7 +927,7 @@
               <div id="ocr-drop" class="intake" data-kind="pdf">
                 <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-file"></use></svg>
                 <span class="intake__title">أسقط ملف PDF هنا</span>
-                <span class="intake__hint">ملف واحد — محلي</span>
+                <span class="intake__hint">ملف واحد : محلي</span>
                 <button id="ocr-browse" type="button" class="btn">
                   تصفّح
                 </button>
@@ -938,9 +938,9 @@
                   <div class="field">
                     <label for="ocr-dpi">دقة التعرف</label>
                     <select id="ocr-dpi">
-                      <option value="150">أسرع — 150</option>
-                      <option value="200" selected>متوازن — 200</option>
-                      <option value="300">أدق — 300</option>
+                      <option value="150">أسرع : 150</option>
+                      <option value="200" selected>متوازن : 200</option>
+                      <option value="300">أدق : 300</option>
                     </select>
                   </div>
                   <div class="field">
@@ -1069,10 +1069,10 @@
         </aside>
         <div class="preview-modal__stage" id="fp-stage">
           <div class="preview-modal__zoombox" id="fp-zoombox">
-            <img id="file-preview-img" alt="" hidden />
+            <img id="file-preview-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/%3E" alt="معاينة المستند" hidden />
             <canvas id="file-preview-canvas" hidden></canvas>
           </div>
-          <p class="preview-modal__loading" id="file-preview-loading">جاري التحميل…</p>
+          <div class="preview-modal__loading" id="file-preview-loading">جاري التحميل…</p>
         </div>
       </div>
       <footer class="preview-modal__foot">

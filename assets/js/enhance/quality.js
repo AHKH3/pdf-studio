@@ -36,7 +36,7 @@ const engine = new EnhanceEngine();
  * the WASM input limit.
  */
 function aiScaleFor(side) {
-  if (side >= TARGET_LONG_SIDE) return 0;
+  if (side >= TARGET_LONG_SIDE || side > 800) return 0;
   const needed = TARGET_LONG_SIDE / side;
   if (needed >= 3.5) return 4;
   if (needed >= 2.5) return 3;
@@ -128,11 +128,15 @@ export async function upscaleToTarget(bitmap) {
 
   const scale = aiScaleFor(side);
   if (scale && bitmap.width * bitmap.height * scale * scale <= MAX_AI_OUTPUT_PIXELS) {
-    const ai = await upscaleBitmap(bitmap, scale);
-    if (ai !== bitmap) {
-      const polished = await polishBitmap(ai);
-      if (polished !== ai) ai.close();
-      return polished;
+    try {
+      const ai = await upscaleBitmap(bitmap, scale);
+      if (ai && ai !== bitmap) {
+        const polished = await polishBitmap(ai);
+        if (polished !== ai) ai.close();
+        return polished;
+      }
+    } catch (e) {
+      console.warn("quality: ai upscale error, falling back to bicubic,", e);
     }
   }
 

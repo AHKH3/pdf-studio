@@ -1,4 +1,4 @@
-import { el, qsa } from "../dom.js";
+import { el, qsa, yieldToUi } from "../dom.js";
 import { PAGE_SIZES } from "../config.js";
 import { baseName, filesKey, saveFile, saveFolder, withExtension } from "../lib/files.js";
 import { ensureDecodableImage } from "../lib/heic.js";
@@ -622,7 +622,9 @@ async function run() {
 
       for (const [order, page] of pages.entries()) {
         throwIfCancelled();
+        await yieldToUi();
         updateProgress({ percent: (order / pages.length) * 100, detail: `صفحة ${order + 1} من ${pages.length}` });
+        await yieldToUi();
         const bitmap = await renderResult(page);
         const bytes = await bitmapToBytes(bitmap, "image/jpeg", 0.9);
         const embedded = await doc.embedJpg(bytes);
@@ -641,10 +643,12 @@ async function run() {
           width: drawWidth,
           height: drawHeight
         });
+        await yieldToUi();
       }
 
       throwIfCancelled();
       updateProgress({ percent: 96, desc: "نكتب الملف.", detail: "" });
+      await yieldToUi();
       const bytes = await doc.save();
       endProgress();
       const saved = await saveFile(bytes, withExtension(el("tb-name").value, "pdf"), "pdf");
@@ -660,12 +664,15 @@ async function run() {
 
     for (const [order, page] of pages.entries()) {
       throwIfCancelled();
+      await yieldToUi();
       updateProgress({ percent: (order / pages.length) * 100, detail: `صورة ${order + 1} من ${pages.length}` });
+      await yieldToUi();
       const bitmap = await renderResult(page);
       files.push({
         name: `${baseName(el("tb-name").value || "مستند-ممسوح")}-${pad(order + 1, digits)}.${extension}`,
         data: await bitmapToBytes(bitmap, mime, 0.92)
       });
+      await yieldToUi();
     }
 
     throwIfCancelled();
