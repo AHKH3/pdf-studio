@@ -1,6 +1,6 @@
 import { el, yieldToUi } from "../dom.js";
 import { baseName, humanSize, saveFile, withExtension } from "../lib/files.js";
-import { loadWritable, textToPng } from "../pdf/core.js";
+import { lib, loadWritable, textToPng } from "../pdf/core.js";
 import { confirmDiscard, confirmReplace } from "../ui/dialog.js";
 import { endProgress, startProgress, throwIfCancelled, toast, updateProgress } from "../ui/feedback.js";
 import { wireIntake } from "../ui/intake.js";
@@ -182,6 +182,7 @@ async function run() {
     const stampWidth = stamp.width / 3;
     const stampHeight = stamp.height / 3;
     const pages = target.getPages();
+    const { degrees } = lib();
 
     for (const [index, page] of pages.entries()) {
       throwIfCancelled();
@@ -190,8 +191,34 @@ async function run() {
         updateProgress({ percent: (index / pages.length) * 100, detail: `صفحة ${index + 1} من ${pages.length}` });
       }
       const { width, height } = page.getSize();
-      for (const spot of placements(config, width, height, stampWidth, stampHeight)) {
-        page.drawImage(stamp, { x: spot.x, y: spot.y, width: stampWidth, height: stampHeight });
+      const angle = ((page.getRotation().angle % 360) + 360) % 360;
+      const isSideways = angle === 90 || angle === 270;
+      const visualW = isSideways ? height : width;
+      const visualH = isSideways ? width : height;
+      for (const spot of placements(config, visualW, visualH, stampWidth, stampHeight)) {
+        let px = spot.x;
+        let py = spot.y;
+        let rot = 0;
+        if (angle === 90) {
+          px = width - spot.y;
+          py = spot.x;
+          rot = 90;
+        } else if (angle === 180) {
+          px = width - spot.x;
+          py = height - spot.y;
+          rot = 180;
+        } else if (angle === 270) {
+          px = spot.y;
+          py = height - spot.x;
+          rot = 270;
+        }
+        page.drawImage(stamp, {
+          x: px,
+          y: py,
+          width: stampWidth,
+          height: stampHeight,
+          rotate: rot && degrees ? degrees(rot) : undefined
+        });
       }
     }
 

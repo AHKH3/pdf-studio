@@ -4,7 +4,7 @@ const EM = 1000;
 const GLYPH_W = 500;
 const MIN_CONFIDENCE = 40;
 const MIN_BOX = 2;
-const MAX_GLYPHS = 255;
+const FONT_CHUNK_SIZE = 255;
 
 function asBox(box) {
   if (!box) return null;
@@ -60,7 +60,6 @@ function uniqueChars(words) {
       if (seen.has(ch)) continue;
       seen.add(ch);
       chars.push(ch);
-      if (chars.length >= MAX_GLYPHS) return chars;
     }
   }
   return chars;
@@ -173,14 +172,42 @@ export function drawInvisibleWords(pdfDoc, page, viewport, words) {
   if (!chars.length) return 0;
 
   const P = lib();
-  const font = embedType3(pdfDoc, chars);
+  const charMap = new Map();
+  const fonts = [];
+
+  for (let i = 0; i < chars.length; i += FONT_CHUNK_SIZE) {
+    const chunk = chars.slice(i, i + FONT_CHUNK_SIZE);
+    const font = embedType3(pdfDoc, chunk);
+    const fontIndex = fonts.length;
+    fonts.push(font);
+    chunk.forEach((ch, idx) => {
+      const code = idx + 1;
+      charMap.set(ch, {
+        fontIndex,
+        hex: code.toString(16).padStart(2, "0")
+      });
+    });
+  }
+
   page.node.normalize();
-  const fontName = page.node.newFontDictionary("Ocr", font.ref);
+  const fontNames = fonts.map((font, idx) => page.node.newFontDictionary(`Ocr${idx}`, font.ref));
 
   let drawn = 0;
   for (const word of words) {
-    const hex = font.encode(word.text);
-    const glyphs = hex.length / 2;
+    const runs = [];
+    let currentRun = null;
+    for (const ch of word.text) {
+      const item = charMap.get(ch);
+      if (!item) continue;
+      if (!currentRun || currentRun.fontIndex !== item.fontIndex) {
+        currentRun = { fontIndex: item.fontIndex, hex: item.hex };
+        runs.push(currentRun);
+      } else {
+        currentRun.hex += item.hex;
+      }
+    }
+    if (!runs.length) continue;
+    const glyphs = runs.reduce((sum, r) => sum + r.hex.length / 2, 0);
     if (!glyphs) continue;
 
     const bl = pdfPoint(viewport, word.bbox.x0, word.bbox.y1);
@@ -201,16 +228,21 @@ export function drawInvisibleWords(pdfDoc, page, viewport, words) {
     const sx = (2 * wLen) / glyphs;
     const sy = hLen;
 
-    page.pushOperators(
+    const ops = [
       P.pushGraphicsState(),
       P.beginText(),
       P.setTextRenderingMode(P.TextRenderingMode.Invisible),
-      P.setFontAndSize(fontName, 1),
-      P.setTextMatrix(ux * sx, uy * sx, vx * sy, vy * sy, bl.x, bl.y),
-      P.showText(P.PDFHexString.of(hex)),
-      P.endText(),
-      P.popGraphicsState()
-    );
+      P.setTextMatrix(ux * sx, uy * sx, vx * sy, vy * sy, bl.x, bl.y)
+    ];
+    for (const run of runs) {
+      ops.push(
+        P.setFontAndSize(fontNames[run.fontIndex], 1),
+        P.showText(P.PDFHexString.of(run.hex))
+      );
+    }
+    ops.push(P.endText(), P.popGraphicsState());
+
+    page.pushOperators(...ops);
     drawn += 1;
   }
   return drawn;

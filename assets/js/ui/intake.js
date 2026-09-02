@@ -1,7 +1,7 @@
 import { el } from "../dom.js";
 import { isHeicFile, isImageFile, isPdfFile } from "../lib/files.js";
 import { ensureDecodableImages } from "../lib/heic.js";
-import { toast } from "./feedback.js";
+import { endProgress, toast } from "./feedback.js";
 
 const FILTERS = {
   pdf: isPdfFile,
@@ -40,12 +40,20 @@ export function wireIntake(config) {
 
   const handle = async (fileList) => {
     const all = Array.from(fileList || []);
+    if (!all.length) return;
     const good = all.filter(accept);
     if (good.length < all.length) {
       const skipped = all.length - good.length;
-      toast(skipped > 1 ? `${REJECTION[config.accept]} (${skipped})` : REJECTION[config.accept], "info");
+      if (good.length === 0) {
+        toast(REJECTION[config.accept] || "نوع الملف غير مدعوم.", "error");
+      } else {
+        toast(skipped > 1 ? `${REJECTION[config.accept]} (${skipped})` : REJECTION[config.accept], "info");
+      }
     }
-    if (!good.length) return;
+    if (!good.length) {
+      endProgress();
+      return;
+    }
 
     // فك HEIC/HEIF قبل التسليم — إن فشل، أظهر رسالة واضحة
     let decodable = good;

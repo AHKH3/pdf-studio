@@ -1,5 +1,4 @@
 @echo off
 chcp 65001 >nul
-echo جاري تشغيل PDF Studio ...
-npm start
-pause
+cd /d "%~dp0"
+start "" npx electron .

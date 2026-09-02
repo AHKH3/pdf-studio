@@ -218,14 +218,25 @@ export class PageThumbnails {
   evict() {
     while (this.cache.size > THUMB_CACHE_LIMIT) {
       const oldest = this.cache.keys().next().value;
-      URL.revokeObjectURL(this.cache.get(oldest));
+      const url = this.cache.get(oldest);
       this.cache.delete(oldest);
+      if (url) {
+        setTimeout(() => {
+          try {
+            URL.revokeObjectURL(url);
+          } catch {}
+        }, 30000);
+      }
     }
   }
 
   async dispose() {
     this.disposed = true;
-    for (const url of this.cache.values()) URL.revokeObjectURL(url);
+    for (const url of this.cache.values()) {
+      try {
+        URL.revokeObjectURL(url);
+      } catch {}
+    }
     this.cache.clear();
     this.pending.clear();
     if (this.docPromise) {

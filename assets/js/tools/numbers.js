@@ -164,15 +164,16 @@ async function run() {
   if (!doc) return;
   if (!(await confirmLarge(doc.pages, "ترقيم الصفحات"))) return;
   const config = settings();
-  const { StandardFonts } = lib();
+  const { StandardFonts, degrees } = lib();
   const arabic = config.template === "page";
+  const isNonWinAnsi = (text) => /[^\u0020-\u007E]/.test(text);
 
   setState("busy");
   startProgress({ title: "ترقيم الصفحات", desc: arabic ? "نرسم رقماً عربياً على كل صفحة." : "نكتب الأرقام داخل الملف." });
   try {
     const target = await loadWritable(doc.bytes);
     const pages = target.getPages();
-    const font = arabic ? null : await target.embedFont(StandardFonts.Helvetica);
+    let font = null;
     const color = hexToRgb(config.color);
     const total = pages.length;
     const build = TEMPLATES[config.template] ?? TEMPLATES.plain;
@@ -186,18 +187,69 @@ async function run() {
 
       const label = build(config.start + index - (config.skipFirst ? 1 : 0), total);
       const { width, height } = page.getSize();
+      const angle = ((page.getRotation().angle % 360) + 360) % 360;
+      const isSideways = angle === 90 || angle === 270;
+      const visualW = isSideways ? height : width;
+      const visualH = isSideways ? width : height;
 
-      if (arabic) {
+      const needsImage = arabic || isNonWinAnsi(label);
+      if (needsImage) {
         const png = await textToPng(label, { size: config.size, color: config.color, angle: 0, opacity: 1 });
         const image = await target.embedPng(png);
         const stampWidth = image.width / 3;
         const stampHeight = image.height / 3;
-        const spot = place(config, index, width, height, stampWidth, stampHeight);
-        page.drawImage(image, { x: spot.x, y: spot.y, width: stampWidth, height: stampHeight });
+        const spot = place(config, index, visualW, visualH, stampWidth, stampHeight);
+        let px = spot.x;
+        let py = spot.y;
+        let rot = 0;
+        if (angle === 90) {
+          px = width - spot.y;
+          py = spot.x;
+          rot = 90;
+        } else if (angle === 180) {
+          px = width - spot.x;
+          py = height - spot.y;
+          rot = 180;
+        } else if (angle === 270) {
+          px = spot.y;
+          py = height - spot.x;
+          rot = 270;
+        }
+        page.drawImage(image, {
+          x: px,
+          y: py,
+          width: stampWidth,
+          height: stampHeight,
+          rotate: rot && degrees ? degrees(rot) : undefined
+        });
       } else {
+        if (!font) font = await target.embedFont(StandardFonts.Helvetica);
         const textWidth = font.widthOfTextAtSize(label, config.size);
-        const spot = place(config, index, width, height, textWidth, config.size);
-        page.drawText(label, { x: spot.x, y: spot.y, size: config.size, font, color });
+        const spot = place(config, index, visualW, visualH, textWidth, config.size);
+        let px = spot.x;
+        let py = spot.y;
+        let rot = 0;
+        if (angle === 90) {
+          px = width - spot.y;
+          py = spot.x;
+          rot = 90;
+        } else if (angle === 180) {
+          px = width - spot.x;
+          py = height - spot.y;
+          rot = 180;
+        } else if (angle === 270) {
+          px = spot.y;
+          py = height - spot.x;
+          rot = 270;
+        }
+        page.drawText(label, {
+          x: px,
+          y: py,
+          size: config.size,
+          font,
+          color,
+          rotate: rot && degrees ? degrees(rot) : undefined
+        });
       }
       printed += 1;
     }

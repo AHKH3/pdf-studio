@@ -32,9 +32,9 @@ The user interface is entirely client-side, RTL Arabic-first, and falls back gra
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| 1 | TestSprite MCP Generation & Execution | Run TestSprite MCP tools (code summary, standardized PRD, frontend test plan, test execution) across all accessible PDF tools. Record diagnostic reports. | None | IN_PROGRESS |
-| 2 | Engine & Tool Defect Remediation | Fix rotation coordinates in Watermark & Numbers, Arabic/Unicode font fallback in Numbers, folder export collision handling in IPC, OCR multi-font capacity, thumbnail URL safety. Strictly preserve protected edit files. | M1 | PLANNED |
-| 3 | Verification, Regression Hardening & Audit | Expand test harness (`npm test`), verify 100% pass across all test runners, conduct independent review, adversarial challenger tests, and forensic integrity audit. | M2 | PLANNED |
+| 1 | TestSprite MCP Generation & Execution | Run TestSprite MCP tools (code summary, standardized PRD, frontend test plan, test execution) across all accessible PDF tools. Record diagnostic reports. | None | DONE |
+| 2 | Engine & Tool Defect Remediation | Fix rotation coordinates in Watermark & Numbers, Arabic/Unicode font fallback in Numbers, folder export collision handling in IPC, OCR multi-font capacity, thumbnail URL safety, and Hub unsupported file handling. Strictly preserve protected edit files. | M1 | DONE |
+| 3 | Verification, Regression Hardening & Audit | Expand test harness (`npm test`), verify 100% pass across all test runners, conduct independent review, adversarial challenger tests, and forensic integrity audit. | M2 | IN_PROGRESS |
 
 ## Interface Contracts
 ### PDF Engine Coordinate Translation (`assets/js/pdf/core.js`, `watermark.js`, `numbers.js`)

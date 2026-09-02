@@ -21,3 +21,16 @@ Standard commands live in `package.json` scripts (`start`, `pack`, `dist:*`, `ve
 - Vendored libraries: `assets/vendor/*.js` are **not** committed (git-ignored). They are copied from `node_modules` by `scripts/copy-vendor.cjs`, which runs automatically on `npm install` (postinstall) and can be re-run manually with `npm run vendor`. If you change/reinstall the `pdf-lib`/`pdfjs-dist`/`sortablejs` dependencies, re-run `npm run vendor` so the app picks up the new files (the running Electron window has no hot reload — reload the window or restart `npm start`).
 - File I/O uses native GTK dialogs: importing files opens an open-dialog, and exporting a PDF triggers a browser download that opens a native "Save As" dialog. In the GTK file chooser, press `Ctrl+L` to type a path directly.
 - Exports have no in-app success toast by default; confirm success by checking the saved file on disk (a valid `%PDF` file with the expected embedded image/page objects).
+
+## Antigravity / Windows specific instructions
+
+> **CRITICAL — READ BEFORE DEBUGGING "window not showing":**
+> On Windows, Antigravity runs commands in a **background session** that is separate from the user's interactive desktop. Any Electron (GUI) window launched from Antigravity's terminal **will not appear on the user's screen**. This is an OS-level session isolation — NOT a code bug. Electron will report `isVisible: true` and `ready-to-show` will fire, but the window physically cannot render on the user's display.
+
+- **DO NOT** attempt to "fix" window visibility by changing `show`, `titleBarStyle`, `titleBarOverlay`, GPU flags, or any other `BrowserWindow` options when the only evidence is that the user "can't see the window" after running from Antigravity's terminal.
+- **Testing the app**: Tell the user to run `npm start` from **their own PowerShell/CMD terminal** (not Antigravity's). The app works correctly when launched from the user's session.
+- **Launching the app from Antigravity**: Use `explorer.exe "C:\Users\abdel\dev\pdf-studio\start.bat"` — this delegates the launch to `explorer.exe` which always runs in the user's interactive desktop session. The window will appear on the user's screen. You will NOT get stdout/stderr back (use `node scripts/check-syntax.mjs` or `npm test` for verification instead).
+- **Verifying code changes**: Use `node scripts/check-syntax.mjs` (runs without a display). For renderer-level checks, use `node scripts/test-launch.mjs` or the test suite via `npm test`. These verify parsing, imports, DOM IDs, and boot without requiring a visible window.
+- **Benign Electron logs**: The CSP warning (`Insecure Content-Security-Policy`) only appears in dev mode and disappears once packaged. GPU warnings (`Exiting GPU process`) are normal in headless/background sessions.
+- **Custom titlebar**: The app uses `titleBarStyle: "hidden"` with `titleBarOverlay` on Windows to provide a custom header with the app's own minimize/maximize/close buttons (defined in `index.html`). **Do not remove these settings** — they are intentional.
+

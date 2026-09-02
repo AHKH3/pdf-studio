@@ -1,5 +1,5 @@
 "use strict";
-const { app, BrowserWindow, shell, nativeImage, ipcMain, dialog, Menu } = require("electron");
+const { app, BrowserWindow, shell, nativeImage, ipcMain, dialog, Menu, screen } = require("electron");
 let autoUpdater = null;
 try {
   ({ autoUpdater } = require("electron-updater"));
@@ -202,8 +202,19 @@ function registerIpc() {
 
     const target = path.join(filePaths[0], sanitiseSegment(request?.suggestedName));
     await fsp.mkdir(target, { recursive: true });
+    const usedNames = new Set();
     for (const file of files) {
-      await fsp.writeFile(path.join(target, sanitiseSegment(file.name)), Buffer.from(file.data));
+      const rawName = sanitiseSegment(file.name);
+      const ext = path.extname(rawName);
+      const base = ext ? path.basename(rawName, ext) : rawName;
+      let finalName = rawName;
+      let count = 1;
+      while (usedNames.has(finalName)) {
+        finalName = `${base} (${count})${ext}`;
+        count++;
+      }
+      usedNames.add(finalName);
+      await fsp.writeFile(path.join(target, finalName), Buffer.from(file.data));
     }
     return { saved: true, name: path.basename(target), count: files.length };
   });
@@ -438,15 +449,25 @@ function revealWindow(win) {
 async function createWindow() {
   const serverReady = ensureServer();
 
+  // حساب حجم النافذة بناءً على مساحة العمل الفعلية للشاشة
+  const primary = screen.getPrimaryDisplay();
+  const wa = primary.workArea;
+  const targetW = 1320;
+  const targetH = 880;
+  const winW = Math.min(targetW, wa.width - 20);
+  const winH = Math.min(targetH, wa.height - 20);
+  bootLog(`display ${wa.width}×${wa.height} scale=${primary.scaleFactor} → window ${winW}×${winH}`);
+
   const iconPath = path.join(ROOT, "assets", "branding", "app-icon-512.png");
   const winOpts = {
-    width: 1320,
-    height: 880,
-    minWidth: 940,
-    minHeight: 640,
-    show: true,
+    width: winW,
+    height: winH,
+    minWidth: Math.min(940, wa.width),
+    minHeight: Math.min(640, wa.height),
+    show: false,
     backgroundColor: "#FFFFFF",
     autoHideMenuBar: true,
+    titleBarStyle: "hidden",
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
@@ -457,6 +478,13 @@ async function createWindow() {
       backgroundThrottling: false
     }
   };
+  if (process.platform === "win32") {
+    winOpts.titleBarOverlay = {
+      color: "#FFFFFF",
+      symbolColor: "#475569",
+      height: 40
+    };
+  }
   if (fs.existsSync(iconPath)) {
     const icon = nativeImage.createFromPath(iconPath);
     if (!icon.isEmpty()) winOpts.icon = icon;
@@ -466,18 +494,33 @@ async function createWindow() {
   attachCloseGuard(mainWindow);
   mainWindow.center();
 
-  // احتياط: إذا لم يطلق ready-to-show خلال 3 ثوانٍ (خطأ CSP/JS)، أظهر النافذة قسراً حتى لا يبدو التطبيق متوقفاً
-  const showFallback = setTimeout(() => {
-    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
-      console.warn("ready-to-show لم يطلق — إظهار قسري للنافذة");
-      revealWindow(mainWindow);
-    }
-  }, 3500);
-  mainWindow.once("ready-to-show", () => {
-    clearTimeout(showFallback);
-    bootLog("ready-to-show");
+  // ضمان ظهور النافذة: 3 محاولات مختلفة
+  let windowRevealed = false;
+  function ensureVisible() {
+    if (windowRevealed || !mainWindow || mainWindow.isDestroyed()) return;
+    windowRevealed = true;
     revealWindow(mainWindow);
+    // تسجيل الحالة بعد الإظهار
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      const b = mainWindow.getBounds();
+      bootLog(`visible=${mainWindow.isVisible()} bounds=${b.x},${b.y} ${b.width}×${b.height}`);
+    }
+  }
+
+  // المحاولة 1: عند ready-to-show (المثالي)
+  mainWindow.once("ready-to-show", () => {
+    bootLog("ready-to-show");
+    ensureVisible();
   });
+
+  // المحاولة 2: بعد 2 ثانية إذا لم يطلق ready-to-show
+  const showFallback = setTimeout(() => {
+    if (!windowRevealed) {
+      console.warn("[boot] ready-to-show لم يطلق — إظهار قسري");
+      ensureVisible();
+    }
+  }, 2000);
+
   mainWindow.webContents.on("console-message", (_e, level, message, line, sourceId) => {
     if (level >= 2 || !app.isPackaged) {
       console.log(`[renderer:${level}] ${message} (${sourceId || ""}:${line})`);
@@ -504,9 +547,10 @@ async function createWindow() {
 
   await mainWindow.loadURL(`${origin}/index.html`);
   bootLog("loadURL");
-  if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
-    revealWindow(mainWindow);
-  }
+  clearTimeout(showFallback);
+
+  // المحاولة 3: بعد loadURL مباشرة
+  ensureVisible();
 
   mainWindow.on("closed", () => {
     mainWindow = null;
