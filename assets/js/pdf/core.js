@@ -112,6 +112,38 @@ export async function renderPageToBlob(page, scale, mime = "image/png", quality)
 }
 
 /**
+ * Render a single page from PDF bytes to a canvas with scale and rotation.
+ * @param {Uint8Array} bytes
+ * @param {number} pageIndex 0-based
+ * @param {{ scale?: number; rotation?: number }} [options]
+ */
+export async function renderPdfPage(bytes, pageIndex, options = {}) {
+  const doc = await openDocument(bytes);
+  try {
+    const page = await doc.getPage(pageIndex + 1);
+    const scale = options.scale || 1;
+    const rotation = options.rotation || 0;
+    const viewport = page.getViewport({ scale, rotation });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.ceil(viewport.width));
+    canvas.height = Math.max(1, Math.ceil(viewport.height));
+    const ctx = pdfRenderContext(canvas);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    page.cleanup();
+    return {
+      canvas,
+      width: viewport.width,
+      height: viewport.height
+    };
+  } finally {
+    await doc.destroy();
+  }
+}
+
+
+/**
  * @param {any} page
  * @param {number} dpi
  * @param {boolean} grayscale

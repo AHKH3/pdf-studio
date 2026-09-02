@@ -3,7 +3,7 @@
  * Rotation is stored as clockwise degrees (matches CSS `rotate()`).
  */
 
-export const MIN_PT = 16;
+export const MIN_PT = 14;
 
 /** @param {number} angle */
 export function normAngle(angle) {
@@ -80,6 +80,23 @@ export function worldToLocal(obj, vx, vy) {
 }
 
 /**
+ * Check if a point (vx, vy) is inside the object box, accounting for rotation.
+ * @param {{ x: number; y: number; width: number; height: number; rotation?: number }} obj
+ * @param {number} vx
+ * @param {number} vy
+ * @param {number} pad
+ */
+export function pointInsideObject(obj, vx, vy, pad = 0) {
+  const local = worldToLocal(obj, vx, vy);
+  return (
+    local.x >= -pad &&
+    local.x <= obj.width + pad &&
+    local.y >= -pad &&
+    local.y <= obj.height + pad
+  );
+}
+
+/**
  * @param {Array<{ x: number; y: number }>} points
  * @param {number} pad
  */
@@ -104,6 +121,31 @@ export function bboxFromPoints(points, pad = 4) {
 }
 
 /**
+ * Combined bounding box of multiple objects.
+ * @param {Array<{ x: number; y: number; width: number; height: number; rotation?: number }>} objects
+ */
+export function combinedBoundingBox(objects) {
+  if (!objects.length) return null;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const obj of objects) {
+    const aabb = rotatedAabb(obj.x, obj.y, obj.width, obj.height, obj.rotation || 0);
+    if (aabb.x < minX) minX = aabb.x;
+    if (aabb.y < minY) minY = aabb.y;
+    if (aabb.x + aabb.width > maxX) maxX = aabb.x + aabb.width;
+    if (aabb.y + aabb.height > maxY) maxY = aabb.y + aabb.height;
+  }
+  return {
+    x: minX,
+    y: minY,
+    width: Math.max(0, maxX - minX),
+    height: Math.max(0, maxY - minY)
+  };
+}
+
+/**
  * @param {{ x: number; y: number; width: number; height: number }} box
  * @param {number} pageW
  * @param {number} pageH
@@ -117,8 +159,7 @@ export function clampBox(box, pageW, pageH) {
 }
 
 /**
- * Translate a box, then clamp. The returned dx/dy are what actually applied
- * after clamping — use those on ink points so the stroke stays glued to the box.
+ * Translate a box, then clamp.
  *
  * @param {{ x: number; y: number; width: number; height: number }} box
  * @param {number} dx
@@ -138,8 +179,110 @@ export function clampedMove(box, dx, dy, pageW, pageH) {
 }
 
 /**
+ * Smart Snapping against page guidelines and other objects.
+ * @param {{ x: number; y: number; width: number; height: number }} box
+ * @param {number} pageW
+ * @param {number} pageH
+ * @param {Array<{ x: number; y: number; width: number; height: number; id: string }>} otherObjects
+ * @param {number} threshold
+ */
+export function snapBox(box, pageW, pageH, otherObjects = [], threshold = 5) {
+  let targetX = box.x;
+  let targetY = box.y;
+  const cx = box.x + box.width / 2;
+  const cy = box.y + box.height / 2;
+  const right = box.x + box.width;
+  const top = box.y + box.height;
+
+  const activeGuides = [];
+
+  // Vertical guides (X-axis)
+  const verticalTargets = [
+    { pos: pageW / 2, type: "center", label: "وسط الصفحة" },
+    { pos: 24, type: "margin", label: "هامش الصفحة" },
+    { pos: pageW - 24, type: "margin", label: "هامش الصفحة" }
+  ];
+
+  // Horizontal guides (Y-axis)
+  const horizontalTargets = [
+    { pos: pageH / 2, type: "center", label: "وسط الصفحة" },
+    { pos: 24, type: "margin", label: "هامش الصفحة" },
+    { pos: pageH - 24, type: "margin", label: "هامش الصفحة" }
+  ];
+
+  for (const obj of otherObjects) {
+    verticalTargets.push({ pos: obj.x, type: "edge" });
+    verticalTargets.push({ pos: obj.x + obj.width / 2, type: "center" });
+    verticalTargets.push({ pos: obj.x + obj.width, type: "edge" });
+
+    horizontalTargets.push({ pos: obj.y, type: "edge" });
+    horizontalTargets.push({ pos: obj.y + obj.height / 2, type: "center" });
+    horizontalTargets.push({ pos: obj.y + obj.height, type: "edge" });
+  }
+
+  // Snap X
+  let snappedX = false;
+  for (const guide of verticalTargets) {
+    if (Math.abs(cx - guide.pos) < threshold) {
+      targetX = guide.pos - box.width / 2;
+      activeGuides.push({ orientation: "v", pos: guide.pos });
+      snappedX = true;
+      break;
+    }
+    if (Math.abs(box.x - guide.pos) < threshold) {
+      targetX = guide.pos;
+      activeGuides.push({ orientation: "v", pos: guide.pos });
+      snappedX = true;
+      break;
+    }
+    if (Math.abs(right - guide.pos) < threshold) {
+      targetX = guide.pos - box.width;
+      activeGuides.push({ orientation: "v", pos: guide.pos });
+      snappedX = true;
+      break;
+    }
+  }
+
+  // Snap Y
+  for (const guide of horizontalTargets) {
+    if (Math.abs(cy - guide.pos) < threshold) {
+      targetY = guide.pos - box.height / 2;
+      activeGuides.push({ orientation: "h", pos: guide.pos });
+      break;
+    }
+    if (Math.abs(box.y - guide.pos) < threshold) {
+      targetY = guide.pos;
+      activeGuides.push({ orientation: "h", pos: guide.pos });
+      break;
+    }
+    if (Math.abs(top - guide.pos) < threshold) {
+      targetY = guide.pos - box.height;
+      activeGuides.push({ orientation: "h", pos: guide.pos });
+      break;
+    }
+  }
+
+  return {
+    x: targetX,
+    y: targetY,
+    guides: activeGuides
+  };
+}
+
+/**
+ * Calculate distance from point (px, py) to line segment (x1, y1)-(x2, y2).
+ */
+export function distToSegment(px, py, x1, y1, x2, y2) {
+  const l2 = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+  if (l2 === 0) return Math.hypot(px - x1, py - y1);
+  let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px - (x1 + t * (x2 - x1)), py - (y1 + t * (y2 - y1)));
+}
+
+/**
  * World-space points with the object's CSS-clockwise rotation applied around
- * the box centre. Preview uses CSS `rotate()`; flatten must rotate the points.
+ * the box centre.
  *
  * @param {{ x: number; y: number; width: number; height: number; rotation?: number }} obj
  * @param {Array<{ x: number; y: number }>} [points]
@@ -166,8 +309,7 @@ export function visualPointToMedia(angle, mediaW, mediaH, vx, vy) {
 }
 
 /**
- * Map a visual-space rectangle into pdf-lib media-box space, plus how many
- * CCW quarter-turns a visual-upright bitmap needs so /Rotate displays it upright.
+ * Map a visual-space rectangle into pdf-lib media-box space.
  *
  * @param {number} angle
  * @param {number} mediaW

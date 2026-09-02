@@ -45,7 +45,7 @@ group("shell — dirty-tool contract");
   const files = walk(path.join(root, "assets", "js", "tools"));
   for (const file of files) {
     const src = fs.readFileSync(file, "utf8");
-    if (!/\bisDirty\s*:/.test(src)) continue;
+    if (!/\bisDirty\s*[:,\(]/.test(src)) continue;
     const rel = path.relative(root, file);
     DIRTY_TOOLS.push(rel);
   }

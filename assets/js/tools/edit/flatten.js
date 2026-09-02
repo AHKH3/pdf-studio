@@ -1,7 +1,7 @@
 import { hexToRgb, lib } from "../../pdf/core.js";
 import { throwIfCancelled, updateProgress } from "../../ui/feedback.js";
 import { orientedPoints, rotatePoint, rotatedAabb, visualPointToMedia, visualRectToMedia } from "./coords.js";
-import { bakeRotatedPng, pngToCanvas, renderTextBoxPng, rotatePngQuarter } from "./text-png.js";
+import { bakeRotatedPng, pngToCanvas, renderStampPng, renderTextBoxPng, rotatePngQuarter } from "./text-png.js";
 
 function objectCorners(obj) {
   const { x, y, width, height, rotation = 0 } = obj;
@@ -50,7 +50,8 @@ function alongLocal(obj, dx, dy) {
 
 /**
  * Draw every overlay object onto the page content stream (flatten).
- * Text and images become PNGs. Shapes and ink are vectors.
+ * Text and stamps become 300 DPI PNGs for perfect Arabic rendering.
+ * Shapes, lines, arrows, whiteouts, highlighters and ink are native vectors.
  *
  * @param {Uint8Array} bytes
  * @param {Array<any>} objects
@@ -76,14 +77,15 @@ export async function flattenObjects(bytes, objects) {
     return pack[ccw];
   }
 
-  async function stampPng(page, pageAngle, mediaW, mediaH, png, visual) {
+  async function stampPng(page, pageAngle, mediaW, mediaH, png, visual, opacity = 1) {
     const placed = visualRectToMedia(pageAngle, mediaW, mediaH, visual);
     const image = await imageFor(png, placed.ccw);
     page.drawImage(image, {
       x: placed.x,
       y: placed.y,
       width: placed.width,
-      height: placed.height
+      height: placed.height,
+      opacity: opacity < 1 ? Math.max(0.05, opacity) : 1
     });
   }
 
@@ -101,11 +103,36 @@ export async function flattenObjects(bytes, objects) {
         width: obj.width,
         height: obj.height,
         fontSize: obj.fontSize || 18,
+        fontFamily: obj.fontFamily || "naskh",
         color: obj.color || "#1E3A8A",
         bold: Boolean(obj.bold),
         italic: Boolean(obj.italic),
         underline: Boolean(obj.underline),
-        align: obj.align || "right"
+        strike: Boolean(obj.strike),
+        align: obj.align || "right",
+        bgOn: Boolean(obj.bgOn),
+        bgColor: obj.bgColor || "#FFFFFF",
+        borderWidth: obj.borderWidth || 0,
+        borderColor: obj.borderColor || "#1E3A8A",
+        opacity: obj.opacity != null ? obj.opacity : 1
+      }, 3.5); // 300+ DPI scaling
+      let png = painted.bytes;
+      let box = { x: obj.x, y: obj.y, width: obj.width, height: obj.height };
+      if (obj.rotation) {
+        const aabb = rotatedAabb(obj.x, obj.y, obj.width, obj.height, obj.rotation);
+        const baked = await bakeRotatedPng(painted.canvas, box, obj.rotation, aabb);
+        png = baked.bytes;
+        box = aabb;
+      }
+      await stampPng(page, pageAngle, mediaW, mediaH, png, box, obj.opacity);
+    } else if (obj.type === "stamp") {
+      const painted = await renderStampPng({
+        label: obj.label || "معتمد",
+        sub: obj.sub || "",
+        color: obj.color || "#DC2626",
+        shape: obj.shape || "rect",
+        width: obj.width,
+        height: obj.height
       });
       let png = painted.bytes;
       let box = { x: obj.x, y: obj.y, width: obj.width, height: obj.height };
@@ -115,7 +142,7 @@ export async function flattenObjects(bytes, objects) {
         png = baked.bytes;
         box = aabb;
       }
-      await stampPng(page, pageAngle, mediaW, mediaH, png, box);
+      await stampPng(page, pageAngle, mediaW, mediaH, png, box, obj.opacity);
     } else if (obj.type === "image" && obj.png) {
       let png = obj.png;
       let box = { x: obj.x, y: obj.y, width: obj.width, height: obj.height };
@@ -126,11 +153,32 @@ export async function flattenObjects(bytes, objects) {
         png = baked.bytes;
         box = aabb;
       }
-      await stampPng(page, pageAngle, mediaW, mediaH, png, box);
+      await stampPng(page, pageAngle, mediaW, mediaH, png, box, obj.opacity);
+    } else if (obj.type === "whiteout") {
+      // Solid Whiteout vector rectangle
+      const pts = objectCorners(obj);
+      page.drawSvgPath(svgPath(mapPoints(pageAngle, mediaW, mediaH, pts), true), {
+        x: 0,
+        y: 0,
+        color: hexToRgb(obj.color || "#FFFFFF"),
+        borderColor: obj.stroke ? hexToRgb(obj.stroke) : undefined,
+        borderWidth: obj.stroke ? 0.5 : 0
+      });
+    } else if (obj.type === "highlight") {
+      // Semi-transparent Highlighter vector rectangle
+      const pts = objectCorners(obj);
+      const color = hexToRgb(obj.color || "#FDE047");
+      page.drawSvgPath(svgPath(mapPoints(pageAngle, mediaW, mediaH, pts), true), {
+        x: 0,
+        y: 0,
+        color,
+        opacity: Math.max(0.1, obj.opacity || 0.35)
+      });
     } else if (obj.type === "shape") {
       const fill = obj.fillOn === false ? undefined : hexToRgb(obj.fill || "#8AA4E0");
       const stroke = hexToRgb(obj.stroke || "#1E3A8A");
       const borderWidth = Math.max(0, finiteNumber(obj.strokeWidth, 1.5));
+      const opacity = obj.opacity != null ? obj.opacity : 1;
 
       if (obj.kind === "ellipse") {
         const c = alongLocal(obj, 0, 0);
@@ -150,8 +198,63 @@ export async function flattenObjects(bytes, objects) {
           rotate: pdf.degrees(ccw),
           color: fill,
           borderColor: stroke,
-          borderWidth
+          borderWidth,
+          opacity: opacity < 1 ? opacity : undefined,
+          borderOpacity: opacity < 1 ? opacity : undefined
         });
+      } else if (obj.kind === "line" || obj.kind === "arrow" || obj.kind === "double-arrow") {
+        const p1 = alongLocal(obj, -obj.width / 2, 0);
+        const p2 = alongLocal(obj, obj.width / 2, 0);
+        const mp1 = visualPointToMedia(pageAngle, mediaW, mediaH, p1.x, p1.y);
+        const mp2 = visualPointToMedia(pageAngle, mediaW, mediaH, p2.x, p2.y);
+        page.drawLine({
+          start: mp1,
+          end: mp2,
+          color: stroke,
+          thickness: borderWidth || 2,
+          lineCap: roundCap
+        });
+
+        // Arrow head(s)
+        if (obj.kind === "arrow" || obj.kind === "double-arrow") {
+          const headLen = Math.max(6, (borderWidth || 2) * 4);
+          const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+          const ah1 = {
+            x: p2.x - headLen * Math.cos(angle - Math.PI / 6),
+            y: p2.y - headLen * Math.sin(angle - Math.PI / 6)
+          };
+          const ah2 = {
+            x: p2.x - headLen * Math.cos(angle + Math.PI / 6),
+            y: p2.y - headLen * Math.sin(angle + Math.PI / 6)
+          };
+          const arrowPts = mapPoints(pageAngle, mediaW, mediaH, [p2, ah1, ah2]);
+          page.drawSvgPath(svgPath(arrowPts, true), {
+            x: 0,
+            y: 0,
+            color: stroke,
+            borderColor: stroke,
+            borderWidth: 0.5
+          });
+
+          if (obj.kind === "double-arrow") {
+            const bah1 = {
+              x: p1.x + headLen * Math.cos(angle - Math.PI / 6),
+              y: p1.y + headLen * Math.sin(angle - Math.PI / 6)
+            };
+            const bah2 = {
+              x: p1.x + headLen * Math.cos(angle + Math.PI / 6),
+              y: p1.y + headLen * Math.sin(angle + Math.PI / 6)
+            };
+            const bArrowPts = mapPoints(pageAngle, mediaW, mediaH, [p1, bah1, bah2]);
+            page.drawSvgPath(svgPath(bArrowPts, true), {
+              x: 0,
+              y: 0,
+              color: stroke,
+              borderColor: stroke,
+              borderWidth: 0.5
+            });
+          }
+        }
       } else {
         const pts = obj.kind === "triangle" ? trianglePoints(obj) : objectCorners(obj);
         page.drawSvgPath(svgPath(mapPoints(pageAngle, mediaW, mediaH, pts), true), {
@@ -159,19 +262,23 @@ export async function flattenObjects(bytes, objects) {
           y: 0,
           color: fill,
           borderColor: stroke,
-          borderWidth
+          borderWidth,
+          opacity: opacity < 1 ? opacity : undefined,
+          borderOpacity: opacity < 1 ? opacity : undefined
         });
       }
     } else if (obj.type === "ink" && obj.points?.length > 1) {
       const color = hexToRgb(obj.color || "#1E3A8A");
       const thickness = Math.max(0.6, Number(obj.strokeWidth) || 2);
+      const opacity = obj.opacity != null ? obj.opacity : 1;
       const mapped = mapPoints(pageAngle, mediaW, mediaH, orientedPoints(obj, obj.points));
       for (let i = 1; i < mapped.length; i += 1) {
         const line = {
           start: mapped[i - 1],
           end: mapped[i],
           thickness,
-          color
+          color,
+          opacity: opacity < 1 ? opacity : undefined
         };
         if (roundCap != null) line.lineCap = roundCap;
         page.drawLine(line);

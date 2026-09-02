@@ -1,5 +1,5 @@
 import { el } from "../dom.js";
-import { captureFiles, clearCapture, setCapture } from "./capture.js";
+import { captureFiles, clearCapture, onCaptureChange, setCapture } from "./capture.js";
 import { confirmDiscard, confirmLeave } from "./dialog.js";
 import { toast } from "./feedback.js";
 
@@ -340,14 +340,12 @@ function snapshotActiveTab() {
 /**
  * Switch active tab.
  * @param {string} tabId
- * @param {object} [options]
- * @param {boolean} [options.isNew]
  */
-export async function switchTab(tabId, options = {}) {
+export async function switchTab(tabId) {
   const target = getTab(tabId);
   if (!target) return;
 
-  if (activeTabId && activeTabId !== tabId && !options.isNew) {
+  if (activeTabId && activeTabId !== tabId) {
     snapshotActiveTab();
   }
 
@@ -355,7 +353,7 @@ export async function switchTab(tabId, options = {}) {
   renderTabsList();
 
   // Restore capture files
-  setCapture(target.captureFiles);
+  setCapture(target.captureFiles ? target.captureFiles.slice() : []);
 
   // Restore route
   const targetRoute = target.route || "start";
@@ -579,9 +577,17 @@ export function initTabs() {
   const addBtn = el("tab-add");
   if (addBtn) {
     addBtn.addEventListener("click", () => {
-      void createTab({ activate: true });
+      void createTab({ title: "الرئيسية", icon: "icon-app", route: "start", activate: true });
     });
   }
+
+  // مزامنة فورية لتغيرات ملفات التابة النشطة
+  onCaptureChange(() => {
+    const active = getActiveTab();
+    if (active) {
+      active.captureFiles = captureFiles();
+    }
+  });
 
   // Create initial first tab ("الرئيسية")
   if (tabs.length === 0) {

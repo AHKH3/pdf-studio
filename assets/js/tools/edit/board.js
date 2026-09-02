@@ -1,898 +1,701 @@
-/**
- * Interactive page board for the edit overlay.
- * Object rectangles live in visual PDF space (origin bottom-left, upright).
- */
-import { openDocument, pdfRenderContext } from "../../pdf/core.js";
 import {
-  MIN_PT,
   bboxFromPoints,
-  clampBox,
   clampedMove,
+  clampBox,
+  combinedBoundingBox,
+  distToSegment,
+  normAngle,
+  pointInsideObject,
+  rotatedAabb,
+  rotatePoint,
   scalePoints,
+  snapBox,
+  translatePoints,
   worldToLocal
 } from "./coords.js";
-import { FONT } from "./text-png.js";
-import { MIN_BOX_PX, fitPageCssWidth, stabilizeFitPx } from "./fit.js";
-
-const CORNER_HANDLES = ["nw", "ne", "sw", "se"];
-const FREE_HANDLES = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 
 /**
+ * Interactive canvas controller for the PDF Editor.
+ * Handles selection, multi-selection marquee, moving, resizing, rotating,
+ * inline WYSIWYG text editing, pen drawing, eraser, shapes, and smart snapping guides.
+ *
  * @param {object} options
- * @param {HTMLCanvasElement} options.canvas
  * @param {HTMLElement} options.layer
- * @param {HTMLElement} [options.wrap]
- * @param {() => Array<any>} options.getObjects
- * @param {() => string} options.getSelectedId
- * @param {(id: string) => void} options.setSelectedId
- * @param {() => string} options.getTool
- * @param {() => object} options.getStyle
- * @param {(obj: any) => void} options.onCreate
- * @param {() => void} options.onChange
- * @param {() => void} [options.onBeginChange]
- * @param {() => void} options.onHistory
- * @param {() => void} [options.onDiscardHistory]
- * @param {(zoom: number) => void} [options.onZoomChange]
+ * @param {HTMLElement} options.viewport
+ * @param {HTMLElement} options.board
+ * @param {HTMLElement} options.guidesWrap
+ * @param {HTMLElement} options.floatingBar
+ * @param {() => number} options.pageW
+ * @param {() => number} options.pageH
+ * @param {() => number} options.zoom
+ * @param {() => string} options.activeTool
+ * @param {() => any} options.getStyle
+ * @param {() => any[]} options.getObjects
+ * @param {(objects: any[], pushHistory?: boolean) => void} options.setObjects
+ * @param {(selectedIds: string[]) => void} options.onSelect
+ * @param {(obj: any) => void} options.onCommitInlineText
  */
 export function createBoard(options) {
   const {
-    canvas,
     layer,
-    wrap,
-    getObjects,
-    getSelectedId,
-    setSelectedId,
-    getTool,
+    viewport,
+    board,
+    guidesWrap,
+    floatingBar,
+    pageW,
+    pageH,
+    zoom,
+    activeTool,
     getStyle,
-    onCreate,
-    onChange,
-    onBeginChange,
-    onHistory,
-    onDiscardHistory,
-    onZoomChange
+    getObjects,
+    setObjects,
+    onSelect,
+    onCommitInlineText
   } = options;
 
-  /** @type {any} */
-  let pdf = null;
-  let visualWidth = 0;
-  let visualHeight = 0;
-  let pageIndex = 0;
-  let generation = 0;
-  /** @type {null | any} */
-  let drag = null;
-  /** @type {SVGSVGElement | null} */
-  let ghostInk = null;
-  /** @type {SVGSVGElement | null} */
-  let ghost = null;
-  let zoom = 1;
-  let fitPx = 0;
-  let hiResTimer = 0;
-  const MIN_ZOOM = 0.5;
-  const MAX_ZOOM = 2.5;
+  let selectedIds = [];
+  let isPanning = false;
+  let panStart = { x: 0, y: 0, scrollLeft: 0, scrollTop: 0 };
+  let activeOp = null;
+  let liveInkPoints = [];
+  let liveInkSvg = null;
+  let activeTextarea = null;
 
-  function displayScale() {
-    return canvas.offsetWidth / Math.max(1, visualWidth);
-  }
-
-  function wrapIsLaidOut() {
-    if (!wrap) return true;
-    if (wrap.hidden || wrap.closest("[hidden]")) return false;
-    return wrap.clientWidth >= MIN_BOX_PX && wrap.clientHeight >= MIN_BOX_PX;
-  }
-
-  function availableBox() {
-    if (!wrap) return { w: 760, h: 980 };
-    if (!wrapIsLaidOut()) return { w: 0, h: 0 };
-    const cs = getComputedStyle(wrap);
-    const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
-    const padY = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
-    const board = canvas.parentElement;
-    const bs = board ? getComputedStyle(board) : null;
-    const chromeX = bs
-      ? (parseFloat(bs.borderLeftWidth) || 0) + (parseFloat(bs.borderRightWidth) || 0)
-      : 0;
-    const chromeY = bs
-      ? (parseFloat(bs.borderTopWidth) || 0) + (parseFloat(bs.borderBottomWidth) || 0)
-      : 0;
+  function toPageCoords(event) {
+    if (!layer?.getBoundingClientRect) return { x: event.clientX || 0, y: event.clientY || 0 };
+    const rect = layer.getBoundingClientRect();
+    const z = zoom() || 1;
+    const clientX = event.clientX || 0;
+    const clientY = event.clientY || 0;
+    const screenX = clientX - rect.left;
+    const screenY = clientY - rect.top;
     return {
-      w: Math.max(0, wrap.clientWidth - padX - chromeX),
-      h: Math.max(0, wrap.clientHeight - padY - chromeY)
+      x: screenX / z,
+      y: (rect.height - screenY) / z
     };
   }
 
-  /** CSS px per pt at zoom 1 — fit the page inside the visible wrap, never upscale past 1:1. */
-  function computeFitPx() {
-    if (!visualWidth || !visualHeight) return 0;
-    const { w, h } = availableBox();
-    return fitPageCssWidth(visualWidth, visualHeight, w, h);
-  }
-
-  /**
-   * Real layout sizing (no CSS transform): the canvas width drives offsetWidth,
-   * so displayScale and every coordinate path stay exact at any zoom.
-   * @returns {boolean} whether the displayed CSS width changed
-   */
-  function applySize() {
-    if (!visualWidth || !visualHeight) return false;
-    if (wrap && !wrapIsLaidOut()) return false;
-    const nextFit = stabilizeFitPx(computeFitPx(), fitPx);
-    if (!nextFit) return false;
-    fitPx = nextFit;
-    const nextWidth = `${Math.round(fitPx * zoom)}px`;
-    const changed = canvas.style.width !== nextWidth;
-    if (changed) canvas.style.width = nextWidth;
-    canvas.style.height = "auto";
-    return changed;
-  }
-
-  function scheduleHiRes() {
-    if (hiResTimer) clearTimeout(hiResTimer);
-    hiResTimer = setTimeout(() => {
-      hiResTimer = 0;
-      if (!drag && pdf) void renderPage(pageIndex);
-    }, 160);
-  }
-
-  function setZoomValue(next, force = false) {
-    const clamped = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next));
-    if (clamped === zoom && !force) return zoom;
-    zoom = clamped;
-    applySize();
-    scheduleHiRes();
-    onZoomChange?.(zoom);
-    return zoom;
-  }
-
-  /** Ctrl/⌘ + wheel (and trackpad pinch) zooms; plain wheel keeps scrolling. */
-  function onWheel(event) {
-    if (!wrapIsLaidOut() || !(fitPx > 0)) return;
-    if (!(event.ctrlKey || event.metaKey)) return;
-    event.preventDefault();
-    const factor = Math.exp(-event.deltaY * 0.0016);
-    setZoomValue(zoom * factor);
-  }
-
-  function clientToVisual(clientX, clientY) {
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = visualWidth / Math.max(1, rect.width);
-    const scaleY = visualHeight / Math.max(1, rect.height);
-    return {
-      x: (clientX - rect.left) * scaleX,
-      y: visualHeight - (clientY - rect.top) * scaleY
-    };
-  }
-
-  function objectsOnPage() {
-    return getObjects().filter((obj) => obj.pageIndex === pageIndex);
-  }
-
-  function positionNode(node, obj) {
-    const scale = displayScale();
-    node.style.left = `${obj.x * scale}px`;
-    node.style.top = `${(visualHeight - obj.y - obj.height) * scale}px`;
-    node.style.width = `${obj.width * scale}px`;
-    node.style.height = `${obj.height * scale}px`;
-    node.style.transform = obj.rotation ? `rotate(${obj.rotation}deg)` : "";
-  }
-
-  function shapeSvg(obj) {
-    const ns = "http://www.w3.org/2000/svg";
-    const svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("viewBox", "0 0 100 100");
-    svg.setAttribute("preserveAspectRatio", "none");
-    const fill = obj.fillOn === false ? "none" : obj.fill || "#8AA4E0";
-    const stroke = obj.stroke || "#1E3A8A";
-    const strokePt = Number.isFinite(Number(obj.strokeWidth)) ? Math.max(0, Number(obj.strokeWidth)) : 1.5;
-    const sw = strokePt * (100 / Math.max(obj.width, 1));
-    /** @type {SVGElement} */
-    let el;
-    if (obj.kind === "ellipse") {
-      el = document.createElementNS(ns, "ellipse");
-      el.setAttribute("cx", "50");
-      el.setAttribute("cy", "50");
-      el.setAttribute("rx", "48");
-      el.setAttribute("ry", "48");
-    } else if (obj.kind === "triangle") {
-      el = document.createElementNS(ns, "polygon");
-      el.setAttribute("points", "50,4 4,96 96,96");
-    } else {
-      el = document.createElementNS(ns, "rect");
-      el.setAttribute("x", "2");
-      el.setAttribute("y", "2");
-      el.setAttribute("width", "96");
-      el.setAttribute("height", "96");
-    }
-    el.setAttribute("fill", fill);
-    el.setAttribute("stroke", stroke);
-    el.setAttribute("stroke-width", String(sw));
-    svg.append(el);
-    return svg;
-  }
-
-  function inkSvg(obj) {
-    const ns = "http://www.w3.org/2000/svg";
-    const svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("viewBox", `0 0 ${obj.width} ${obj.height}`);
-    svg.setAttribute("preserveAspectRatio", "none");
-    const path = document.createElementNS(ns, "path");
-    const d = (obj.points || [])
-      .map((point, index) => {
-        const x = point.x - obj.x;
-        const y = obj.height - (point.y - obj.y);
-        return `${index ? "L" : "M"} ${x} ${y}`;
-      })
-      .join(" ");
-    path.setAttribute("d", d);
-    path.setAttribute("fill", "none");
-    path.setAttribute("stroke", obj.color || "#1E3A8A");
-    path.setAttribute("stroke-width", String(obj.strokeWidth || 2));
-    path.setAttribute("stroke-linecap", "round");
-    path.setAttribute("stroke-linejoin", "round");
-    svg.append(path);
-    return svg;
-  }
-
-  /**
-   * Live pen preview as an SVG overlay (visual pt units, same mapping as the
-   * final ink layer). A second <canvas> here used to present a stale white GPU
-   * buffer after resize and blank the whole page.
-   */
-  function beginLiveInk(color, weight) {
-    endLiveInk();
-    const ns = "http://www.w3.org/2000/svg";
-    const svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("viewBox", `0 0 ${visualWidth} ${visualHeight}`);
-    svg.setAttribute("preserveAspectRatio", "none");
-    svg.classList.add("edit-ink-live");
-    const path = document.createElementNS(ns, "path");
-    path.setAttribute("fill", "none");
-    path.setAttribute("stroke", color);
-    path.setAttribute("stroke-width", String(weight));
-    path.setAttribute("stroke-linecap", "round");
-    path.setAttribute("stroke-linejoin", "round");
-    svg.append(path);
-    layer.append(svg);
-    ghostInk = svg;
-    return path;
-  }
-
-  function endLiveInk() {
-    ghostInk?.remove();
-    ghostInk = null;
-  }
-
-  function drawLiveInk() {
-    if (!ghostInk || !drag?.livePath) return;
-    const d = drag.points
-      .map((point, index) => `${index ? "L" : "M"} ${point.x} ${visualHeight - point.y}`)
-      .join(" ");
-    drag.livePath.setAttribute("d", d);
-  }
-
-  /**
-   * Grow a text object's height so its textarea never clips content.
-   * Keeps the visual TOP edge fixed (box grows downward on screen).
-   * @param {HTMLTextAreaElement} area
-   * @param {any} obj
-   */
-  function growTextArea(area, obj) {
-    const scale = displayScale();
-    if (!(scale > 0)) return;
-    const neededPt = area.scrollHeight / scale + 2;
-    if (neededPt <= obj.height + 0.5) return;
-    const top = visualHeight - obj.y - obj.height;
-    obj.height = Math.min(visualHeight, Math.max(MIN_PT, neededPt));
-    obj.y = Math.max(0, Math.min(visualHeight - obj.height, visualHeight - top - obj.height));
-    const node = area.closest(".edit-obj");
-    if (node instanceof HTMLElement) positionNode(node, obj);
-  }
-
-  function paintOverlay() {
-    const selected = getSelectedId();
-    const focused = document.activeElement;
-    const keepFocusId =
-      focused instanceof HTMLTextAreaElement ? focused.closest(".edit-obj")?.dataset.id : "";
-
-    layer.querySelectorAll(".edit-obj, .edit-ghost").forEach((node) => {
-      try {
-        node.remove();
-      } catch {
-        /* أُزيلت بالفعل أثناء معالجة متداخلة */
+  function renderGuides(guides = []) {
+    if (!guidesWrap) return;
+    guidesWrap.innerHTML = "";
+    const z = zoom() || 1;
+    const h = pageH ? pageH() : 842;
+    for (const g of guides) {
+      const line = document.createElement("div");
+      line.className = `edit-guide edit-guide--${g.orientation}`;
+      if (g.orientation === "v") {
+        line.style.left = `${g.pos * z}px`;
+      } else {
+        line.style.top = `${(h - g.pos) * z}px`;
       }
+      guidesWrap.append(line);
+    }
+  }
+
+  function clearGuides() {
+    if (guidesWrap) guidesWrap.innerHTML = "";
+  }
+
+  function updateFloatingBar() {
+    if (!floatingBar) return;
+    if (selectedIds.length === 0 || activeTextarea) {
+      floatingBar.hidden = true;
+      return;
+    }
+    const objects = getObjects().filter((o) => selectedIds.includes(o.id));
+    if (!objects.length) {
+      floatingBar.hidden = true;
+      return;
+    }
+    const bbox = combinedBoundingBox(objects);
+    if (!bbox) {
+      floatingBar.hidden = true;
+      return;
+    }
+    const z = zoom() || 1;
+    const h = pageH ? pageH() : 842;
+    const topPx = (h - (bbox.y + bbox.height)) * z;
+    const centerPx = (bbox.x + bbox.width / 2) * z;
+
+    floatingBar.hidden = false;
+    floatingBar.style.top = `${Math.max(10, topPx)}px`;
+    floatingBar.style.left = `${centerPx}px`;
+  }
+
+  function startInlineEditor(obj) {
+    if (activeTextarea) commitInlineEditor();
+    const el = layer.querySelector(`[data-id="${obj.id}"]`);
+    if (!el) return;
+
+    const textarea = document.createElement("textarea");
+    textarea.className = "edit-inline-textarea";
+    textarea.value = obj.text || "";
+    textarea.style.fontSize = `${(obj.fontSize || 18)}px`;
+    textarea.style.color = obj.color || "#1E3A8A";
+    textarea.style.textAlign = obj.align || "right";
+    textarea.style.fontWeight = obj.bold ? "bold" : "normal";
+    textarea.style.fontStyle = obj.italic ? "italic" : "normal";
+
+    el.append(textarea);
+    textarea.focus();
+    if (typeof textarea.select === "function") textarea.select();
+    activeTextarea = { textarea, obj };
+
+    textarea.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        commitInlineEditor();
+      }
+      e.stopPropagation();
     });
-    layer.dataset.tool = getTool();
 
-    for (const obj of objectsOnPage()) {
-      const node = document.createElement("div");
-      node.className = "edit-obj" + (obj.id === selected ? " is-selected" : "");
-      node.dataset.id = obj.id;
-      node.dataset.type = obj.type;
-      node.tabIndex = 0;
-      node.setAttribute("role", "button");
-      node.setAttribute("aria-label", labelFor(obj));
-      node.setAttribute("aria-selected", obj.id === selected ? "true" : "false");
-      positionNode(node, obj);
-
-      if (obj.type === "text") {
-        const fontSize = obj.fontSize || 18;
-        const scale = displayScale();
-        const padPx = Math.max(2, fontSize * 0.18) * scale;
-        node.style.color = obj.color || "#1E3A8A";
-        node.style.fontFamily = FONT;
-        node.style.fontWeight = obj.bold ? "700" : "400";
-        node.style.fontStyle = obj.italic ? "italic" : "normal";
-        node.style.textDecoration = obj.underline ? "underline" : "none";
-        node.style.fontSize = `${fontSize * scale}px`;
-        node.style.lineHeight = "1.45";
-        node.style.textAlign = obj.align || "right";
-        node.style.padding = `${padPx}px`;
-        if (obj.id === selected || obj.id === keepFocusId) {
-          const area = document.createElement("textarea");
-          area.value = obj.text || "";
-          area.dir = "rtl";
-          area.maxLength = 2000;
-          area.addEventListener("pointerdown", (event) => event.stopPropagation());
-          area.addEventListener("keydown", (event) => {
-            if (event.key === "Escape") {
-              event.preventDefault();
-              event.stopPropagation();
-              setSelectedId("");
-              paintOverlay();
-              onChange();
-            }
-          });
-          area.addEventListener("input", () => {
-            onBeginChange?.();
-            obj.text = area.value;
-            growTextArea(area, obj);
-            onChange();
-          });
-          node.append(area);
-          requestAnimationFrame(() => {
-            if (area.isConnected) growTextArea(area, obj);
-          });
-        } else {
-          const preview = document.createElement("div");
-          preview.className = "edit-obj__text";
-          preview.textContent = obj.text || "نص";
-          node.append(preview);
-        }
-      } else if (obj.type === "image") {
-        const img = document.createElement("img");
-        img.alt = "";
-        img.draggable = false;
-        img.src = obj.url;
-        node.append(img);
-      } else if (obj.type === "shape") {
-        node.append(shapeSvg(obj));
-      } else if (obj.type === "ink") {
-        node.append(inkSvg(obj));
-      }
-
-      const handles = obj.type === "image" ? CORNER_HANDLES : FREE_HANDLES;
-      for (const handle of handles) {
-        const grip = document.createElement("span");
-        grip.className = "edit-handle";
-        grip.dataset.handle = handle;
-        grip.setAttribute("aria-hidden", "true");
-        node.append(grip);
-      }
-      const rotate = document.createElement("span");
-      rotate.className = "edit-rotate";
-      rotate.dataset.handle = "rotate";
-      rotate.setAttribute("aria-hidden", "true");
-      node.append(rotate);
-
-      layer.append(node);
-
-      if (obj.id === keepFocusId) {
-        const area = node.querySelector("textarea");
-        if (area instanceof HTMLTextAreaElement) {
-          area.focus();
-          area.selectionStart = area.value.length;
-        }
-      }
-    }
-  }
-
-  function labelFor(obj) {
-    if (obj.type === "text") return "نص";
-    if (obj.type === "image") return "صورة";
-    if (obj.type === "ink") return "رسم";
-    if (obj.kind === "ellipse") return "دائرة";
-    if (obj.kind === "triangle") return "مثلث";
-    return "مربع";
-  }
-
-  function applyResize(handle, origin, vx, vy) {
-    const local = worldToLocal(origin, vx, vy);
-    const cx = origin.x + origin.width / 2;
-    const cy = origin.y + origin.height / 2;
-    let width = origin.width;
-    let height = origin.height;
-    const lock = origin.type === "image";
-
-    if (handle.includes("e") || handle.includes("w")) {
-      width = Math.max(MIN_PT, Math.abs(local.x - origin.width / 2) * 2);
-    }
-    if (handle.includes("n") || handle.includes("s")) {
-      height = Math.max(MIN_PT, Math.abs(local.y - origin.height / 2) * 2);
-    }
-    if (lock && origin.aspect) {
-      if (handle === "n" || handle === "s") width = height * origin.aspect;
-      else height = width / origin.aspect;
-    }
-
-    return {
-      x: cx - width / 2,
-      y: cy - height / 2,
-      width,
-      height
-    };
-  }
-
-  function hitObject(vx, vy) {
-    const list = objectsOnPage().slice().reverse();
-    for (const obj of list) {
-      const local = worldToLocal(obj, vx, vy);
-      if (local.x >= 0 && local.y >= 0 && local.x <= obj.width && local.y <= obj.height) {
-        return obj;
-      }
-    }
-    return null;
-  }
-
-  async function renderPage(index) {
-    if (!pdf) return;
-    const token = (generation += 1);
-    const page = await pdf.getPage(index + 1);
-    if (token !== generation) {
-      page.cleanup();
-      return;
-    }
-
-    const base = page.getViewport({ scale: 1 });
-    visualWidth = base.width;
-    visualHeight = base.height;
-    pageIndex = index;
-
-    applySize();
-    if (!fitPx) {
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-      applySize();
-    }
-    if (!fitPx) return;
-
-    // Bitmap resolution follows the on-screen size (zoom × fit) so zoom-in stays crisp.
-    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-    const shownW = Math.max(1, fitPx * zoom);
-    const shownLongest = Math.max(shownW, shownW * (base.height / base.width));
-    const bitmapLongest = Math.max(360, Math.min(2400, shownLongest * dpr));
-    const scale = bitmapLongest / Math.max(base.width, base.height);
-    const viewport = page.getViewport({ scale });
-    canvas.width = Math.max(1, Math.ceil(viewport.width));
-    canvas.height = Math.max(1, Math.ceil(viewport.height));
-    canvas.style.aspectRatio = `${canvas.width} / ${canvas.height}`;
-
-    const ctx = pdfRenderContext(canvas);
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    await page.render({ canvasContext: ctx, viewport }).promise;
-    page.cleanup();
-    if (token !== generation) return;
-    canvas.style.visibility = "";
-    paintOverlay();
-  }
-
-  function pointerDown(event) {
-    if (event.target instanceof HTMLTextAreaElement) return;
-    const tool = getTool();
-    const visual = clientToVisual(event.clientX, event.clientY);
-    const handle = event.target.closest?.("[data-handle]");
-    const node = event.target.closest?.(".edit-obj");
-
-    if (tool === "select" || (node && handle) || (node && tool !== "pen")) {
-      if (!node) {
-        setSelectedId("");
-        paintOverlay();
-        onChange();
-        return;
-      }
-      event.preventDefault();
-      const obj = getObjects().find((item) => item.id === node.dataset.id);
-      if (!obj) return;
-      setSelectedId(obj.id);
-      paintOverlay();
-      if (obj.type === "text") focusSelectedText();
-      layer.setPointerCapture(event.pointerId);
-      const mode = handle?.dataset.handle || "move";
-      onHistory();
-      drag = {
-        pointerId: event.pointerId,
-        mode,
-        origin: {
-          ...obj,
-          points: obj.points ? obj.points.map((point) => ({ ...point })) : undefined
-        },
-        startX: event.clientX,
-        startY: event.clientY,
-        dirty: false,
-        historyPushed: true
-      };
-      onChange();
-      return;
-    }
-
-    if (tool === "pen") {
-      event.preventDefault();
-      layer.setPointerCapture(event.pointerId);
-      const style = getStyle();
-      drag = {
-        pointerId: event.pointerId,
-        mode: "pen",
-        points: [{ x: visual.x, y: visual.y }],
-        color: style.penColor,
-        strokeWidth: style.penWeight
-      };
-      drag.livePath = beginLiveInk(drag.color, drag.strokeWidth);
-      drawLiveInk();
-      return;
-    }
-
-    if (tool === "text") {
-      event.preventDefault();
-      const hit = hitObject(visual.x, visual.y);
-      if (hit) {
-        setSelectedId(hit.id);
-        paintOverlay();
-        onChange();
-        return;
-      }
-      const style = getStyle();
-      onHistory();
-      onCreate({
-        type: "text",
-        pageIndex,
-        x: visual.x - 90,
-        y: visual.y - 24,
-        width: 180,
-        height: 48,
-        rotation: 0,
-        text: "",
-        fontSize: style.fontSize,
-        color: style.textColor,
-        bold: style.bold,
-        align: style.align
-      });
-      return;
-    }
-
-    if (tool === "rect" || tool === "ellipse" || tool === "triangle") {
-      event.preventDefault();
-      const hit = hitObject(visual.x, visual.y);
-      if (hit) {
-        setSelectedId(hit.id);
-        paintOverlay();
-        onChange();
-        return;
-      }
-      layer.setPointerCapture(event.pointerId);
-      drag = {
-        pointerId: event.pointerId,
-        mode: "shape",
-        kind: tool,
-        start: visual
-      };
-      ghost = document.createElement("div");
-      ghost.className = "edit-ghost";
-      layer.append(ghost);
-      return;
-    }
-  }
-
-  function pointerMove(event) {
-    if (!drag || event.pointerId !== drag.pointerId) return;
-    event.preventDefault();
-    const visual = clientToVisual(event.clientX, event.clientY);
-
-    if (drag.mode === "pen") {
-      const last = drag.points[drag.points.length - 1];
-      if (Math.hypot(visual.x - last.x, visual.y - last.y) < 0.8) return;
-      drag.points.push({ x: visual.x, y: visual.y });
-      drawLiveInk();
-      return;
-    }
-
-    if (drag.mode === "shape") {
-      const x = Math.min(drag.start.x, visual.x);
-      const y = Math.min(drag.start.y, visual.y);
-      const width = Math.abs(visual.x - drag.start.x);
-      const height = Math.abs(visual.y - drag.start.y);
-      const scale = displayScale();
-      if (ghost) {
-        ghost.style.left = `${x * scale}px`;
-        ghost.style.top = `${(visualHeight - y - height) * scale}px`;
-        ghost.style.width = `${width * scale}px`;
-        ghost.style.height = `${height * scale}px`;
-        ghost.style.borderRadius = drag.kind === "ellipse" ? "50%" : "0";
-      }
-      return;
-    }
-
-    const obj = getObjects().find((item) => item.id === drag.origin.id);
-    if (!obj) return;
-    const scale = displayScale();
-    const dxPt = (event.clientX - drag.startX) / scale;
-    const dyPdf = -(event.clientY - drag.startY) / scale;
-
-    if (drag.mode === "move") {
-      const moved = clampedMove(drag.origin, dxPt, dyPdf, visualWidth, visualHeight);
-      obj.x = moved.x;
-      obj.y = moved.y;
-      if (obj.points) {
-        obj.points = drag.origin.points.map((point) => ({
-          x: point.x + moved.dx,
-          y: point.y + moved.dy
-        }));
-      }
-      drag.dirty = moved.dx !== 0 || moved.dy !== 0;
-    } else if (drag.mode === "rotate") {
-      const cx = drag.origin.x + drag.origin.width / 2;
-      const cy = drag.origin.y + drag.origin.height / 2;
-      obj.rotation = (Math.atan2(visual.x - cx, visual.y - cy) * 180) / Math.PI;
-      drag.dirty = true;
-    } else {
-      const next = applyResize(drag.mode, drag.origin, visual.x, visual.y);
-      clampBox(next, visualWidth, visualHeight);
-      if (obj.points) {
-        obj.points = scalePoints(drag.origin.points, drag.origin, next);
-      }
-      Object.assign(obj, next);
-      drag.dirty =
-        next.x !== drag.origin.x ||
-        next.y !== drag.origin.y ||
-        next.width !== drag.origin.width ||
-        next.height !== drag.origin.height;
-    }
-
-    const node = layer.querySelector(`[data-id="${obj.id}"]`);
-    if (node) positionNode(/** @type {HTMLElement} */ (node), obj);
-  }
-
-  function pointerUp(event) {
-    if (!drag || event.pointerId !== drag.pointerId) return;
-    const mode = drag.mode;
-
-    if (mode === "pen") {
-      const points = drag.points;
-      const color = drag.color;
-      const strokeWidth = drag.strokeWidth;
-      drag = null;
-      endLiveInk();
-      if (points.length > 1) {
-        const pad = strokeWidth + 2;
-        const box = bboxFromPoints(points, pad);
-        clampBox(box, visualWidth, visualHeight);
-        onHistory();
-        onCreate({
-          type: "ink",
-          pageIndex,
-          ...box,
-          rotation: 0,
-          points,
-          color,
-          strokeWidth
-        });
-      }
-      return;
-    }
-
-    if (mode === "shape") {
-      const start = drag.start;
-      const kind = drag.kind;
-      const visual = clientToVisual(event.clientX, event.clientY);
-      drag = null;
-      ghost?.remove();
-      ghost = null;
-      const width = Math.abs(visual.x - start.x);
-      const height = Math.abs(visual.y - start.y);
-      if (width < 8 || height < 8) return;
-      const style = getStyle();
-      const box = {
-        x: Math.min(start.x, visual.x),
-        y: Math.min(start.y, visual.y),
-        width,
-        height
-      };
-      clampBox(box, visualWidth, visualHeight);
-      onHistory();
-      onCreate({
-        type: "shape",
-        kind,
-        pageIndex,
-        ...box,
-        rotation: 0,
-        fill: style.fill,
-        fillOn: style.fillOn,
-        stroke: style.stroke,
-        strokeWidth: style.strokeWidth
-      });
-      return;
-    }
-
-    if (mode === "move" || mode === "rotate" || CORNER_HANDLES.includes(mode) || FREE_HANDLES.includes(mode)) {
-      if (!drag.dirty && drag.historyPushed) onDiscardHistory?.();
-      drag = null;
-      paintOverlay();
-      onChange();
-      return;
-    }
-
-    drag = null;
-  }
-
-  function onLayerKey(event) {
-    const node = event.target.closest?.(".edit-obj");
-    if (!node) return;
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      setSelectedId(node.dataset.id);
-      paintOverlay();
-      onChange();
-    }
-  }
-
-  layer.addEventListener("pointerdown", pointerDown);
-  layer.addEventListener("pointermove", pointerMove);
-  layer.addEventListener("pointerup", pointerUp);
-  layer.addEventListener("pointercancel", pointerUp);
-  layer.addEventListener("keydown", onLayerKey);
-
-  const sizeTarget = wrap || canvas;
-  const observer = new ResizeObserver(() => {
-    if (drag) return;
-    if (!wrapIsLaidOut()) return;
-    if (pdf && visualWidth && !fitPx) {
-      void renderPage(pageIndex);
-      return;
-    }
-    const changed = applySize();
-    if (changed) {
-      paintOverlay();
-      scheduleHiRes();
-    }
-  });
-  observer.observe(sizeTarget);
-  sizeTarget.addEventListener("wheel", onWheel, { passive: false });
-
-  async function closePdf() {
-    generation += 1;
-    drag = null;
-    ghost?.remove();
-    ghost = null;
-    endLiveInk();
-    if (hiResTimer) {
-      clearTimeout(hiResTimer);
-      hiResTimer = 0;
-    }
-    if (pdf) {
-      await pdf.destroy().catch(() => {});
-      pdf = null;
-    }
-    visualWidth = 0;
-    visualHeight = 0;
-    fitPx = 0;
-    canvas.style.width = "";
-    canvas.style.visibility = "";
-    const ctx = canvas.getContext("2d");
-    ctx?.clearRect(0, 0, canvas.width, canvas.height);
-    layer.querySelectorAll(".edit-obj, .edit-ghost").forEach((node) => {
-      try {
-        node.remove();
-      } catch {
-        /* أُزيلت بالفعل */
-      }
+    textarea.addEventListener("blur", () => {
+      commitInlineEditor();
     });
   }
 
-  function detach() {
-    layer.removeEventListener("pointerdown", pointerDown);
-    layer.removeEventListener("pointermove", pointerMove);
-    layer.removeEventListener("pointerup", pointerUp);
-    layer.removeEventListener("pointercancel", pointerUp);
-    layer.removeEventListener("keydown", onLayerKey);
-    sizeTarget.removeEventListener("wheel", onWheel);
-    observer.disconnect();
+  function commitInlineEditor() {
+    if (!activeTextarea) return;
+    const { textarea, obj } = activeTextarea;
+    const newText = textarea.value;
+    textarea.remove();
+    activeTextarea = null;
+
+    if (newText !== obj.text) {
+      const list = getObjects().map((o) => (o.id === obj.id ? { ...o, text: newText } : o));
+      setObjects(list, true);
+      onCommitInlineText({ ...obj, text: newText });
+    }
   }
 
-  return {
-    get visualWidth() {
-      return visualWidth;
-    },
-    get visualHeight() {
-      return visualHeight;
-    },
-    paintOverlay,
-    async load(bytes) {
-      await closePdf();
-      canvas.style.visibility = "hidden";
-      if (!wrapIsLaidOut()) canvas.style.width = "0px";
-      pdf = await openDocument(bytes);
-      return pdf.numPages;
-    },
-    async clear() {
-      await closePdf();
-    },
-    showPage: renderPage,
-    whenLaidOut() {
-      return new Promise((resolve) => {
-        if (wrapIsLaidOut()) {
-          resolve();
+  function onPointerDown(event) {
+    if (event.button !== undefined && event.button !== 0) return;
+    if (activeTextarea && !activeTextarea.textarea.contains(event.target)) {
+      commitInlineEditor();
+    }
+
+    const tool = activeTool();
+    const pt = toPageCoords(event);
+    const pw = pageW ? pageW() : 595;
+    const ph = pageH ? pageH() : 842;
+
+    // 1. Hand / Pan tool or Spacebar held
+    if (tool === "hand" || event.spaceKey) {
+      isPanning = true;
+      panStart = {
+        x: event.clientX || 0,
+        y: event.clientY || 0,
+        scrollLeft: viewport?.scrollLeft || 0,
+        scrollTop: viewport?.scrollTop || 0
+      };
+      viewport?.classList?.add("is-panning");
+      return;
+    }
+
+    // 2. Click on existing object handle / rotate / body
+    const handleEl = event.target?.closest ? event.target.closest(".edit-handle") : null;
+    const rotateEl = event.target?.closest ? event.target.closest(".edit-rotate") : null;
+    const objEl = event.target?.closest ? event.target.closest(".edit-obj") : null;
+
+    if (tool === "select" || tool === "eraser") {
+      if (tool === "eraser") {
+        if (objEl) {
+          const id = objEl.dataset.id;
+          const remaining = getObjects().filter((o) => o.id !== id);
+          setObjects(remaining, true);
+          selectedIds = selectedIds.filter((i) => i !== id);
+          onSelect(selectedIds);
+          updateFloatingBar();
+        }
+        return;
+      }
+
+      if (rotateEl && selectedIds.length === 1) {
+        const obj = getObjects().find((o) => o.id === selectedIds[0]);
+        if (obj && !obj.locked) {
+          activeOp = {
+            type: "rotate",
+            objId: obj.id,
+            cx: obj.x + obj.width / 2,
+            cy: obj.y + obj.height / 2,
+            startAngle: obj.rotation || 0,
+            startPointerAngle: Math.atan2(pt.y - (obj.y + obj.height / 2), pt.x - (obj.x + obj.width / 2))
+          };
           return;
         }
-        let settled = false;
-        const node = wrap || canvas;
-        const finish = () => {
-          if (settled) return;
-          settled = true;
-          obs.disconnect();
-          clearTimeout(timer);
-          resolve();
-        };
-        const obs = new ResizeObserver(() => {
-          if (wrapIsLaidOut()) finish();
-        });
-        obs.observe(node);
-        const timer = setTimeout(finish, 400);
-        requestAnimationFrame(() => {
-          if (wrapIsLaidOut()) finish();
-        });
-      });
-    },
-    setZoom: setZoomValue,
-    getZoom() {
-      return zoom;
-    },
-    /** Re-fit the page into the wrap at zoom 1 (recomputes the fit base). */
-    fit() {
-      fitPx = 0;
-      return setZoomValue(1, true);
-    },
-    syncTool() {
-      layer.dataset.tool = getTool();
-    },
-    nudge(dxPt, dyPt) {
-      const obj = getObjects().find((item) => item.id === getSelectedId());
-      if (!obj || obj.pageIndex !== pageIndex) return false;
-      const moved = clampedMove(obj, dxPt, dyPt, visualWidth, visualHeight);
-      if (moved.dx === 0 && moved.dy === 0) return false;
-      obj.x = moved.x;
-      obj.y = moved.y;
-      if (obj.points) {
-        obj.points = obj.points.map((point) => ({ x: point.x + moved.dx, y: point.y + moved.dy }));
       }
-      paintOverlay();
-      onChange();
-      return true;
-    },
-    focusSelectedText() {
-      const area = layer.querySelector(".edit-obj.is-selected textarea");
-      if (area instanceof HTMLTextAreaElement) area.focus();
-    },
-    /** Mirror side-panel text into the on-canvas textarea (when not focused). */
-    syncSelectedText(value) {
-      const node = layer.querySelector(".edit-obj.is-selected");
-      const area = node?.querySelector("textarea");
-      if (!(area instanceof HTMLTextAreaElement) || document.activeElement === area) return;
-      const obj = getObjects().find((item) => item.id === node?.dataset.id);
-      if (!obj) return;
-      area.value = value || "";
-      growTextArea(area, obj);
-    },
-    async destroy() {
-      await closePdf();
-      endLiveInk();
-      detach();
+
+      if (handleEl && selectedIds.length === 1) {
+        const obj = getObjects().find((o) => o.id === selectedIds[0]);
+        if (obj && !obj.locked) {
+          const handle = handleEl.dataset.handle;
+          activeOp = {
+            type: "resize",
+            handle,
+            objId: obj.id,
+            origin: { x: obj.x, y: obj.y, width: obj.width, height: obj.height },
+            startPt: pt
+          };
+          return;
+        }
+      }
+
+      if (objEl) {
+        const id = objEl.dataset.id;
+        const obj = getObjects().find((o) => o.id === id);
+        if (obj) {
+          if (event.shiftKey) {
+            if (selectedIds.includes(id)) {
+              selectedIds = selectedIds.filter((i) => i !== id);
+            } else {
+              selectedIds = [...selectedIds, id];
+            }
+          } else {
+            if (!selectedIds.includes(id)) {
+              selectedIds = [id];
+            }
+          }
+          onSelect(selectedIds);
+          updateFloatingBar();
+
+          if (!obj.locked) {
+            activeOp = {
+              type: "move",
+              startPt: pt,
+              objects: getObjects()
+                .filter((o) => selectedIds.includes(o.id))
+                .map((o) => ({ id: o.id, x: o.x, y: o.y, width: o.width, height: o.height }))
+            };
+          }
+          return;
+        }
+      }
+
+      // Clicked on empty canvas in Select mode -> Start Marquee selection
+      if (!event.shiftKey) {
+        selectedIds = [];
+        onSelect(selectedIds);
+        updateFloatingBar();
+      }
+      activeOp = {
+        type: "marquee",
+        startPt: pt
+      };
+      return;
     }
+
+    // 3. Drawing tools: Pen
+    if (tool === "pen") {
+      liveInkPoints = [pt];
+      const style = getStyle();
+      activeOp = {
+        type: "pen",
+        color: style.penColor || "#1E3A8A",
+        strokeWidth: style.penWeight || 2.2,
+        points: liveInkPoints
+      };
+      return;
+    }
+
+    // 4. Creation tools: text, highlight, whiteout, rect, ellipse, triangle, arrow, line, stamp
+    const style = getStyle();
+    activeOp = {
+      type: "create",
+      tool,
+      startPt: pt,
+      style
+    };
+  }
+
+  function onPointerMove(event) {
+    if (isPanning) {
+      const dx = (event.clientX || 0) - panStart.x;
+      const dy = (event.clientY || 0) - panStart.y;
+      if (viewport) {
+        viewport.scrollLeft = panStart.scrollLeft - dx;
+        viewport.scrollTop = panStart.scrollTop - dy;
+      }
+      return;
+    }
+
+    if (!activeOp) return;
+    const pt = toPageCoords(event);
+    const pw = pageW ? pageW() : 595;
+    const ph = pageH ? pageH() : 842;
+
+    if (activeOp.type === "move") {
+      const dx = pt.x - activeOp.startPt.x;
+      const dy = pt.y - activeOp.startPt.y;
+
+      const otherObjects = getObjects().filter((o) => !selectedIds.includes(o.id));
+      const primary = activeOp.objects[0];
+      if (!primary) return;
+      const testBox = { x: primary.x + dx, y: primary.y + dy, width: primary.width, height: primary.height };
+      const snapped = snapBox(testBox, pw, ph, otherObjects, 6);
+      renderGuides(snapped.guides);
+
+      const realDx = snapped.x - primary.x;
+      const realDy = snapped.y - primary.y;
+
+      const updated = getObjects().map((o) => {
+        const init = activeOp.objects.find((orig) => orig.id === o.id);
+        if (!init) return o;
+        return {
+          ...o,
+          x: Math.max(0, Math.min(pw - o.width, init.x + realDx)),
+          y: Math.max(0, Math.min(ph - o.height, init.y + realDy))
+        };
+      });
+      setObjects(updated, false);
+      updateFloatingBar();
+      return;
+    }
+
+    if (activeOp.type === "resize") {
+      const { handle, objId, origin, startPt } = activeOp;
+      const dx = pt.x - startPt.x;
+      const dy = pt.y - startPt.y;
+      let { x, y, width, height } = origin;
+
+      if (handle.includes("e")) width = Math.max(16, origin.width + dx);
+      if (handle.includes("w")) {
+        const newW = Math.max(16, origin.width - dx);
+        x = origin.x + (origin.width - newW);
+        width = newW;
+      }
+      if (handle.includes("n")) height = Math.max(16, origin.height + dy);
+      if (handle.includes("s")) {
+        const newH = Math.max(16, origin.height - dy);
+        y = origin.y + (origin.height - newH);
+        height = newH;
+      }
+
+      const updated = getObjects().map((o) => {
+        if (o.id !== objId) return o;
+        return { ...o, x, y, width, height };
+      });
+      setObjects(updated, false);
+      updateFloatingBar();
+      return;
+    }
+
+    if (activeOp.type === "rotate") {
+      const { objId, cx, cy, startAngle, startPointerAngle } = activeOp;
+      const curPointerAngle = Math.atan2(pt.y - cy, pt.x - cx);
+      let angleDeg = startAngle - ((curPointerAngle - startPointerAngle) * 180) / Math.PI;
+      if (event.shiftKey) {
+        angleDeg = Math.round(angleDeg / 15) * 15;
+      }
+      const updated = getObjects().map((o) => (o.id === objId ? { ...o, rotation: normAngle(angleDeg) } : o));
+      setObjects(updated, false);
+      updateFloatingBar();
+      return;
+    }
+
+    if (activeOp.type === "pen") {
+      activeOp.points.push(pt);
+      renderLiveInk(activeOp.points, activeOp.color, activeOp.strokeWidth);
+      return;
+    }
+
+    if (activeOp.type === "marquee") {
+      renderMarquee(activeOp.startPt, pt);
+      return;
+    }
+
+    if (activeOp.type === "create") {
+      renderCreationGhost(activeOp.startPt, pt, activeOp.tool);
+      return;
+    }
+  }
+
+  function onPointerUp(event) {
+    if (isPanning) {
+      isPanning = false;
+      viewport?.classList?.remove("is-panning");
+    }
+
+    clearGuides();
+    removeMarquee();
+    removeCreationGhost();
+    removeLiveInk();
+
+    if (!activeOp) return;
+    const pt = toPageCoords(event);
+    const pw = pageW ? pageW() : 595;
+    const ph = pageH ? pageH() : 842;
+    const op = activeOp;
+    activeOp = null;
+
+    if (op.type === "move" || op.type === "resize" || op.type === "rotate") {
+      setObjects(getObjects(), true);
+      updateFloatingBar();
+      return;
+    }
+
+    if (op.type === "pen") {
+      if (op.points.length > 1) {
+        const box = bboxFromPoints(op.points, 4);
+        const newObj = {
+          id: `ink_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+          type: "ink",
+          x: box.x,
+          y: box.y,
+          width: box.width,
+          height: box.height,
+          points: op.points,
+          color: op.color,
+          strokeWidth: op.strokeWidth,
+          rotation: 0
+        };
+        setObjects([...getObjects(), newObj], true);
+        selectedIds = [newObj.id];
+        onSelect(selectedIds);
+        updateFloatingBar();
+      }
+      return;
+    }
+
+    if (op.type === "marquee") {
+      const minX = Math.min(op.startPt.x, pt.x);
+      const maxX = Math.max(op.startPt.x, pt.x);
+      const minY = Math.min(op.startPt.y, pt.y);
+      const maxY = Math.max(op.startPt.y, pt.y);
+
+      const found = getObjects().filter((o) => {
+        const cx = o.x + o.width / 2;
+        const cy = o.y + o.height / 2;
+        return cx >= minX && cx <= maxX && cy >= minY && cy <= maxY;
+      });
+      selectedIds = found.map((o) => o.id);
+      onSelect(selectedIds);
+      updateFloatingBar();
+      return;
+    }
+
+    if (op.type === "create") {
+      const minX = Math.min(op.startPt.x, pt.x);
+      const maxX = Math.max(op.startPt.x, pt.x);
+      const minY = Math.min(op.startPt.y, pt.y);
+      const maxY = Math.max(op.startPt.y, pt.y);
+
+      let w = Math.max(24, maxX - minX);
+      let h = Math.max(24, maxY - minY);
+
+      let x = minX;
+      let y = minY;
+
+      if (Math.hypot(maxX - minX, maxY - minY) < 8) {
+        if (op.tool === "text") { w = 220; h = 60; }
+        else if (op.tool === "stamp") { w = 180; h = 80; }
+        else if (op.tool === "arrow" || op.tool === "line") { w = 160; h = 32; }
+        else if (op.tool === "highlight" || op.tool === "whiteout") { w = 180; h = 32; }
+        else { w = 120; h = 100; }
+        x = Math.max(0, Math.min(pw - w, op.startPt.x - w / 2));
+        y = Math.max(0, Math.min(ph - h, op.startPt.y - h / 2));
+      }
+
+      const id = `obj_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      let newObj = null;
+
+      if (op.tool === "text") {
+        newObj = {
+          id,
+          type: "text",
+          x,
+          y,
+          width: w,
+          height: h,
+          text: "اكتب هنا",
+          fontSize: op.style.fontSize || 18,
+          fontFamily: op.style.fontFamily || "naskh",
+          color: op.style.textColor || "#1E3A8A",
+          bold: op.style.bold || false,
+          italic: op.style.italic || false,
+          underline: op.style.underline || false,
+          strike: op.style.strike || false,
+          align: op.style.align || "right",
+          bgOn: op.style.bgOn || false,
+          bgColor: op.style.bgColor || "#FFFFFF",
+          rotation: 0
+        };
+      } else if (op.tool === "highlight") {
+        newObj = {
+          id,
+          type: "highlight",
+          x,
+          y,
+          width: w,
+          height: h,
+          color: op.style.hlColor || "#FDE047",
+          opacity: op.style.hlOpacity != null ? op.style.hlOpacity : 0.35,
+          rotation: 0
+        };
+      } else if (op.tool === "whiteout") {
+        newObj = {
+          id,
+          type: "whiteout",
+          x,
+          y,
+          width: w,
+          height: h,
+          color: op.style.woColor || "#FFFFFF",
+          stroke: op.style.woBorder ? "#E2E8F0" : null,
+          rotation: 0
+        };
+      } else if (op.tool === "stamp") {
+        newObj = {
+          id,
+          type: "stamp",
+          x,
+          y,
+          width: w,
+          height: h,
+          label: op.style.stampText || "معتمد",
+          sub: new Date().toLocaleDateString("ar-EG"),
+          color: op.style.stampColor || "#DC2626",
+          shape: "rect",
+          rotation: 0
+        };
+      } else if (["rect", "ellipse", "triangle", "arrow", "line"].includes(op.tool)) {
+        newObj = {
+          id,
+          type: "shape",
+          kind: op.tool,
+          x,
+          y,
+          width: w,
+          height: h,
+          fillOn: op.style.fillOn != null ? op.style.fillOn : true,
+          fill: op.style.fillColor || "#BFDBFE",
+          stroke: op.style.strokeColor || "#1E3A8A",
+          strokeWidth: op.style.strokeWidth || 1.5,
+          opacity: op.style.shapeOpacity != null ? op.style.shapeOpacity : 1,
+          rotation: 0
+        };
+      }
+
+      if (newObj) {
+        setObjects([...getObjects(), newObj], true);
+        selectedIds = [newObj.id];
+        onSelect(selectedIds);
+        updateFloatingBar();
+
+        if (newObj.type === "text") {
+          setTimeout(() => startInlineEditor(newObj), 40);
+        }
+      }
+    }
+  }
+
+  function onDoubleClick(event) {
+    const objEl = event.target?.closest ? event.target.closest('.edit-obj[data-type="text"]') : null;
+    if (!objEl) return;
+    const id = objEl.dataset.id;
+    const obj = getObjects().find((o) => o.id === id);
+    if (obj) {
+      startInlineEditor(obj);
+    }
+  }
+
+  function renderLiveInk(points, color, strokeWidth) {
+    if (!liveInkSvg) {
+      liveInkSvg = document.createElement("svg");
+      liveInkSvg.classList.add("edit-ink-live");
+      layer.append(liveInkSvg);
+    }
+    const z = zoom() || 1;
+    const h = pageH ? pageH() : 842;
+    const d = points
+      .map((p, i) => `${i ? "L" : "M"} ${(p.x * z).toFixed(1)} ${((h - p.y) * z).toFixed(1)}`)
+      .join(" ");
+    liveInkSvg.innerHTML = `<path d="${d}" fill="none" stroke="${color}" stroke-width="${strokeWidth * z}" stroke-linecap="round" stroke-linejoin="round" />`;
+  }
+
+  function removeLiveInk() {
+    if (liveInkSvg) {
+      liveInkSvg.remove();
+      liveInkSvg = null;
+    }
+  }
+
+  function renderMarquee(start, current) {
+    let el = layer.querySelector(".edit-marquee");
+    if (!el) {
+      el = document.createElement("div");
+      el.className = "edit-marquee";
+      layer.append(el);
+    }
+    const z = zoom() || 1;
+    const h = pageH ? pageH() : 842;
+    const minX = Math.min(start.x, current.x);
+    const maxX = Math.max(start.x, current.x);
+    const minY = Math.min(start.y, current.y);
+    const maxY = Math.max(start.y, current.y);
+
+    el.style.left = `${minX * z}px`;
+    el.style.top = `${(h - maxY) * z}px`;
+    el.style.width = `${(maxX - minX) * z}px`;
+    el.style.height = `${(maxY - minY) * z}px`;
+  }
+
+  function removeMarquee() {
+    layer.querySelector(".edit-marquee")?.remove();
+  }
+
+  function renderCreationGhost(start, current, tool) {
+    let el = layer.querySelector(".edit-ghost");
+    if (!el) {
+      el = document.createElement("div");
+      el.className = "edit-ghost";
+      layer.append(el);
+    }
+    const z = zoom() || 1;
+    const h = pageH ? pageH() : 842;
+    const minX = Math.min(start.x, current.x);
+    const maxX = Math.max(start.x, current.x);
+    const minY = Math.min(start.y, current.y);
+    const maxY = Math.max(start.y, current.y);
+
+    el.style.left = `${minX * z}px`;
+    el.style.top = `${(h - maxY) * z}px`;
+    el.style.width = `${(maxX - minX) * z}px`;
+    el.style.height = `${(maxY - minY) * z}px`;
+    el.style.borderRadius = tool === "ellipse" ? "50%" : "3px";
+  }
+
+  function removeCreationGhost() {
+    layer.querySelector(".edit-ghost")?.remove();
+  }
+
+  layer?.addEventListener?.("pointerdown", onPointerDown);
+  layer?.addEventListener?.("mousedown", onPointerDown);
+  if (typeof window !== "undefined") {
+    window.addEventListener?.("pointermove", onPointerMove);
+    window.addEventListener?.("mousemove", onPointerMove);
+    window.addEventListener?.("pointerup", onPointerUp);
+    window.addEventListener?.("mouseup", onPointerUp);
+  }
+  layer?.addEventListener?.("dblclick", onDoubleClick);
+
+  return {
+    destroy() {
+      layer?.removeEventListener?.("pointerdown", onPointerDown);
+      layer?.removeEventListener?.("mousedown", onPointerDown);
+      if (typeof window !== "undefined") {
+        window.removeEventListener?.("pointermove", onPointerMove);
+        window.removeEventListener?.("mousemove", onPointerMove);
+        window.removeEventListener?.("pointerup", onPointerUp);
+        window.removeEventListener?.("mouseup", onPointerUp);
+      }
+      layer?.removeEventListener?.("dblclick", onDoubleClick);
+    },
+    setSelectedIds(ids) {
+      selectedIds = ids;
+      updateFloatingBar();
+    },
+    getSelectedIds() {
+      return selectedIds;
+    },
+    updateFloatingBar
   };
 }
