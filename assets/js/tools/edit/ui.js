@@ -1,6 +1,6 @@
 const CSS = `
 /* ==========================================================================
-   PDF Studio — PDF Editor UI (Lumen Glow v2 Full-Viewport Architecture)
+   PDF Studio — PDF Editor UI (Lumen Glow v2 Floating Canvas Architecture)
    ========================================================================== */
 
 /* Full Viewport Expansion with Harmonious Spacing */
@@ -89,51 +89,51 @@ const CSS = `
   color: var(--text-primary);
 }
 #edit-drop .intake__hint {
-  font-size: var(--t-xs, 0.82rem);
+  font-size: var(--t-xs, 0.8125rem);
   color: var(--text-muted);
   max-width: 44ch;
   text-wrap: balance;
   line-height: 1.6;
 }
 
-/* ——— Workspace 3-Zone Layout ——— */
+/* ——— Workspace Full-Bleed Creative Canvas Architecture ——— */
 .edit-workspace {
-  display: grid;
-  grid-template-columns: 200px minmax(0, 1fr) 280px;
-  gap: 16px;
-  align-items: stretch;
-  height: calc(100vh - var(--header-h, 44px) - 86px);
-  min-height: 480px;
+  position: relative;
+  display: block;
   width: 100%;
-  transition: grid-template-columns var(--dur-base, 180ms) var(--ease, ease);
+  height: calc(100vh - var(--header-h, 44px) - 20px);
+  min-height: 520px;
   overflow: hidden;
   box-sizing: border-box;
-}
-.edit-workspace.sidebar-collapsed {
-  grid-template-columns: 0px minmax(0, 1fr) 280px;
-  gap: 16px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-0, rgba(15, 23, 42, 0.03));
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-panel);
 }
 
-/* ——— 1. Thumbnails Sidebar (Right in RTL) ——— */
+/* ——— 1. Floating Thumbnails Drawer (Right in RTL) ——— */
 .edit-sidebar {
-  display: flex;
-  flex-direction: column;
-  background: var(--surface-1);
+  position: absolute;
+  top: 76px;
+  right: 16px;
+  bottom: 76px;
+  width: 220px;
+  background: var(--surface-3, rgba(255, 255, 255, 0.88));
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: var(--shadow-panel);
   overflow: hidden;
-  min-width: 0;
-  transition: opacity var(--dur-fast, 140ms) var(--ease, ease);
+  z-index: 105;
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--dur-base, 220ms) cubic-bezier(0.16, 1, 0.3, 1), opacity var(--dur-base, 220ms) ease;
 }
 .edit-workspace.sidebar-collapsed .edit-sidebar {
+  transform: translateX(calc(100% + 24px));
   opacity: 0;
   pointer-events: none;
-  border: 0;
-  padding: 0;
-  margin: 0;
 }
 .edit-sidebar__head {
   display: flex;
@@ -141,13 +141,13 @@ const CSS = `
   justify-content: space-between;
   padding: 0 var(--space-3);
   border-bottom: 1px solid var(--border-soft);
-  background: var(--surface-0, rgba(15, 23, 42, 0.02));
-  height: 40px;
-  min-height: 40px;
+  background: var(--surface-1);
+  height: 42px;
+  min-height: 42px;
 }
 .edit-sidebar__title {
   font-family: var(--ui, "Noto Naskh Arabic", serif);
-  font-size: var(--t-xs, 0.80rem);
+  font-size: var(--t-xs, 0.8125rem);
   font-weight: 700;
   color: var(--text-primary);
   display: flex;
@@ -155,7 +155,7 @@ const CSS = `
   gap: var(--space-2);
 }
 .edit-sidebar__count {
-  font-size: var(--t-2xs, 0.70rem);
+  font-size: var(--t-2xs, 0.75rem);
   color: var(--text-muted);
   background: var(--surface-2);
   padding: 1px 6px;
@@ -175,34 +175,34 @@ const CSS = `
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--surface-2);
+  background: var(--surface-1);
   border: 1.5px solid var(--border-soft);
   border-radius: var(--radius-md);
-  padding: 6px;
+  padding: 8px;
   cursor: pointer;
   transition: all var(--dur-fast, 140ms) var(--ease, ease);
   user-select: none;
 }
 .edit-thumb-item:hover {
   border-color: var(--border-strong);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
 }
 .edit-thumb-item.is-active {
   border-color: var(--accent);
-  background: var(--surface-3, #FFFFFF);
-  box-shadow: 0 0 0 2px var(--accent-soft), 0 4px 14px var(--shadow-glow);
+  background: var(--surface-2);
+  box-shadow: 0 0 0 2px var(--accent-soft), var(--shadow-glow);
 }
 .edit-thumb-preview {
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1.414;
   background: var(--surface-3, #FFFFFF);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   overflow: hidden;
   display: grid;
   place-items: center;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+  box-shadow: var(--shadow-soft);
 }
 .edit-thumb-preview canvas {
   width: 100%;
@@ -220,7 +220,7 @@ const CSS = `
 }
 .edit-thumb-num {
   font-family: var(--data, "Playfair Display", serif);
-  font-size: var(--t-2xs, 0.72rem);
+  font-size: var(--t-2xs, 0.75rem);
   font-weight: 700;
   color: var(--text-primary);
   display: flex;
@@ -240,14 +240,14 @@ const CSS = `
   opacity: 0.85;
 }
 .edit-thumb-btn {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   display: grid;
   place-items: center;
   border: 0;
-  background: var(--surface-1);
+  background: var(--surface-2);
   color: var(--text-muted);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   cursor: pointer;
   padding: 0;
   transition: all var(--dur-fast, 140ms);
@@ -262,65 +262,72 @@ const CSS = `
 }
 .edit-thumb-btn .icon { width: 12px; height: 12px; }
 
-/* ——— 2. Central Stage & Viewport ——— */
+/* ——— 2. Central Full-Bleed Stage & Viewport ——— */
 .edit-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--surface-1);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-lg);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  box-shadow: var(--shadow-soft);
+  background: transparent;
   overflow: hidden;
   min-width: 0;
-  height: 100%;
-  position: relative;
+  z-index: 1;
 }
 
-/* Polished Top Stage Toolbar with Clean Proportions & Explicit Stacking Context */
+/* Floating Dynamic Island Topbar */
 .edit-topbar, .edit-stage__bar {
+  position: absolute !important;
+  top: 14px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
   gap: 12px !important;
-  padding: 0 16px !important;
-  height: 56px !important;
-  min-height: 56px !important;
-  max-height: 56px !important;
-  border-bottom: 1px solid var(--border-soft) !important;
-  background: var(--surface-0, rgba(15, 23, 42, 0.02)) !important;
-  flex-wrap: nowrap !important;
-  white-space: nowrap !important;
-  z-index: 100 !important;
-  position: relative !important;
+  padding: 6px 14px !important;
+  height: 52px !important;
+  min-height: 52px !important;
+  max-height: 52px !important;
+  width: max-content !important;
+  max-width: calc(100% - 32px) !important;
+  background: var(--surface-3, rgba(255, 255, 255, 0.88)) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid var(--border-soft) !important;
+  border-radius: var(--radius-pill) !important;
+  box-shadow: var(--shadow-panel) !important;
+  z-index: 120 !important;
   overflow: visible !important;
   box-sizing: border-box !important;
+  white-space: nowrap !important;
+  user-select: none !important;
 }
 
 .edit-topbar__section {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 8px !important;
+  gap: 6px !important;
   flex-shrink: 0 !important;
 }
 
 .edit-toolbar, .edit-tool-group {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 4px !important;
+  gap: 3px !important;
   background: var(--surface-2) !important;
   border: 1px solid var(--border-soft) !important;
   border-radius: var(--radius-pill) !important;
-  padding: 4px 6px !important;
+  padding: 3px 5px !important;
   position: relative !important;
 }
 
 .edit-tool-divider {
   width: 1px;
-  height: 20px;
+  height: 18px;
   background: var(--border-strong);
-  margin: 0 4px;
+  margin: 0 3px;
 }
 
 /* Specific Override for Tool Radios in Header */
@@ -355,7 +362,7 @@ const CSS = `
   width: auto !important;
   border-radius: var(--radius-pill) !important;
   color: var(--text-muted) !important;
-  font-size: 0.85rem !important;
+  font-size: var(--t-sm, 0.8125rem) !important;
   font-weight: 600 !important;
   transition: all var(--dur-fast, 140ms) cubic-bezier(0.4, 0, 0.2, 1) !important;
   user-select: none !important;
@@ -402,7 +409,7 @@ const CSS = `
   padding: 0 12px !important;
   border-radius: var(--radius-pill) !important;
   color: var(--text-muted) !important;
-  font-size: 0.85rem !important;
+  font-size: var(--t-sm, 0.8125rem) !important;
   font-weight: 600 !important;
   transition: all var(--dur-fast, 140ms) cubic-bezier(0.4, 0, 0.2, 1) !important;
   user-select: none !important;
@@ -425,18 +432,20 @@ const CSS = `
 
 .edit-popover-menu {
   position: absolute !important;
-  top: calc(100% + 6px) !important;
+  top: calc(100% + 8px) !important;
   right: 0 !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 2px !important;
+  gap: 3px !important;
   background: var(--surface-3, #FFFFFF) !important;
-  border: 1.5px solid var(--border-strong) !important;
+  border: 1px solid var(--border-soft) !important;
   border-radius: var(--radius-md) !important;
-  padding: 4px !important;
-  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.35) !important;
+  padding: 6px !important;
+  box-shadow: var(--shadow-panel) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
   z-index: 999 !important;
-  min-width: 130px !important;
+  min-width: 140px !important;
 }
 .edit-popover-menu[hidden] {
   display: none !important;
@@ -449,9 +458,9 @@ const CSS = `
   border: 0 !important;
   background: transparent !important;
   color: var(--text-primary) !important;
-  font-size: 0.74rem !important;
+  font-size: var(--t-xs, 0.8125rem) !important;
   font-weight: 600 !important;
-  border-radius: 4px !important;
+  border-radius: var(--radius-xs) !important;
   cursor: pointer !important;
   text-align: start !important;
   transition: background var(--dur-fast, 140ms) !important;
@@ -474,11 +483,11 @@ const CSS = `
   gap: 6px !important;
   height: 36px !important;
   min-height: 36px !important;
-  padding: 0 16px !important;
+  padding: 0 14px !important;
   border: 1px solid var(--border-soft) !important;
   background: var(--surface-2) !important;
   color: var(--text-primary) !important;
-  font-size: 0.85rem !important;
+  font-size: var(--t-sm, 0.8125rem) !important;
   font-weight: 600 !important;
   border-radius: var(--radius-pill) !important;
   cursor: pointer !important;
@@ -491,7 +500,7 @@ const CSS = `
   background: var(--surface-3, #FFFFFF) !important;
   border-color: var(--border-strong) !important;
   transform: translateY(-1px) !important;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
+  box-shadow: var(--shadow-soft) !important;
 }
 .edit-tool-btn:active {
   transform: translateY(0) !important;
@@ -514,7 +523,7 @@ const CSS = `
   background: var(--accent) !important;
   color: #FFFFFF !important;
   border-color: var(--accent) !important;
-  padding: 0 20px !important;
+  padding: 0 18px !important;
   box-shadow: 0 4px 12px var(--accent-glow) !important;
 }
 .edit-btn-primary:hover {
@@ -530,11 +539,11 @@ const CSS = `
   background: var(--surface-2);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-pill);
-  padding: 1px 3px;
+  padding: 2px 4px;
 }
 .edit-nav-btn {
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   display: grid;
   place-items: center;
   border: 0;
@@ -553,13 +562,13 @@ const CSS = `
   opacity: 0.35;
   cursor: not-allowed;
 }
-.edit-nav-btn .icon { width: 11px; height: 11px; }
+.edit-nav-btn .icon { width: 12px; height: 12px; }
 .edit-nav-count {
   font-family: var(--data, "Playfair Display", serif);
-  font-size: var(--t-xs, 0.68rem);
+  font-size: var(--t-xs, 0.8125rem);
   font-weight: 700;
   color: var(--text-primary);
-  padding: 0 4px;
+  padding: 0 6px;
   direction: ltr;
 }
 
@@ -571,30 +580,32 @@ const CSS = `
   background: var(--surface-2);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-pill);
-  padding: 1px 4px;
+  padding: 2px 4px;
 }
 .edit-zoom-label {
   font-family: var(--data, "Playfair Display", serif);
-  font-size: var(--t-xs, 0.70rem);
+  font-size: var(--t-xs, 0.8125rem);
   font-weight: 700;
   color: var(--text-primary);
-  min-width: 36px;
+  min-width: 40px;
   text-align: center;
   direction: ltr;
 }
 
 /* Canvas Viewport */
 .edit-viewport, .edit-board-wrap {
-  position: relative;
-  flex: 1;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: safe center;
   justify-content: safe center;
   overflow: auto;
-  padding: var(--space-4);
-  background: var(--surface-0, rgba(15, 23, 42, 0.04));
-  background-image: radial-gradient(var(--border-soft) 1px, transparent 0);
-  background-size: 20px 20px;
+  padding: 84px 48px 84px;
+  background: var(--surface-0, rgba(15, 23, 42, 0.03));
+  background-image: radial-gradient(var(--border-soft) 1.5px, transparent 0);
+  background-size: 24px 24px;
   user-select: none;
   cursor: default;
   scrollbar-gutter: stable;
@@ -611,8 +622,8 @@ const CSS = `
   position: relative;
   display: inline-block;
   background: var(--surface-3, #FFFFFF);
-  border-radius: 4px;
-  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.06);
+  border-radius: var(--radius-xs);
+  box-shadow: var(--shadow-panel);
   transition: box-shadow var(--dur-base, 180ms);
   overflow: visible;
   transform-origin: center center;
@@ -625,7 +636,7 @@ const CSS = `
   max-width: none;
   height: auto;
   background: var(--surface-3, #FFFFFF);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   direction: ltr;
 }
 
@@ -647,7 +658,7 @@ const CSS = `
   outline: 1px solid transparent;
   transform-origin: center center;
   font-family: var(--ui, "Noto Naskh Arabic", serif);
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   user-select: none;
 }
 .edit-obj:active { cursor: grabbing; }
@@ -707,10 +718,10 @@ const CSS = `
   line-height: 1.42;
   direction: rtl;
   white-space: pre-wrap;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   outline: none;
   z-index: 40;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-panel);
 }
 
 /* Resize & Rotate Handles */
@@ -720,10 +731,10 @@ const CSS = `
   height: 10px;
   background: var(--accent);
   border: 2px solid #FFFFFF;
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   z-index: 35;
   box-sizing: border-box;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+  box-shadow: var(--shadow-soft);
 }
 .edit-handle[data-handle="nw"] { top: -5px; left: -5px; cursor: nwse-resize; }
 .edit-handle[data-handle="n"]  { top: -5px; left: 50%; margin-left: -5px; cursor: ns-resize; }
@@ -738,26 +749,26 @@ const CSS = `
   position: absolute;
   left: 50%;
   top: -24px;
-  width: 11px;
-  height: 11px;
-  margin-left: -5.5px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
   background: #FFFFFF;
   border: 2px solid var(--accent);
   border-radius: 50%;
   cursor: grab;
   z-index: 35;
   box-sizing: border-box;
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.20);
+  box-shadow: var(--shadow-soft);
 }
 .edit-rotate::after {
   content: "";
   position: absolute;
-  left: 3.5px;
-  top: 9px;
+  left: 4px;
+  top: 10px;
   width: 2px;
   height: 12px;
   background: var(--accent);
-  border-radius: 1px;
+  border-radius: var(--radius-xs);
 }
 .edit-obj:not(.is-selected) .edit-handle,
 .edit-obj:not(.is-selected) .edit-rotate {
@@ -774,34 +785,34 @@ const CSS = `
   top: 0;
   bottom: 0;
   width: 1px;
-  background: #3B82F6;
-  box-shadow: 0 0 4px #3B82F6;
+  background: var(--accent);
+  box-shadow: 0 0 4px var(--accent-glow);
 }
 .edit-guide--h {
   left: 0;
   right: 0;
   height: 1px;
-  background: #3B82F6;
-  box-shadow: 0 0 4px #3B82F6;
+  background: var(--accent);
+  box-shadow: 0 0 4px var(--accent-glow);
 }
 
 /* Marquee Drag Box */
 .edit-marquee {
   position: absolute;
   border: 1px solid var(--accent);
-  background: var(--accent-soft, rgba(79, 70, 229, 0.12));
+  background: var(--accent-soft);
   pointer-events: none;
   z-index: 30;
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
 }
 
 /* Ghost Creation Box */
 .edit-ghost {
   position: absolute;
   border: 2px dashed var(--accent);
-  background: var(--accent-soft, rgba(79, 70, 229, 0.10));
+  background: var(--accent-soft);
   pointer-events: none;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   z-index: 28;
 }
 
@@ -825,9 +836,10 @@ const CSS = `
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-pill);
   padding: 6px 8px;
-  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.12), 0 0 0 1px var(--accent-soft);
+  box-shadow: var(--shadow-panel);
   backdrop-filter: blur(20px) saturate(180%);
-  z-index: 50;
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  z-index: 130;
   transform: translate(-50%, -100%) translateY(-14px);
   pointer-events: auto;
   white-space: nowrap;
@@ -838,7 +850,7 @@ const CSS = `
 .edit-floating-bar .btn {
   height: 32px;
   padding: 0 12px;
-  font-size: 0.8rem;
+  font-size: var(--t-xs, 0.8125rem);
   font-weight: 600;
   border: 0;
   background: transparent;
@@ -860,20 +872,22 @@ const CSS = `
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 16px;
-  height: 42px;
-  min-height: 42px;
+  padding: 6px 18px;
+  height: 44px;
+  min-height: 44px;
   background: var(--surface-3, rgba(255, 255, 255, 0.90));
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-pill);
-  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.12);
+  box-shadow: var(--shadow-panel);
   backdrop-filter: blur(24px) saturate(180%);
-  font-size: 0.75rem;
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  font-size: var(--t-xs, 0.8125rem);
   color: var(--text-muted);
-  gap: 24px;
-  z-index: 100;
+  gap: 20px;
+  z-index: 120;
   width: max-content;
   max-width: calc(100% - 32px);
+  user-select: none;
 }
 .edit-stage__status-start {
   display: inline-flex;
@@ -889,89 +903,123 @@ const CSS = `
   font-family: var(--data, "Playfair Display", monospace);
   font-size: 0.85em;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: var(--surface-1);
   border: 1px solid var(--border-soft);
   color: var(--text-primary);
   font-weight: 600;
 }
 
-/* ——— 3. Contextual Inspector Sidebar (Left in RTL) ——— */
+/* ——— 3. Floating Contextual Inspector Drawer (Left in RTL) ——— */
 .edit-inspector, .edit-panel {
-  display: flex;
-  flex-direction: column;
-  background: var(--surface-1);
+  position: absolute;
+  top: 76px;
+  left: 16px;
+  bottom: 76px;
+  width: 300px;
+  max-width: calc(100% - 32px);
+  background: var(--surface-3, rgba(255, 255, 255, 0.88));
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: var(--shadow-panel);
   overflow: hidden;
-  min-width: 0;
-  height: 100%;
+  z-index: 110;
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--dur-base, 220ms) cubic-bezier(0.16, 1, 0.3, 1), opacity var(--dur-base, 220ms) ease;
+}
+.edit-workspace.inspector-collapsed .edit-inspector {
+  transform: translateX(calc(-100% - 24px));
+  opacity: 0;
+  pointer-events: none;
+}
+.edit-inspector__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-3);
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--surface-1);
+  height: 42px;
+  min-height: 42px;
+}
+.edit-inspector__title {
+  font-family: var(--ui, "Noto Naskh Arabic", serif);
+  font-size: var(--t-xs, 0.8125rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 .edit-inspector__scroll {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-2);
+  padding: var(--space-3);
   overflow-y: auto;
   flex: 1;
   scrollbar-gutter: stable;
 }
 
 .edit-inspector .panel-block, .edit-panel .panel-block {
-  background: var(--surface-3, rgba(255,255,255,0.8));
+  background: var(--surface-1);
   border: 1px solid var(--border-soft);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-soft);
 }
 .edit-inspector .panel-block__title, .edit-panel .panel-block__title {
   font-family: var(--ui, "Noto Naskh Arabic", serif);
-  font-size: 0.9rem;
+  font-size: var(--t-sm, 0.8125rem);
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 .edit-inspector .panel-block__meta {
-  font-size: 0.8rem;
+  font-size: var(--t-xs, 0.8125rem);
   color: var(--text-muted);
   line-height: 1.6;
-  margin: 0 0 12px 0;
+  margin: 0 0 10px 0;
 }
 .edit-inspector .field label, .edit-panel .field label {
-  font-size: 0.8rem;
+  font-size: var(--t-xs, 0.8125rem);
   font-weight: 600;
   margin-bottom: 4px;
 }
 .edit-inspector .field input:not([type="color"]):not([type="range"]):not([type="checkbox"]), 
 .edit-inspector .field select, 
 .edit-inspector .field textarea {
-  font-size: 0.85rem;
+  font-size: var(--t-sm, 0.8125rem);
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-strong);
-  background: var(--surface-1);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-family: inherit;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
 }
 .edit-inspector .field input:focus, .edit-inspector .field select:focus, .edit-inspector .field textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
+  outline: none;
 }
 
 /* Swatches & Chips */
 .edit-swatches {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 6px;
   margin-top: 6px;
 }
 .edit-swatch {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   padding: 0;
   border-radius: 50%;
   border: 2px solid var(--border-strong);
@@ -995,7 +1043,7 @@ const CSS = `
   height: 24px;
   padding: 0 6px;
   font-family: var(--data, "Playfair Display", serif);
-  font-size: var(--t-2xs, 0.70rem);
+  font-size: var(--t-2xs, 0.75rem);
   font-weight: 700;
   border-radius: var(--radius-pill);
   border: 1px solid var(--border-strong);
@@ -1018,41 +1066,42 @@ const CSS = `
 .edit-align-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 3px;
+  gap: 4px;
 }
 .edit-align-btn {
-  height: 28px;
+  height: 30px;
   display: grid;
   place-items: center;
   border: 1px solid var(--border-soft);
-  background: var(--surface-3, #FFFFFF);
+  background: var(--surface-2);
   color: var(--text-muted);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   cursor: pointer;
   padding: 0;
+  transition: all var(--dur-fast);
 }
 .edit-align-btn:hover {
-  background: var(--surface-2);
+  background: var(--surface-1);
   color: var(--accent);
   border-color: var(--accent);
 }
-.edit-align-btn .icon { width: 13px; height: 13px; }
+.edit-align-btn .icon { width: 14px; height: 14px; }
 
 /* Layers List */
 .edit-layers {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   max-height: 180px;
   overflow-y: auto;
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-md);
-  padding: 3px;
+  padding: 4px;
   background: var(--surface-0, rgba(15, 23, 42, 0.02));
 }
 .edit-layers:empty::before {
   content: "لا عناصر بعد — اضغط على الصفحة لإضافة نص أو شكل";
-  font-size: var(--t-2xs, 0.70rem);
+  font-size: var(--t-2xs, 0.75rem);
   color: var(--text-muted);
   text-align: center;
   padding: var(--space-2);
@@ -1062,12 +1111,12 @@ const CSS = `
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  padding: 4px var(--space-2);
+  padding: 5px var(--space-2);
   border: 1px solid var(--border-soft);
-  border-radius: 4px;
-  background: var(--surface-3, #FFFFFF);
+  border-radius: var(--radius-xs);
+  background: var(--surface-2);
   cursor: pointer;
-  font-size: var(--t-2xs, 0.72rem);
+  font-size: var(--t-2xs, 0.75rem);
   transition: all var(--dur-fast, 140ms);
 }
 .edit-layer-row:hover {
@@ -1087,42 +1136,42 @@ const CSS = `
   text-align: start;
 }
 .edit-layer-row__btn, .edit-layer-row__del {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   display: grid;
   place-items: center;
   border: 0;
   background: transparent;
   color: var(--text-muted);
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   cursor: pointer;
   padding: 0;
 }
 .edit-layer-row__btn:hover, .edit-layer-row__del:hover {
-  background: var(--surface-2);
+  background: var(--surface-1);
   color: var(--text-primary);
 }
 .edit-layer-row__btn--del:hover {
   background: var(--danger-soft);
   color: var(--danger, #E11D48);
 }
-.edit-layer-row__btn .icon, .edit-layer-row__del .icon { width: 11px; height: 11px; }
+.edit-layer-row__btn .icon, .edit-layer-row__del .icon { width: 12px; height: 12px; }
 
 /* Preset stamps grid */
 .edit-stamps-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4px;
+  gap: 6px;
 }
 .edit-stamp-preset {
-  height: 32px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 1.5px solid currentColor;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   font-family: "Amiri", "Noto Naskh Arabic", serif;
-  font-size: var(--t-xs, 0.78rem);
+  font-size: var(--t-xs, 0.8125rem);
   font-weight: 700;
   cursor: pointer;
   background: transparent;
@@ -1130,59 +1179,78 @@ const CSS = `
 }
 .edit-stamp-preset:hover {
   transform: scale(1.03);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
+  box-shadow: var(--shadow-soft);
 }
 
 /* Shape Presets */
 .edit-presets {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4px;
+  gap: 6px;
   margin-top: 4px;
 }
 .edit-preset {
-  height: 28px;
+  height: 30px;
   padding: 0 var(--space-2);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  font-size: var(--t-2xs, 0.70rem);
+  gap: 6px;
+  font-size: var(--t-2xs, 0.75rem);
   font-weight: 600;
-  border-radius: var(--radius-sm, 6px);
+  border-radius: var(--radius-xs);
   border: 1px solid var(--border-strong);
-  background: var(--surface-3, #FFFFFF);
-  color: var(--ink-2);
+  background: var(--surface-2);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all var(--dur-fast, 140ms);
 }
-.edit-preset:hover { border-color: var(--accent); }
+.edit-preset:hover { border-color: var(--accent); color: var(--accent); }
 .edit-preset i {
   width: 12px;
   height: 12px;
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   display: inline-block;
   border: 1px solid var(--border-strong);
   flex: none;
 }
 
+/* Blueprint / Dark Theme Overrides */
+[data-theme="blueprint"] .edit-topbar,
+[data-theme="blueprint"] .edit-sidebar,
+[data-theme="blueprint"] .edit-inspector,
+[data-theme="blueprint"] .edit-stage__status,
+[data-theme="blueprint"] .edit-floating-bar,
+[data-theme="blueprint"] .edit-popover-menu {
+  background: var(--surface-3) !important;
+  border-color: var(--border-soft) !important;
+  box-shadow: var(--shadow-panel) !important;
+}
+
 /* Responsive Rules */
-@media (max-width: 1080px) {
-  .edit-workspace {
-    grid-template-columns: 1fr;
-    height: auto;
+@media (max-width: 1100px) {
+  .edit-sidebar {
+    width: 180px;
+  }
+  .edit-inspector {
+    width: 260px;
   }
 }
-@media (max-width: 640px) {
-  .edit-workspace {
-    grid-template-columns: 1fr;
+@media (max-width: 860px) {
+  .edit-inspector {
+    transform: translateX(calc(-100% - 24px));
   }
-  .edit-sidebar, .edit-inspector {
-    max-height: none;
+  .edit-workspace.inspector-open .edit-inspector {
+    transform: translateX(0);
+  }
+  .edit-topbar, .edit-stage__bar {
+    max-width: calc(100% - 16px) !important;
+    padding: 4px 8px !important;
+    gap: 6px !important;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .edit-obj, .edit-thumb-item, .edit-tool-btn, .edit-swatch {
+  .edit-obj, .edit-thumb-item, .edit-tool-btn, .edit-swatch, .edit-sidebar, .edit-inspector {
     transition: none !important;
   }
 }
@@ -1328,11 +1396,12 @@ export function buildUi(root) {
               </div>
             </div>
 
-            <!-- Left Section: History, Delete, and Save -->
+            <!-- Left Section: History, Delete, Inspector Toggle, and Save -->
             <div class="edit-topbar__section">
               <button id="edit-undo" type="button" class="edit-tool-btn edit-btn-icon-only" title="تراجع (Ctrl+Z)">${icon("icon-rotate")}</button>
               <button id="edit-redo" type="button" class="edit-tool-btn edit-btn-icon-only" title="إعادة (Ctrl+Y)"><svg class="icon flip" aria-hidden="true"><use href="#icon-rotate"></use></svg></button>
               <button id="edit-delete" type="button" class="edit-tool-btn edit-btn-icon-only" title="حذف المحدد (Delete)">${icon("icon-trash")}</button>
+              <button id="edit-inspector-btn" type="button" class="edit-tool-btn edit-btn-icon-only" title="لوحة الخصائص والطبقات (إظهار / إخفاء)"><svg class="icon flip" aria-hidden="true"><use href="#icon-sidebar"></use></svg></button>
               <button id="edit-save" type="button" class="edit-tool-btn edit-btn-primary" title="حفظ المستند">${icon("icon-download")} <span>حفظ</span></button>
             </div>
           </div>
@@ -1372,7 +1441,15 @@ export function buildUi(root) {
         </section>
 
         <!-- 3. Contextual Inspector Sidebar (Left in RTL) -->
-        <aside class="edit-inspector edit-panel" aria-label="لوحة الخصائص">
+        <aside class="edit-inspector edit-panel" id="edit-inspector" aria-label="لوحة الخصائص">
+          <div class="edit-inspector__head">
+            <span class="edit-inspector__title">
+              <svg class="icon flip" aria-hidden="true"><use href="#icon-sidebar"></use></svg> الخصائص والطبقات
+            </span>
+            <button id="edit-inspector-toggle" type="button" class="btn btn--compact" title="طي / فتح لوحة الخصائص">
+              ${icon("icon-close")}
+            </button>
+          </div>
           <div class="edit-inspector__scroll">
 
             <!-- Alignment & Multi-Selection Panel (Visible only when 2+ elements selected) -->
@@ -1490,10 +1567,10 @@ export function buildUi(root) {
             <div class="panel-block" data-edit-panel="shape" hidden>
               <h3 class="panel-block__title">خصائص الشكل</h3>
               <div class="edit-presets" role="group" aria-label="أنماط جاهزة">
-                <button type="button" class="edit-preset" data-shape-preset="frame"><i style="background:#fff;border-color:#DC2626"></i> إطار</button>
-                <button type="button" class="edit-preset" data-shape-preset="highlight"><i style="background:#FDE68A"></i> تظليل</button>
-                <button type="button" class="edit-preset" data-shape-preset="fill"><i style="background:#BFDBFE"></i> تعبئة</button>
-                <button type="button" class="edit-preset" data-shape-preset="cover"><i style="background:#fff"></i> تغطية</button>
+                <button type="button" class="edit-preset" data-shape-preset="frame"><i style="background:var(--surface-3);border-color:var(--danger, #E11D48)"></i> إطار</button>
+                <button type="button" class="edit-preset" data-shape-preset="highlight"><i style="background:var(--surface-2)"></i> تظليل</button>
+                <button type="button" class="edit-preset" data-shape-preset="fill"><i style="background:var(--accent-soft)"></i> تعبئة</button>
+                <button type="button" class="edit-preset" data-shape-preset="cover"><i style="background:var(--surface-3)"></i> تغطية</button>
               </div>
               <div class="grid-2col" style="margin-top: 6px">
                 <label class="check">
@@ -1546,12 +1623,12 @@ export function buildUi(root) {
             <div class="panel-block" data-edit-panel="stamp" hidden>
               <h3 class="panel-block__title">الأختام العربية</h3>
               <div class="edit-stamps-grid">
-                <button type="button" class="edit-stamp-preset" data-stamp="معتمد" style="color: #DC2626">معتمد</button>
-                <button type="button" class="edit-stamp-preset" data-stamp="سري للغاية" style="color: #DC2626">سري للغاية</button>
-                <button type="button" class="edit-stamp-preset" data-stamp="مسودة" style="color: #2563EB">مسودة</button>
-                <button type="button" class="edit-stamp-preset" data-stamp="ملغى" style="color: #DC2626">ملغى</button>
-                <button type="button" class="edit-stamp-preset" data-stamp="مدفوع" style="color: #059669">مدفوع</button>
-                <button type="button" class="edit-stamp-preset" data-stamp="طبق الأصل" style="color: #7C3AED">طبق الأصل</button>
+                <button type="button" class="edit-stamp-preset" data-stamp="معتمد" style="color: var(--danger, #E11D48)">معتمد</button>
+                <button type="button" class="edit-stamp-preset" data-stamp="سري للغاية" style="color: var(--danger, #E11D48)">سري للغاية</button>
+                <button type="button" class="edit-stamp-preset" data-stamp="مسودة" style="color: var(--accent, #4F46E5)">مسودة</button>
+                <button type="button" class="edit-stamp-preset" data-stamp="ملغى" style="color: var(--danger, #E11D48)">ملغى</button>
+                <button type="button" class="edit-stamp-preset" data-stamp="مدفوع" style="color: var(--success, #059669)">مدفوع</button>
+                <button type="button" class="edit-stamp-preset" data-stamp="طبق الأصل" style="color: var(--accent, #4F46E5)">طبق الأصل</button>
               </div>
               <div class="field field--wide" style="margin-top: 6px">
                 <label for="edit-stamp-custom">نص ختم مخصص</label>
@@ -1597,6 +1674,14 @@ export function buildUi(root) {
   const intakeGlyph = root.querySelector("#edit-drop .icon");
   if (intakeGlyph) intakeGlyph.classList.add("intake__glyph");
 
+  const inspBtn = root.querySelector("#edit-inspector-btn");
+  const inspToggle = root.querySelector("#edit-inspector-toggle");
+  const toggleInspector = () => {
+    root.querySelector("#edit-workspace")?.classList.toggle("inspector-collapsed");
+  };
+  if (inspBtn) inspBtn.onclick = toggleInspector;
+  if (inspToggle) inspToggle.onclick = toggleInspector;
+
   return {
     drop: root.querySelector("#edit-drop"),
     browse: root.querySelector("#edit-browse"),
@@ -1609,6 +1694,9 @@ export function buildUi(root) {
     sidebarCount: root.querySelector("#edit-sidebar-count"),
     sidebarToggle: root.querySelector("#edit-sidebar-toggle"),
     sidebarBtn: root.querySelector("#edit-sidebar-btn"),
+    inspector: root.querySelector("#edit-inspector"),
+    inspectorToggle: root.querySelector("#edit-inspector-toggle"),
+    inspectorBtn: root.querySelector("#edit-inspector-btn"),
     thumbs: root.querySelector("#edit-thumbs"),
     viewport: root.querySelector("#edit-wrap"),
     wrap: root.querySelector("#edit-wrap"),
