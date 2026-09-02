@@ -1513,7 +1513,10 @@ export function buildUi(root) {
               </div>
               <div class="field field--wide" style="margin-top: 6px">
                 <label for="edit-stamp-custom">نص ختم مخصص</label>
-                <input id="edit-stamp-custom" type="text" placeholder="اكتب نص الختم..." />
+                <div style="display: flex; gap: 4px; align-items: center">
+                  <input id="edit-stamp-custom" type="text" placeholder="اكتب نص الختم..." style="flex: 1" />
+                  <button id="edit-stamp-add" type="button" class="btn btn-secondary" style="height: 30px; padding: 0 10px; font-size: 0.75rem">${icon("icon-plus")} إضافة</button>
+                </div>
               </div>
             </div>
 
@@ -1611,6 +1614,7 @@ export function buildUi(root) {
     strokeWidth: root.querySelector("#edit-stroke-width"),
     shapeOpacity: root.querySelector("#edit-shape-opacity"),
     stampCustom: root.querySelector("#edit-stamp-custom"),
+    stampAdd: root.querySelector("#edit-stamp-add"),
     undo: root.querySelector("#edit-undo"),
     redo: root.querySelector("#edit-redo"),
     remove: root.querySelector("#edit-delete"),

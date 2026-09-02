@@ -51,6 +51,8 @@ const session = {
   currentShape: "rect"
 };
 
+let clipboard = [];
+
 function hasTitleblock() {
   return Boolean(document.getElementById("tb-run"));
 }
@@ -160,14 +162,34 @@ function getCurrentObjects() {
   return session.pagesObjects.get(session.pageIndex) || [];
 }
 
+function updateThumbBadge(pageIdx) {
+  const container = session.ui?.thumbs;
+  if (!container) return;
+  const item = container.querySelector(`[data-page-index="${pageIdx}"]`);
+  if (!item) return;
+  const numSpan = item.querySelector(".edit-thumb-num");
+  if (!numSpan) return;
+  const hasEdits = (session.pagesObjects.get(pageIdx) || []).length > 0;
+  const existingBadge = numSpan.querySelector(".edit-thumb-badge");
+  if (hasEdits && !existingBadge) {
+    const badge = document.createElement("span");
+    badge.className = "edit-thumb-badge";
+    badge.title = "تحتوي على تعديلات";
+    numSpan.append(badge);
+  } else if (!hasEdits && existingBadge) {
+    existingBadge.remove();
+  }
+}
+
 function setCurrentObjects(objs, pushHist = true) {
   if (pushHist) pushHistory();
   session.pagesObjects.set(session.pageIndex, objs);
   renderObjectsOnLayer();
   renderInspectorLayers();
-  renderThumbnails();
+  updateThumbBadge(session.pageIndex);
   syncChrome();
   updateButtonStates();
+  updateStatusInfo();
   saveSessionToTab();
 }
 
@@ -187,7 +209,7 @@ export function isDirty() {
 
 function pushHistory() {
   const snapshot = {
-    pagesObjects: new Map(Array.from(session.pagesObjects.entries()).map(([k, v]) => [k, JSON.parse(JSON.stringify(v))])),
+    pagesObjects: new Map(Array.from(session.pagesObjects.entries()).map(([k, v]) => [k, structuredClone(v)])),
     pageIndex: session.pageIndex
   };
   session.history.push(snapshot);
@@ -200,7 +222,7 @@ function pushHistory() {
 function undo() {
   if (!session.history.length) return;
   const currentSnapshot = {
-    pagesObjects: new Map(Array.from(session.pagesObjects.entries()).map(([k, v]) => [k, JSON.parse(JSON.stringify(v))])),
+    pagesObjects: new Map(Array.from(session.pagesObjects.entries()).map(([k, v]) => [k, structuredClone(v)])),
     pageIndex: session.pageIndex
   };
   session.redoStack.push(currentSnapshot);
@@ -210,9 +232,10 @@ function undo() {
   session.pageIndex = Math.min(session.pageCount - 1, prev.pageIndex);
   renderObjectsOnLayer();
   renderInspectorLayers();
-  renderThumbnails();
+  updateThumbBadge(session.pageIndex);
   renderPage();
   updateButtonStates();
+  updateStatusInfo();
   saveSessionToTab();
   toast("تم التراجع", "info");
 }
@@ -220,7 +243,7 @@ function undo() {
 function redo() {
   if (!session.redoStack.length) return;
   const currentSnapshot = {
-    pagesObjects: new Map(Array.from(session.pagesObjects.entries()).map(([k, v]) => [k, JSON.parse(JSON.stringify(v))])),
+    pagesObjects: new Map(Array.from(session.pagesObjects.entries()).map(([k, v]) => [k, structuredClone(v)])),
     pageIndex: session.pageIndex
   };
   session.history.push(currentSnapshot);
@@ -230,9 +253,10 @@ function redo() {
   session.pageIndex = Math.min(session.pageCount - 1, next.pageIndex);
   renderObjectsOnLayer();
   renderInspectorLayers();
-  renderThumbnails();
+  updateThumbBadge(session.pageIndex);
   renderPage();
   updateButtonStates();
+  updateStatusInfo();
   saveSessionToTab();
   toast("تمت الإعادة", "info");
 }
@@ -296,7 +320,30 @@ function updateInspectorPanels(tool) {
   }
 }
 
+function updateStatusInfo() {
+  const statusEl = session.ui?.statusInfo;
+  if (!statusEl) return;
+  if (!session.bytes) {
+    statusEl.textContent = "جاهز";
+    return;
+  }
+  const selCount = session.selectedIds.length;
+  if (selCount === 1) {
+    const obj = getCurrentObjects().find((o) => o.id === session.selectedIds[0]);
+    if (obj) {
+      statusEl.textContent = `محدد: ${Math.round(obj.width)}×${Math.round(obj.height)} pt (صفحة ${session.pageIndex + 1}/${session.pageCount})`;
+      return;
+    }
+  } else if (selCount > 1) {
+    statusEl.textContent = `محدد: ${selCount} عناصر (صفحة ${session.pageIndex + 1}/${session.pageCount})`;
+    return;
+  }
+  const total = getCurrentObjects().length;
+  statusEl.textContent = `${total} عنصر (صفحة ${session.pageIndex + 1}/${session.pageCount})`;
+}
+
 function syncInspectorWithSelection() {
+  updateStatusInfo();
   const alignBlock = session.root?.querySelector("#panel-align");
   if (alignBlock) alignBlock.hidden = session.selectedIds.length < 2;
 
@@ -623,6 +670,92 @@ function renderObjectsOnLayer() {
   session.board?.updateFloatingBar();
 }
 
+function bringForward(id) {
+  const objs = getCurrentObjects();
+  const idx = objs.findIndex((o) => o.id === id);
+  if (idx === -1 || idx >= objs.length - 1) return;
+  pushHistory();
+  const next = [...objs];
+  const [item] = next.splice(idx, 1);
+  next.splice(idx + 1, 0, item);
+  setCurrentObjects(next, false);
+  renderObjectsOnLayer();
+  renderInspectorLayers();
+}
+
+function sendBackward(id) {
+  const objs = getCurrentObjects();
+  const idx = objs.findIndex((o) => o.id === id);
+  if (idx <= 0) return;
+  pushHistory();
+  const next = [...objs];
+  const [item] = next.splice(idx, 1);
+  next.splice(idx - 1, 0, item);
+  setCurrentObjects(next, false);
+  renderObjectsOnLayer();
+  renderInspectorLayers();
+}
+
+function copySelected() {
+  const selected = getCurrentObjects().filter((o) => session.selectedIds.includes(o.id));
+  if (!selected.length) return;
+  clipboard = JSON.parse(JSON.stringify(selected));
+  toast(`تم نسخ ${selected.length} عنصر`, "info");
+}
+
+function pasteSelected() {
+  if (!clipboard.length) return;
+  const pw = session.pageW || 595;
+  const ph = session.pageH || 842;
+  const newObjs = clipboard.map((o) => {
+    const clone = JSON.parse(JSON.stringify(o));
+    clone.id = `${clone.type || "obj"}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    clone.x = Math.min(pw - (clone.width || 50), Math.max(0, (clone.x || 0) + 15));
+    clone.y = Math.min(ph - (clone.height || 50), Math.max(0, (clone.y || 0) - 15));
+    return clone;
+  });
+  const current = getCurrentObjects();
+  setCurrentObjects([...current, ...newObjs], true);
+  session.selectedIds = newObjs.map((o) => o.id);
+  session.board?.setSelectedIds(session.selectedIds);
+  renderObjectsOnLayer();
+  renderInspectorLayers();
+  syncInspectorWithSelection();
+  toast(`تم لصق ${newObjs.length} عنصر`, "done");
+}
+
+function addCustomStamp(text) {
+  const stampText = String(text || session.ui?.stampCustom?.value || "").trim();
+  if (!stampText) {
+    toast("يرجى كتابة نص الختم أولاً.", "info");
+    return;
+  }
+  const pw = session.pageW || 595;
+  const ph = session.pageH || 842;
+  const w = 180;
+  const h = 80;
+  const newStamp = {
+    id: `stamp_${Date.now()}`,
+    type: "stamp",
+    label: stampText,
+    color: "#DC2626",
+    shape: "rect",
+    x: (pw - w) / 2,
+    y: (ph - h) / 2,
+    width: w,
+    height: h,
+    rotation: 0
+  };
+  setCurrentObjects([...getCurrentObjects(), newStamp], true);
+  session.selectedIds = [newStamp.id];
+  session.board?.setSelectedIds(session.selectedIds);
+  renderObjectsOnLayer();
+  renderInspectorLayers();
+  syncInspectorWithSelection();
+  setTool("select");
+  toast(`تمت إضافة الختم «${stampText}»`, "done");
+}
+
 function renderInspectorLayers() {
   const container = session.ui?.layers;
   if (!container) return;
@@ -651,6 +784,12 @@ function renderInspectorLayers() {
 
     row.innerHTML = `
       <span class="edit-layer-row__name">${label}</span>
+      <button type="button" class="edit-layer-row__btn" data-act="up" title="تقديم للأمام">
+        <svg class="icon" style="transform: rotate(90deg)"><use href="#icon-chev"></use></svg>
+      </button>
+      <button type="button" class="edit-layer-row__btn" data-act="down" title="إرجاع للخلف">
+        <svg class="icon" style="transform: rotate(-90deg)"><use href="#icon-chev"></use></svg>
+      </button>
       <button type="button" class="edit-layer-row__btn" data-act="lock" title="${obj.locked ? 'إلغاء القفل' : 'قفل'}">
         <svg class="icon"><use href="#${obj.locked ? 'icon-lock' : 'icon-lock-open'}"></use></svg>
       </button>
@@ -670,6 +809,14 @@ function renderInspectorLayers() {
         syncInspectorWithSelection();
         return;
       }
+      if (act === "up") {
+        bringForward(obj.id);
+        return;
+      }
+      if (act === "down") {
+        sendBackward(obj.id);
+        return;
+      }
       if (act === "lock") {
         const updated = getCurrentObjects().map((o) => (o.id === obj.id ? { ...o, locked: !o.locked } : o));
         setCurrentObjects(updated, true);
@@ -685,6 +832,8 @@ function renderInspectorLayers() {
     container.append(row);
   }
 }
+
+const thumbCanvasCache = new Map();
 
 async function renderThumbnails() {
   const container = session.ui?.thumbs;
@@ -738,22 +887,41 @@ async function renderThumbnails() {
         session.pageIndex = i;
         session.selectedIds = [];
         renderPage();
-        renderThumbnails();
+        container.querySelectorAll(".edit-thumb-item").forEach((el) => {
+          el.classList.toggle("is-active", el.dataset.pageIndex === String(i));
+        });
         syncInspectorWithSelection();
       }
     });
 
     container.append(item);
 
-    renderPdfPage(session.bytes, i, { scale: 0.28, rotation: session.pageRotations[i] || 0 })
-      .then((res) => {
-        const previewEl = document.getElementById(`thumb-preview-${i}`);
-        if (previewEl) {
-          previewEl.innerHTML = "";
-          previewEl.append(res.canvas);
-        }
-      })
-      .catch(() => {});
+    const rot = session.pageRotations[i] || 0;
+    const cacheKey = `${i}_${rot}`;
+    const previewEl = item.querySelector(`#thumb-preview-${i}`);
+
+    if (thumbCanvasCache.has(cacheKey)) {
+      const cached = thumbCanvasCache.get(cacheKey);
+      if (previewEl) {
+        previewEl.innerHTML = "";
+        const cloneCanvas = document.createElement("canvas");
+        cloneCanvas.width = cached.width;
+        cloneCanvas.height = cached.height;
+        const ctx = cloneCanvas.getContext("2d");
+        ctx?.drawImage(cached, 0, 0);
+        previewEl.append(cloneCanvas);
+      }
+    } else {
+      renderPdfPage(session.bytes, i, { scale: 0.28, rotation: rot })
+        .then((res) => {
+          thumbCanvasCache.set(cacheKey, res.canvas);
+          if (previewEl) {
+            previewEl.innerHTML = "";
+            previewEl.append(res.canvas);
+          }
+        })
+        .catch(() => {});
+    }
   }
 }
 
@@ -1282,9 +1450,40 @@ export function mount(container) {
         renderObjectsOnLayer();
         renderInspectorLayers();
         syncInspectorWithSelection();
+        setTool("select");
         toast("تم إدراج الصورة", "done");
       } catch (err) {
         reportFailure(err, "تعذّر تحميل الصورة.");
+      }
+    };
+  }
+
+  // Custom stamp add button
+  if (session.ui.stampAdd) session.ui.stampAdd.onclick = () => addCustomStamp();
+  if (session.ui.stampCustom) {
+    session.ui.stampCustom.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        addCustomStamp();
+      }
+    };
+  }
+
+  // Support drag-and-drop replacement of PDF onto workspace viewport
+  if (session.ui.viewport) {
+    session.ui.viewport.ondragover = (e) => {
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+    };
+    session.ui.viewport.ondrop = async (e) => {
+      e.preventDefault();
+      const file = e.dataTransfer?.files?.[0];
+      if (file && isPdfFile(file)) {
+        if (isDirty()) {
+          const ok = await confirmReplace();
+          if (!ok) return;
+        }
+        handleFile(file);
       }
     };
   }
@@ -1319,6 +1518,24 @@ function handleKeyDown(e) {
     e.preventDefault();
     if (e.shiftKey) redo();
     else undo();
+    return;
+  }
+  if (e.ctrlKey && (e.key === "c" || e.key === "C")) {
+    e.preventDefault();
+    copySelected();
+    return;
+  }
+  if (e.ctrlKey && (e.key === "v" || e.key === "V")) {
+    e.preventDefault();
+    pasteSelected();
+    return;
+  }
+  if (e.ctrlKey && (e.key === "]" || e.key === "[")) {
+    e.preventDefault();
+    if (session.selectedIds.length === 1) {
+      if (e.key === "]") bringForward(session.selectedIds[0]);
+      else sendBackward(session.selectedIds[0]);
+    }
     return;
   }
   if (e.ctrlKey && (e.key === "y" || e.key === "Y")) {
