@@ -491,7 +491,10 @@ async function clearAll() {
 }
 
 async function acceptFiles(files) {
-  if (!files?.length) return;
+  if (!files?.length) {
+    if (pages.length) await clearAll();
+    return;
+  }
   const key = filesKey(files);
   if (key === acceptedKey && pages.length) return;
   if (pages.length) await clearAll();

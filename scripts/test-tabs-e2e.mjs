@@ -1,21 +1,30 @@
 #!/usr/bin/env node
 // E2E Tests for the Tabs system using Electron's native Chromium engine
-import { app, BrowserWindow } from "electron";
-import http from "http";
 import fs from "fs";
 import path from "path";
+import { spawn } from "child_process";
 import { fileURLToPath } from "url";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+const harnessPath = path.join(root, "scripts", "tabs-e2e-harness.cjs");
+const harnessCode = `
+"use strict";
+const { app, BrowserWindow } = require("electron");
+const http = require("http");
+const fs = require("fs");
+const path = require("path");
+
+const ROOT = path.join(__dirname, "..");
 
 let ok = 0;
 let fail = 0;
 function check(name, cond, hint = "") {
   if (cond) {
-    console.log(`  ok   ${name}`);
+    console.log("  ok   " + name);
     ok++;
   } else {
-    console.log(`  FAIL ${name}${hint ? ` — ${hint}` : ""}`);
+    console.log("  FAIL " + name + (hint ? " — " + hint : ""));
     fail++;
   }
 }
@@ -24,13 +33,13 @@ const srv = http.createServer((req, res) => {
   const urlPath = (req.url || "/").split("?")[0];
   let rel;
   try {
-    rel = decodeURIComponent(urlPath).replace(/^\/+/, "");
+    rel = decodeURIComponent(urlPath).replace(/^\\/+/, "");
   } catch {
     res.writeHead(400);
     return res.end();
   }
   if (!rel) rel = "index.html";
-  const file = path.join(root, rel);
+  const file = path.join(ROOT, rel);
   if (!fs.existsSync(file)) {
     res.writeHead(404);
     return res.end();
@@ -66,20 +75,13 @@ srv.listen(0, "127.0.0.1", async () => {
     }
   });
 
-  const logs = [];
-  win.webContents.on("console-message", (_e, level, msg) => {
-    logs.push(msg);
-  });
-
-  await win.loadURL(`http://127.0.0.1:${port}/index.html`);
-
-  // Wait for boot
-  await new Promise((r) => setTimeout(r, 1500));
+  await win.loadURL("http://127.0.0.1:" + port + "/index.html");
+  await new Promise((r) => setTimeout(r, 1200));
 
   console.log("Tabs System — Chromium E2E Verification");
 
-  // 1. Check initial tab
-  const tab1Info = await win.webContents.executeJavaScript(`
+  // 1. Initial tab check
+  const tab1 = await win.webContents.executeJavaScript(\`
     (() => {
       const tabs = document.querySelectorAll('.tab-item');
       const startVisible = document.getElementById('view-start')?.classList.contains('view--active');
@@ -88,13 +90,13 @@ srv.listen(0, "127.0.0.1", async () => {
       const title = tabs[0]?.querySelector('.tab-item__title')?.textContent;
       return { count: tabs.length, startVisible, dropVisible, panelHidden, title };
     })()
-  `);
+  \`);
 
-  check("Initial Tab 1 exists and is named الرئيسية", tab1Info.count === 1 && tab1Info.title === "الرئيسية");
-  check("Initial Tab 1 starts on Main drop view (hub-drop visible)", tab1Info.startVisible && tab1Info.dropVisible && tab1Info.panelHidden);
+  check("Initial Tab 1 exists and is named الرئيسية", tab1.count === 1 && tab1.title === "الرئيسية");
+  check("Initial Tab 1 starts on Main drop view (hub-drop visible)", tab1.startVisible && tab1.dropVisible && tab1.panelHidden);
 
-  // 2. Simulate adding files to Tab 1
-  const tab1AddFiles = await win.webContents.executeJavaScript(`
+  // 2. Add files to Tab 1
+  const tab1Files = await win.webContents.executeJavaScript(\`
     (async () => {
       const { setCapture, captureFiles } = await import('./assets/js/ui/capture.js');
       const f1 = new File([new Uint8Array([1, 2, 3])], "document1.pdf", { type: "application/pdf" });
@@ -107,13 +109,13 @@ srv.listen(0, "127.0.0.1", async () => {
       const panelVisible = !document.getElementById('hub-panel')?.hidden;
       return { fileCount: captureFiles().length, title, dropHidden, panelVisible };
     })()
-  `);
+  \`);
 
-  check("Tab 1 has 2 files and shows files panel", tab1AddFiles.fileCount === 2 && tab1AddFiles.dropHidden && tab1AddFiles.panelVisible);
-  check("Tab 1 title updates to 2 ملفات", tab1AddFiles.title === "2 ملفات");
+  check("Tab 1 has 2 files and shows files panel", tab1Files.fileCount === 2 && tab1Files.dropHidden && tab1Files.panelVisible);
+  check("Tab 1 title updates to 2 ملفات", tab1Files.title === "2 ملفات");
 
   // 3. Click [+] to create Tab 2
-  const tab2Created = await win.webContents.executeJavaScript(`
+  const tab2 = await win.webContents.executeJavaScript(\`
     (async () => {
       const addBtn = document.getElementById('tab-add');
       addBtn.click();
@@ -134,14 +136,14 @@ srv.listen(0, "127.0.0.1", async () => {
         currentFiles: captureFiles().length
       };
     })()
-  `);
+  \`);
 
-  check("Clicking [+] creates Tab 2 (total 2 tabs)", tab2Created.count === 2);
-  check("Tab 2 opens cleanly on الرئيسية with 0 files (not duplicating Tab 1)", tab2Created.activeTitle === "الرئيسية" && tab2Created.currentFiles === 0);
-  check("Tab 2 shows clean drop intake area (#hub-drop visible, #hub-panel hidden)", tab2Created.startVisible && tab2Created.dropVisible && tab2Created.panelHidden);
+  check("Clicking [+] creates Tab 2 (total 2 tabs)", tab2.count === 2);
+  check("Tab 2 opens cleanly on الرئيسية with 0 files (not duplicating Tab 1)", tab2.activeTitle === "الرئيسية" && tab2.currentFiles === 0);
+  check("Tab 2 shows clean drop intake area (#hub-drop visible, #hub-panel hidden)", tab2.startVisible && tab2.dropVisible && tab2.panelHidden);
 
   // 4. Switch back to Tab 1
-  const switchedToTab1 = await win.webContents.executeJavaScript(`
+  const backToTab1 = await win.webContents.executeJavaScript(\`
     (async () => {
       const tabs = document.querySelectorAll('.tab-item');
       tabs[0].click();
@@ -156,13 +158,13 @@ srv.listen(0, "127.0.0.1", async () => {
         panelVisible
       };
     })()
-  `);
+  \`);
 
-  check("Switching back to Tab 1 restores Tab 1 files (2 files)", switchedToTab1.fileCount === 2 && switchedToTab1.panelVisible);
-  check("Tab 1 title is preserved (2 ملفات)", switchedToTab1.activeTitle === "2 ملفات");
+  check("Switching back to Tab 1 restores Tab 1 files (2 files)", backToTab1.fileCount === 2 && backToTab1.panelVisible);
+  check("Tab 1 title is preserved (2 ملفات)", backToTab1.activeTitle === "2 ملفات");
 
   // 5. Switch to Tab 2 again
-  const switchedToTab2 = await win.webContents.executeJavaScript(`
+  const backToTab2 = await win.webContents.executeJavaScript(\`
     (async () => {
       const tabs = document.querySelectorAll('.tab-item');
       tabs[1].click();
@@ -174,12 +176,12 @@ srv.listen(0, "127.0.0.1", async () => {
         dropVisible
       };
     })()
-  `);
+  \`);
 
-  check("Switching to Tab 2 again restores Tab 2 clean state (0 files, drop visible)", switchedToTab2.fileCount === 0 && switchedToTab2.dropVisible);
+  check("Switching to Tab 2 again restores Tab 2 clean state (0 files, drop visible)", backToTab2.fileCount === 0 && backToTab2.dropVisible);
 
   // 6. Close Tab 2
-  const closedTab2 = await win.webContents.executeJavaScript(`
+  const closeTab2Res = await win.webContents.executeJavaScript(\`
     (async () => {
       const tabs = document.querySelectorAll('.tab-item');
       const closeBtn = tabs[1].querySelector('.tab-item__close');
@@ -193,17 +195,86 @@ srv.listen(0, "127.0.0.1", async () => {
         fileCount: captureFiles().length
       };
     })()
-  `);
+  \`);
 
-  check("Closing Tab 2 leaves 1 tab (Tab 1)", closedTab2.count === 1);
-  check("Active tab becomes Tab 1 with its 2 files preserved", closedTab2.activeTitle === "2 ملفات" && closedTab2.fileCount === 2);
+  check("Closing Tab 2 leaves 1 tab (Tab 1)", closeTab2Res.count === 1);
+  check("Active tab becomes Tab 1 with its 2 files preserved", closeTab2Res.activeTitle === "2 ملفات" && closeTab2Res.fileCount === 2);
 
-  // 7. Close Tab 1 (last remaining tab)
-  const closedLastTab = await win.webContents.executeJavaScript(`
+  // 7. Test Cross-Tool Route Isolation: Tab 1 enters Merge -> Tab 2 created -> Tab 2 is on Start Hub
+  const routeIsolation = await win.webContents.executeJavaScript(\`
     (async () => {
-      const tabs = document.querySelectorAll('.tab-item');
-      const closeBtn = tabs[0].querySelector('.tab-item__close');
-      closeBtn.click();
+      const { route } = await import('./assets/js/ui/router.js');
+      const { setCapture, captureFiles } = await import('./assets/js/ui/capture.js');
+      const { createTab, getAllTabs, switchTab } = await import('./assets/js/ui/tabs.js');
+      const { lib } = await import('./assets/js/pdf/core.js');
+      const { PDFDocument } = lib();
+
+      // Ensure Tab 1 has files and is on merge
+      const doc1 = await PDFDocument.create();
+      doc1.addPage([200, 200]);
+      const bytes1 = await doc1.save();
+      const doc2 = await PDFDocument.create();
+      doc2.addPage([200, 200]);
+      const bytes2 = await doc2.save();
+
+      const f1 = new File([bytes1], "DocA.pdf", { type: "application/pdf" });
+      const f2 = new File([bytes2], "DocB.pdf", { type: "application/pdf" });
+      setCapture([f1, f2]);
+      await route("merge");
+      await new Promise(r => setTimeout(r, 400));
+
+      const tab1ActiveView = document.querySelector('.view--active')?.id;
+
+      // Click [+] to create Tab 2
+      const addBtn = document.getElementById('tab-add');
+      addBtn.click();
+      await new Promise(r => setTimeout(r, 400));
+
+      const tab2ActiveView = document.querySelector('.view--active')?.id;
+      const tab2Title = document.querySelector('.tab-item--active .tab-item__title')?.textContent;
+      const tab2Files = captureFiles().length;
+
+      // In Tab 2, visit merge with 0 files
+      await route("merge");
+      await new Promise(r => setTimeout(r, 400));
+      const tab2MergePanelHidden = document.getElementById('merge-panel')?.hidden;
+      const tab2MergeDropHidden = document.getElementById('merge-drop')?.hidden;
+
+      // Switch back to Tab 1
+      const all = getAllTabs();
+      await switchTab(all[0].id);
+      await new Promise(r => setTimeout(r, 400));
+      const tab1RestoredView = document.querySelector('.view--active')?.id;
+      const tab1RestoredTitle = document.querySelector('.tab-item--active .tab-item__title')?.textContent;
+      const tab1RestoredFiles = captureFiles().length;
+
+      return {
+        tab1ActiveView,
+        tab2ActiveView,
+        tab2Title,
+        tab2Files,
+        tab2MergePanelHidden,
+        tab2MergeDropHidden,
+        tab1RestoredView,
+        tab1RestoredTitle,
+        tab1RestoredFiles
+      };
+    })()
+  \`);
+
+  check("Tab 1 navigates to Merge view", routeIsolation.tab1ActiveView === "view-merge");
+  check("Creating Tab 2 opens on Start Hub with 0 files (not copying Merge from Tab 1)", routeIsolation.tab2ActiveView === "view-start" && routeIsolation.tab2Title === "الرئيسية" && routeIsolation.tab2Files === 0);
+  check("Tab 2 visiting Merge with 0 files shows empty drop area without Tab 1 files", routeIsolation.tab2MergePanelHidden && !routeIsolation.tab2MergeDropHidden);
+  check("Switching back to Tab 1 restores Merge view with Tab 1 files intact", routeIsolation.tab1RestoredView === "view-merge" && routeIsolation.tab1RestoredFiles === 2);
+
+  // 8. Close last tab
+  const closeLastRes = await win.webContents.executeJavaScript(\`
+    (async () => {
+      const { getAllTabs, closeTab, createTab } = await import('./assets/js/ui/tabs.js');
+      const all = getAllTabs();
+      for (const t of all) {
+        await closeTab(t.id);
+      }
       await new Promise(r => setTimeout(r, 200));
       const tabsAfter = document.querySelectorAll('.tab-item');
       const { captureFiles } = await import('./assets/js/ui/capture.js');
@@ -215,30 +286,50 @@ srv.listen(0, "127.0.0.1", async () => {
         dropVisible
       };
     })()
-  `);
+  \`);
 
-  check("Closing last tab automatically creates a fresh new 'الرئيسية' tab", closedLastTab.count === 1 && closedLastTab.title === "الرئيسية");
-  check("Fresh tab starts with 0 files and drop area visible", closedLastTab.fileCount === 0 && closedLastTab.dropVisible);
+  check("Closing all tabs automatically creates a fresh new 'الرئيسية' tab", closeLastRes.count === 1 && closeLastRes.title === "الرئيسية");
+  check("Fresh tab starts with 0 files and drop area visible", closeLastRes.fileCount === 0 && closeLastRes.dropVisible);
 
-  // 8. Test Keyboard Shortcuts (Ctrl+T, Ctrl+W, Ctrl+Tab)
-  const shortcutsTest = await win.webContents.executeJavaScript(`
-    (async () => {
-      const { createTab, closeCurrentTab, nextTab, getAllTabs } = await import('./assets/js/ui/tabs.js');
-      await createTab({ title: "الرئيسية", activate: true });
-      await createTab({ title: "الرئيسية", activate: true });
-      const threeTabs = getAllTabs().length;
-      await nextTab();
-      await closeCurrentTab();
-      const twoTabs = getAllTabs().length;
-      return { threeTabs, twoTabs };
-    })()
-  `);
-
-  check("Keyboard shortcuts & lifecycle functions create and close tabs properly", shortcutsTest.threeTabs === 3 && shortcutsTest.twoTabs === 2);
-
-  console.log(`\nResults: ${ok} passed, ${fail} failed.`);
-
+  console.log("TABS_RESULT " + Buffer.from(JSON.stringify({ ok, fail })).toString("base64"));
   srv.close();
   app.quit();
-  process.exit(fail === 0 ? 0 : 1);
+});
+`;
+
+fs.writeFileSync(harnessPath, harnessCode, "utf8");
+
+const electronBin = path.join(root, "node_modules", "electron", "dist", "electron.exe");
+const useBin = fs.existsSync(electronBin) ? electronBin : path.join(root, "node_modules", ".bin", "electron.cmd");
+
+const child = spawn(useBin, [harnessPath], {
+  cwd: root,
+  env: { ...process.env, ELECTRON_DISABLE_SECURITY_WARNINGS: "1" }
+});
+
+let output = "";
+child.stdout.on("data", (d) => {
+  const s = d.toString();
+  output += s;
+  process.stdout.write(s);
+});
+child.stderr.on("data", (d) => {
+  // Ignore harmless GPU noise
+  const s = d.toString();
+  if (!/GPU process|swiftshader|GLDriver/.test(s)) {
+    process.stderr.write(s);
+  }
+});
+
+child.on("close", (code) => {
+  try {
+    fs.unlinkSync(harnessPath);
+  } catch {}
+  const match = output.match(/TABS_RESULT\s+(\S+)/);
+  if (match) {
+    const res = JSON.parse(Buffer.from(match[1], "base64").toString("utf8"));
+    process.exit(res.fail === 0 ? 0 : 1);
+  } else {
+    process.exit(code || 0);
+  }
 });

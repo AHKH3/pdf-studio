@@ -23,6 +23,16 @@ let tabs = [];
 let activeTabId = "";
 let tabSeq = 0;
 let routerNavigate = null;
+let getActiveRouteBridge = null;
+let syncTabMetaBridge = null;
+let isSwitchingTab = false;
+
+/**
+ * Check if a tab switch transition is currently in progress.
+ */
+export function isTabSwitching() {
+  return isSwitchingTab;
+}
 
 // Concurrency Queue Configuration
 const MAX_CONCURRENT_TASKS = 2;
@@ -68,11 +78,17 @@ export function getAllTabs() {
 }
 
 /**
- * Set the router bridge navigation function.
- * @param {(routeId: string) => Promise<void>} fn
+ * Set the router bridge functions.
+ * @param {{ navigate: (routeId: string) => Promise<void>; getActiveRoute?: () => string; syncTabMeta?: () => void } | ((routeId: string) => Promise<void>)} bridge
  */
-export function setRouterBridge(fn) {
-  routerNavigate = fn;
+export function setRouterBridge(bridge) {
+  if (typeof bridge === "function") {
+    routerNavigate = bridge;
+  } else if (bridge && typeof bridge === "object") {
+    routerNavigate = bridge.navigate;
+    getActiveRouteBridge = bridge.getActiveRoute || null;
+    syncTabMetaBridge = bridge.syncTabMeta || null;
+  }
 }
 
 /**
@@ -334,7 +350,10 @@ function snapshotActiveTab() {
   const current = getActiveTab();
   if (!current) return;
 
-  current.captureFiles = captureFiles();
+  current.captureFiles = captureFiles().slice();
+  if (getActiveRouteBridge) {
+    current.route = getActiveRouteBridge() || "start";
+  }
 }
 
 /**
@@ -345,23 +364,30 @@ export async function switchTab(tabId) {
   const target = getTab(tabId);
   if (!target) return;
 
-  if (activeTabId && activeTabId !== tabId) {
-    snapshotActiveTab();
+  isSwitchingTab = true;
+  try {
+    if (activeTabId && activeTabId !== tabId) {
+      snapshotActiveTab();
+    }
+
+    activeTabId = tabId;
+
+    // Restore capture files
+    setCapture(target.captureFiles ? target.captureFiles.slice() : []);
+
+    // Restore route
+    const targetRoute = target.route || "start";
+    if (routerNavigate) {
+      await routerNavigate(targetRoute);
+    }
+  } finally {
+    isSwitchingTab = false;
   }
 
-  activeTabId = tabId;
+  if (syncTabMetaBridge) {
+    syncTabMetaBridge();
+  }
   renderTabsList();
-
-  // Restore capture files
-  setCapture(target.captureFiles ? target.captureFiles.slice() : []);
-
-  // Restore route
-  const targetRoute = target.route || "start";
-  if (routerNavigate) {
-    await routerNavigate(targetRoute);
-  }
-
-  updateTabElement(tabId);
 }
 
 /**

@@ -152,7 +152,10 @@ function addImages(files) {
 }
 
 async function acceptFiles(files) {
-  if (!files?.length) return;
+  if (!files?.length) {
+    if (pages.length) reset();
+    return;
+  }
   const key = filesKey(files);
   if (key === acceptedKey && pages.length) return;
   reset();

@@ -4,7 +4,7 @@ import { confirmLeave, isDialogOpen } from "./dialog.js";
 import { toast } from "./feedback.js";
 import { onToolPrefsChange, recordOrder, sortToolIds, isPinned, isHidden } from "./toolprefs.js";
 import { setOperation } from "./titleblock.js";
-import { updateActiveTabMeta, setRouterBridge } from "./tabs.js";
+import { updateActiveTabMeta, setRouterBridge, isTabSwitching } from "./tabs.js";
 
 /**
  * @typedef {object} Tool
@@ -281,7 +281,8 @@ function buildLegend() {
   }
 }
 
-function syncTabMeta() {
+export function syncTabMeta() {
+  if (isTabSwitching()) return;
   const tool = tools.get(activeId);
   const files = captureFiles();
   let dynamicTitle = tool ? tool.name.replace("→", "←") : "الرئيسية";
@@ -307,6 +308,10 @@ function syncTabMeta() {
     title: dynamicTitle,
     icon: dynamicIcon
   });
+}
+
+export function getActiveRoute() {
+  return activeId || "start";
 }
 
 function showRoute(id) {
@@ -348,7 +353,7 @@ async function deliverAndEnter(id) {
   const tool = tools.get(id);
   if (!tool) return;
   const files = filesForAction(id);
-  if (files.length) await tool.acceptFiles?.(files);
+  await tool.acceptFiles?.(files);
   tool.enter?.();
 
   const heading = el(`view-${id}`)?.querySelector(".view__title, .start__title");
@@ -394,9 +399,13 @@ export function initRouter() {
   onToolPrefsChange(() => buildLegend());
 
   // ربط مدير التابات بآلية التنقل
-  setRouterBridge(async (routeId) => {
-    showRoute(routeId);
-    await deliverAndEnter(routeId);
+  setRouterBridge({
+    navigate: async (routeId) => {
+      showRoute(routeId);
+      await deliverAndEnter(routeId);
+    },
+    getActiveRoute: () => activeId || "start",
+    syncTabMeta
   });
 
   document.addEventListener("click", (event) => {

@@ -148,7 +148,10 @@ async function requestClear() {
 
 async function acceptFiles(files) {
   const file = files?.[0];
-  if (!file) return;
+  if (!file) {
+    if (doc) clear();
+    return;
+  }
   if (doc && doc.name === file.name && doc.size === file.size) return;
   if (doc) clear();
   await load([file]);

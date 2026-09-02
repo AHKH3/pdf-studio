@@ -111,7 +111,10 @@ async function requestClear() {
 }
 
 async function acceptFiles(files) {
-  if (!files?.length) return;
+  if (!files?.length) {
+    if (items.length) clear();
+    return;
+  }
   const current = items.map((item) => `${item.name}:${item.size}`).join("|");
   const incoming = files.map((file) => `${file.name}:${file.size}`).join("|");
   if (current === incoming) return;

@@ -303,6 +303,7 @@ async function runTestProbe(win) {
 
           const ids = ["organize", "split", "compress", "watermark", "numbers", "rasterize", "edit"];
           const dirty = {};
+          const logs = [];
           for (const id of ids) {
             const btn = document.querySelector("[data-route='" + id + "']");
             if (!btn) {
@@ -310,14 +311,21 @@ async function runTestProbe(win) {
               continue;
             }
             btn.click();
-            await new Promise((r) => setTimeout(r, 200));
-            const leave = document.querySelector(".progress.is-open .btn--act");
-            if (leave) {
-              leave.click();
-              await new Promise((r) => setTimeout(r, 400));
+            let clickedLeave = false;
+            for (let i = 0; i < 20; i++) {
+              const leave = document.querySelector('[role="dialog"] .btn--act');
+              if (leave) {
+                leave.click();
+                clickedLeave = true;
+                await new Promise((r) => setTimeout(r, 400));
+                break;
+              }
+              await new Promise((r) => setTimeout(r, 100));
             }
-            await new Promise((r) => setTimeout(r, 700));
+            await new Promise((r) => setTimeout(r, 800));
             const idsDirty = typeof __pdfStudioDirtyToolIds === "function" ? __pdfStudioDirtyToolIds() : [];
+            const active = document.querySelector(".view--active")?.id;
+            logs.push({ id, clickedLeave, active, idsDirty });
             dirty[id] = idsDirty.includes(id);
           }
           return { dirty, hasFile: true };

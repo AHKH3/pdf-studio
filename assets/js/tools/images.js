@@ -68,7 +68,10 @@ async function requestClear() {
 }
 
 async function acceptFiles(files) {
-  if (!files?.length) return;
+  if (!files?.length) {
+    if (items.length) clear();
+    return;
+  }
   if (filesKey(files) === filesKey(items.map((item) => item.file))) return;
   clear();
   add(files);
