@@ -75,12 +75,16 @@
       <div class="sheet__frame" aria-hidden="true"></div>
 
       <header class="sheet__head app-titlebar titlebar-drag">
-          <button class="mark titlebar-nodrag" type="button" data-route="start" aria-label="العودة إلى البداية">
-            <svg class="icon mark__glyph" aria-hidden="true"><use href="#icon-app"></use></svg>
-            <span class="mark__name" lang="en">PDF Studio</span>
+        <div class="tabs-strip titlebar-nodrag" id="tabs-strip" role="tablist" aria-label="ألسنة العمل">
+          <div class="tabs-list" id="tabs-list"></div>
+          <button class="tab-add" id="tab-add" type="button" aria-label="إضافة تابة جديدة (Ctrl+T)" title="إضافة تابة جديدة (Ctrl+T)">
+            <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg>
           </button>
+        </div>
 
-        <nav class="legend titlebar-nodrag" aria-label="إجراءات المستند">
+        <div class="titlebar-spacer" aria-hidden="true"></div>
+
+        <nav class="legend titlebar-nodrag" aria-label="إجراءات المستند" hidden>
           <h2 class="legend__title sr-only" id="legend-title">الإجراءات</h2>
           <p class="legend__lede sr-only" id="legend-lede">أسقط ملفات أولاً</p>
           <ul class="legend__list" id="legend-list"></ul>

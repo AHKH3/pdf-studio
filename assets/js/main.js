@@ -6,6 +6,7 @@ import { guardWindowDrops } from "./ui/intake.js";
 import { initKeys } from "./ui/keys.js";
 import { initFilePreview } from "./ui/preview.js";
 import { initRouter, registerTools, addTools } from "./ui/router.js";
+import { initTabs } from "./ui/tabs.js";
 import { initTheme } from "./ui/theme.js";
 import { initTitleBlock } from "./ui/titleblock.js";
 import { initToolMenu } from "./ui/toolprefs.js";
@@ -110,6 +111,7 @@ async function boot() {
   initFilePreview();
 
   registerTools([startTool]);
+  initTabs();
   initRouter();
   markHero();
   loadToolsProgressively();

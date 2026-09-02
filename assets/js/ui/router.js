@@ -4,6 +4,7 @@ import { confirmLeave, isDialogOpen } from "./dialog.js";
 import { toast } from "./feedback.js";
 import { onToolPrefsChange, recordOrder, sortToolIds, isPinned, isHidden } from "./toolprefs.js";
 import { setOperation } from "./titleblock.js";
+import { updateActiveTabMeta, setRouterBridge } from "./tabs.js";
 
 /**
  * @typedef {object} Tool
@@ -280,6 +281,34 @@ function buildLegend() {
   }
 }
 
+function syncTabMeta() {
+  const tool = tools.get(activeId);
+  const files = captureFiles();
+  let dynamicTitle = tool ? tool.name.replace("→", "←") : "الرئيسية";
+  let dynamicIcon = tool ? (tool.icon || "icon-app") : "icon-app";
+
+  if (!activeId || activeId === "start") {
+    if (files.length === 1) {
+      dynamicTitle = files[0].name;
+      dynamicIcon = "icon-file";
+    } else if (files.length > 1) {
+      dynamicTitle = `${files.length} ملفات`;
+      dynamicIcon = "icon-file";
+    } else {
+      dynamicTitle = "الرئيسية";
+      dynamicIcon = "icon-app";
+    }
+  } else if (files.length === 1 && files[0].name) {
+    dynamicTitle = `${dynamicTitle}: ${files[0].name}`;
+  }
+
+  updateActiveTabMeta({
+    route: activeId || "start",
+    title: dynamicTitle,
+    icon: dynamicIcon
+  });
+}
+
 function showRoute(id) {
   const tool = tools.get(id);
   if (!tool) return;
@@ -295,6 +324,7 @@ function showRoute(id) {
 
   activeId = id;
   buildLegend();
+  syncTabMeta();
 
   setOperation({
     op: tool.op ?? tool.name,
@@ -347,7 +377,10 @@ export async function route(id) {
 
 export function initRouter() {
   routerStarted = true;
-  onCaptureChange(buildLegend);
+  onCaptureChange(() => {
+    buildLegend();
+    syncTabMeta();
+  });
   buildLegend();
   for (const tool of tools.values()) {
     try {
@@ -359,6 +392,12 @@ export function initRouter() {
 
   // أي تغيير في التثبيت/الإخفاء يعيد بناء الأقسام
   onToolPrefsChange(() => buildLegend());
+
+  // ربط مدير التابات بآلية التنقل
+  setRouterBridge(async (routeId) => {
+    showRoute(routeId);
+    await deliverAndEnter(routeId);
+  });
 
   document.addEventListener("click", (event) => {
     const trigger = /** @type {HTMLElement} */ (event.target).closest("[data-route]");
