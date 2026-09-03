@@ -401,11 +401,11 @@ function initDashboard() {
   if (dashboardInitialized) return;
   dashboardInitialized = true;
 
-  // 1. ربط بطاقات الأدوات بالموجّه
-  const cards = qsa(".tool-card-h");
+  // 1. ربط بطاقات الأدوات وبطاقات الأكثر استخداماً بالموجّه
+  const cards = qsa(".tool-card-h, .featured-card");
   for (const card of cards) {
     card.addEventListener("click", () => {
-      const toolId = card.getAttribute("data-tool");
+      const toolId = card.getAttribute("data-tool") || card.getAttribute("data-route");
       if (toolId) void route(toolId);
     });
   }

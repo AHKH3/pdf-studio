@@ -84,6 +84,8 @@
     <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
     <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
     <symbol id="icon-layers" viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
+    <symbol id="icon-sparkles" viewBox="0 0 24 24"><path d="M12 2L14.4 7.6L20 10L14.4 12.4L12 18L9.6 12.4L4 10L9.6 7.6L12 2Z"/></symbol>
+    <symbol id="icon-bolt" viewBox="0 0 24 24"><path d="M13 2L4 13.5H11L10 22L20 9.5H13L14 2Z"/></symbol>
   </svg>
 
   <div class="board">
@@ -191,6 +193,98 @@
                       </div>
                       <svg class="icon recent-card__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
                     </div>
+                  </div>
+                </section>
+
+                <!-- Most Used Tools Section (الأدوات الأكثر استخداماً) -->
+                <section class="hub-featured" id="hub-featured-section" aria-labelledby="featured-heading">
+                  <div class="hub-featured__head">
+                    <div class="hub-featured__head-right">
+                      <div class="hub-featured__icon-wrap">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-sparkles"></use></svg>
+                      </div>
+                      <div class="hub-featured__title-row">
+                        <h2 id="featured-heading" class="hub-featured__title">الأدوات الأكثر استخداماً</h2>
+                        <span class="hub-featured__pulse-badge">
+                          <span class="hub-featured__pulse-dot" aria-hidden="true"></span>
+                          سير عمل فوري
+                        </span>
+                      </div>
+                    </div>
+                    <div class="hub-featured__head-left">
+                      <svg class="icon hub-featured__bolt" aria-hidden="true"><use href="#icon-bolt"></use></svg>
+                      <span>إجراءات بضغطة واحدة</span>
+                    </div>
+                  </div>
+
+                  <div class="hub-featured__grid">
+                    <!-- 1. دمج PDF -->
+                    <button type="button" class="featured-card" data-tool="merge" data-route="merge">
+                      <div class="featured-card__main">
+                        <div class="featured-card__head">
+                          <div class="featured-card__icon featured-card__icon--indigo">
+                            <svg class="icon" aria-hidden="true"><use href="#icon-merge"></use></svg>
+                          </div>
+                          <span class="featured-card__badge featured-card__badge--indigo">الأساسي</span>
+                        </div>
+                        <h3 class="featured-card__name">دمج ملفات PDF</h3>
+                      </div>
+                      <div class="featured-card__foot">
+                        <span class="featured-card__action">افتح الأداة</span>
+                        <svg class="icon featured-card__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </div>
+                    </button>
+
+                    <!-- 2. ضغط وتصغير الحجم -->
+                    <button type="button" class="featured-card" data-tool="compress" data-route="compress">
+                      <div class="featured-card__main">
+                        <div class="featured-card__head">
+                          <div class="featured-card__icon featured-card__icon--amber">
+                            <svg class="icon" aria-hidden="true"><use href="#icon-compress"></use></svg>
+                          </div>
+                          <span class="featured-card__badge featured-card__badge--amber">توفير حتى 80%</span>
+                        </div>
+                        <h3 class="featured-card__name">ضغط وتصغير الحجم</h3>
+                      </div>
+                      <div class="featured-card__foot">
+                        <span class="featured-card__action">ضغط ذكي</span>
+                        <svg class="icon featured-card__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </div>
+                    </button>
+
+                    <!-- 3. صور إلى PDF -->
+                    <button type="button" class="featured-card" data-tool="images" data-route="images">
+                      <div class="featured-card__main">
+                        <div class="featured-card__head">
+                          <div class="featured-card__icon featured-card__icon--emerald">
+                            <svg class="icon" aria-hidden="true"><use href="#icon-images"></use></svg>
+                          </div>
+                          <span class="featured-card__badge featured-card__badge--emerald">تجميع فوري</span>
+                        </div>
+                        <h3 class="featured-card__name">صور إلى PDF</h3>
+                      </div>
+                      <div class="featured-card__foot">
+                        <span class="featured-card__action">تحويل مباشر</span>
+                        <svg class="icon featured-card__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </div>
+                    </button>
+
+                    <!-- 4. التوقيع والختم -->
+                    <button type="button" class="featured-card" data-tool="sign" data-route="sign">
+                      <div class="featured-card__main">
+                        <div class="featured-card__head">
+                          <div class="featured-card__icon featured-card__icon--purple">
+                            <svg class="icon" aria-hidden="true"><use href="#icon-sign"></use></svg>
+                          </div>
+                          <span class="featured-card__badge featured-card__badge--purple">معتمد ورسمي</span>
+                        </div>
+                        <h3 class="featured-card__name">التوقيع والختم</h3>
+                      </div>
+                      <div class="featured-card__foot">
+                        <span class="featured-card__action">توقيع سريع</span>
+                        <svg class="icon featured-card__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </div>
+                    </button>
                   </div>
                 </section>
 

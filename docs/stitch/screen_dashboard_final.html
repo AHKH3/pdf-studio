@@ -1,11 +1,17 @@
-<!DOCTYPE html>
+Title: Live Content
 
-<html dir="rtl" lang="ar" style=""><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+Description: Fetched live
+
+Source: https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzAwMDY1YThlNTY0YmI1NDQwNDVhZGFjNWVhMWQyMmNmEgsSBxCArfDW4RgYAZIBIwoKcHJvamVjdF9pZBIVQhM2NTE5MTkxNzMzMDMyOTUwNTgy&filename=&opi=89354086
+
+---
+
+<!DOCTYPE html><html dir="rtl" lang="ar" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
 <title>PDF Studio | استوديو المستندات الذكي</title>
 <!-- Material Symbols -->
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
 <!-- Tailwind CSS -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <!-- Tailwind Config -->
@@ -15,53 +21,53 @@
     theme: {
       extend: {
         "colors": {
-                "tertiary": "#7e3000",
-                "primary-fixed": "#e2dfff",
+                "surface-container": "#e5eeff",
+                "surface-dim": "#cbdbf5",
+                "on-secondary-container": "#00567c",
                 "surface-variant": "#d3e4fe",
-                "secondary-fixed-dim": "#89ceff",
+                "on-secondary-fixed": "#001e2f",
+                "on-tertiary-fixed": "#351000",
+                "primary": "#3525cd",
+                "inverse-on-surface": "#eaf1ff",
+                "surface-bright": "#f8f9ff",
+                "surface": "#f8f9ff",
+                "surface-container-high": "#dce9ff",
+                "on-secondary-fixed-variant": "#004c6e",
+                "primary-fixed-dim": "#c3c0ff",
                 "on-surface-variant": "#464555",
-                "inverse-surface": "#213145",
-                "on-tertiary-fixed-variant": "#7b2f00",
-                "on-primary-container": "#dad7ff",
+                "surface-container-highest": "#d3e4fe",
                 "outline": "#777587",
-                "tertiary-container": "#a44100",
-                "on-surface": "#0b1c30",
-                "primary-container": "#4f46e5",
+                "inverse-primary": "#c3c0ff",
+                "secondary": "#006590",
+                "on-tertiary-container": "#ffd2be",
+                "tertiary-fixed": "#ffdbcc",
                 "on-background": "#0b1c30",
-                "on-primary-fixed-variant": "#3323cc",
-                "surface-container-lowest": "#ffffff",
+                "error": "#ba1a1a",
+                "secondary-fixed-dim": "#89ceff",
                 "on-primary-fixed": "#0f0069",
                 "on-error-container": "#93000a",
-                "outline-variant": "#c7c4d8",
-                "on-tertiary-fixed": "#351000",
-                "on-error": "#ffffff",
-                "secondary-container": "#85cbfd",
-                "surface-bright": "#f8f9ff",
-                "tertiary-fixed": "#ffdbcc",
-                "background": "#f8f9ff",
-                "on-tertiary-container": "#ffd2be",
                 "error-container": "#ffdad6",
-                "surface": "#f8f9ff",
-                "secondary-fixed": "#c8e6ff",
                 "tertiary-fixed-dim": "#ffb695",
                 "surface-container-low": "#eff4ff",
-                "on-secondary-fixed-variant": "#004c6e",
-                "error": "#ba1a1a",
-                "on-secondary": "#ffffff",
-                "on-secondary-fixed": "#001e2f",
-                "primary-fixed-dim": "#c3c0ff",
-                "surface-container-highest": "#d3e4fe",
-                "surface-container": "#e5eeff",
-                "on-primary": "#ffffff",
-                "surface-tint": "#4d44e3",
-                "inverse-on-surface": "#eaf1ff",
-                "surface-dim": "#cbdbf5",
-                "primary": "#3525cd",
-                "secondary": "#006590",
+                "secondary-fixed": "#c8e6ff",
                 "on-tertiary": "#ffffff",
-                "inverse-primary": "#c3c0ff",
-                "on-secondary-container": "#00567c",
-                "surface-container-high": "#dce9ff"
+                "on-primary": "#ffffff",
+                "tertiary-container": "#a44100",
+                "outline-variant": "#c7c4d8",
+                "on-secondary": "#ffffff",
+                "inverse-surface": "#213145",
+                "background": "#f8f9ff",
+                "on-surface": "#0b1c30",
+                "surface-tint": "#4d44e3",
+                "on-error": "#ffffff",
+                "surface-container-lowest": "#ffffff",
+                "secondary-container": "#85cbfd",
+                "on-primary-container": "#dad7ff",
+                "tertiary": "#7e3000",
+                "primary-container": "#4f46e5",
+                "on-tertiary-fixed-variant": "#7b2f00",
+                "primary-fixed": "#e2dfff",
+                "on-primary-fixed-variant": "#3323cc"
         },
         "borderRadius": {
                 "DEFAULT": "0.25rem",
@@ -70,8 +76,8 @@
                 "full": "9999px"
         },
         "spacing": {
-                "container-max": "1280px",
                 "margin": "24px",
+                "container-max": "1280px",
                 "gutter": "16px",
                 "base": "4px"
         },
@@ -79,19 +85,19 @@
                 "title-lg": [
                         "Rubik"
                 ],
-                "body-sm": [
+                "body-md": [
+                        "Rubik"
+                ],
+                "label-md": [
                         "Rubik"
                 ],
                 "headline-md": [
                         "Rubik"
                 ],
+                "body-sm": [
+                        "Rubik"
+                ],
                 "display-lg": [
-                        "Rubik"
-                ],
-                "body-md": [
-                        "Rubik"
-                ],
-                "label-md": [
                         "Rubik"
                 ]
         },
@@ -101,27 +107,6 @@
                         {
                                 "lineHeight": "26px",
                                 "fontWeight": "500"
-                        }
-                ],
-                "body-sm": [
-                        "14px",
-                        {
-                                "lineHeight": "20px",
-                                "fontWeight": "400"
-                        }
-                ],
-                "headline-md": [
-                        "24px",
-                        {
-                                "lineHeight": "32px",
-                                "fontWeight": "600"
-                        }
-                ],
-                "display-lg": [
-                        "32px",
-                        {
-                                "lineHeight": "40px",
-                                "fontWeight": "700"
                         }
                 ],
                 "body-md": [
@@ -138,6 +123,27 @@
                                 "letterSpacing": "0.02em",
                                 "fontWeight": "500"
                         }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-sm": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "display-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "700"
+                        }
                 ]
         }
 },
@@ -151,17 +157,15 @@
         .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(226, 232, 240, 0.6); }
         /* Fix Material Symbols RTL issue where icons point the wrong way */
         .material-symbols-outlined { direction: ltr; display: inline-block; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-[#f8f9ff] text-on-surface h-screen flex flex-col overflow-hidden">
 <!-- TopBar -->
-<header class="bg-surface border-b border-border h-12 flex items-center justify-between px-2 shrink-0">
+<header class="bg-surface border-b border-border h-12 flex items-center justify-between px-4 w-full shrink-0">
 <!-- Right: Logo & Tabs -->
 <div class="flex items-center h-full">
 <div class="flex items-center gap-2 px-3 border-l border-border h-full">
-<span class="material-symbols-outlined text-primary text-[20px]" style='font-variation-settings: "FILL" 1;'>picture_as_pdf</span>
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: &quot;FILL&quot; 1;">picture_as_pdf</span>
 <span class="font-title-lg text-title-lg font-bold text-on-surface">PDF Studio</span>
 </div>
 <div class="flex h-full mt-2">
@@ -189,20 +193,19 @@
 <button class="w-10 h-full hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
 <span class="material-symbols-outlined text-[14px]">crop_square</span>
 </button>
-<button class="w-10 h-full hover:bg-error hover:text-white flex items-center justify-center text-on-surface-variant transition-colors">
+<button class="w-10 h-full hover:bg-danger hover:text-white flex items-center justify-center text-on-surface-variant transition-colors">
 <span class="material-symbols-outlined text-[18px]">close</span>
 </button>
 </div>
 </header>
 <!-- Main Content Area -->
-<main class="flex-1 overflow-hidden p-4 md:p-6 pb-2 flex flex-col h-full">
-<div class="max-w-container-max mx-auto h-full flex flex-col gap-4">
-<!-- Recent Files Shelf -->
+<main class="flex-1 overflow-hidden px-8 py-5 flex flex-col h-full w-full">
+<div class="w-full max-w-[1440px] mx-auto h-full flex flex-col gap-5 min-w-0"><!-- Recent Files Shelf -->
 <section class="bg-[#ffffff] rounded-xl border border-[#e2e8f0] p-3 shadow-sm shrink-0">
 <div class="flex items-center justify-between pb-2.5 mb-3 border-b border-[#e2e8f0] px-1"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center"><span class="material-symbols-outlined text-[20px]">schedule</span></div><h2 class="text-[17px] font-bold text-on-surface">مؤخراً</h2><span class="bg-primary/10 text-primary border border-primary/20 text-[11px] font-bold px-2.5 py-0.5 rounded-full mr-1">3 ملفات</span></div><button class="text-[12px] font-medium text-primary hover:underline flex items-center gap-1 transition-colors"><span class="">عرض الكل</span><span class="material-symbols-outlined text-[14px]">arrow_back</span></button></div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 <!-- File 1: PDF -->
-<div class="flex items-center gap-3 p-2 rounded-lg border border-[#e2e8f0] hover:bg-surface-container-low/50 hover:border-rose-300 transition-all cursor-pointer group">
+<div class="flex items-center gap-3 p-2 rounded-lg border border-[#e2e8f0] hover:bg-surface-container-low/50 hover:border-red-300 transition-all cursor-pointer group">
 <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-rose-50 text-rose-600 border border-rose-100 group-hover:scale-105 transition-transform">
 <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
 </div>
@@ -248,228 +251,314 @@
 </div>
 </div>
 </section>
-<!-- Unified Tools Grid Across 3 Sections -->
-<div class="flex-1 overflow-y-auto pb-6 hide-scrollbar space-y-8">
-<!-- Section 1: Images & Visuals (4 tools) -->
+<!-- Unified 15 Tools Grid Across 3 Sections -->
+<div class="flex-1 overflow-y-auto pb-8 hide-scrollbar space-y-6 w-full"><section class="rounded-xl border border-[#e2e8f0] bg-[#ffffff] p-4 shadow-sm relative overflow-hidden transition-all">
+  <div class="flex items-center justify-between pb-3.5 mb-3.5 border-b border-[#e2e8f0]">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+        <span class="material-symbols-outlined text-[20px]">auto_awesome</span>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h2 class="text-[17px] font-bold text-on-surface tracking-tight">الأدوات الأكثر استخداماً</h2>
+          <span class="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+            سير عمل فوري
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 text-on-surface-variant text-[12px]">
+      <span class="material-symbols-outlined text-[16px] text-amber-600">bolt</span>
+      <span class="font-medium">إجراءات بضغطة واحدة</span>
+    </div>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Card 1: دمج PDF -->
+    <div class="group relative rounded-xl border border-[#e2e8f0] hover:border-indigo-500/50 bg-[#ffffff] hover:bg-indigo-50/50 p-3.5 flex flex-col justify-between transition-all cursor-pointer hover:shadow-md">
+      <div>
+        <div class="flex items-start justify-between gap-2 mb-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <span class="material-symbols-outlined text-[22px]">call_merge</span>
+          </div>
+          <span class="text-[11px] font-medium bg-indigo-50 text-indigo-600 border border-indigo-100 px-2 py-0.5 rounded-full shrink-0">الأساسي</span>
+        </div>
+        <h3 class="text-[15px] font-bold text-on-surface leading-tight mb-1 group-hover:text-indigo-600 transition-colors">دمج ملفات PDF</h3>
+        
+      </div>
+      <div class="pt-3 mt-3 border-t border-[#e2e8f0] flex items-center justify-between text-on-surface-variant group-hover:text-indigo-600 transition-colors">
+        <span class="text-[11px] font-medium flex items-center gap-1">
+          <span class="">افتح الأداة</span>
+        </span>
+        <span class="material-symbols-outlined text-[16px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+      </div>
+    </div>
+    <!-- Card 2: ضغط وتصغير الحجم -->
+    <div class="group relative rounded-xl border border-[#e2e8f0] hover:border-amber-500/50 bg-[#ffffff] hover:bg-amber-50/50 p-3.5 flex flex-col justify-between transition-all cursor-pointer hover:shadow-md">
+      <div>
+        <div class="flex items-start justify-between gap-2 mb-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <span class="material-symbols-outlined text-[22px]">compress</span>
+          </div>
+          <span class="text-[11px] font-medium bg-amber-50 text-amber-600 border border-amber-100 px-2 py-0.5 rounded-full shrink-0">توفير حتى 80%</span>
+        </div>
+        <h3 class="text-[15px] font-bold text-on-surface leading-tight mb-1 group-hover:text-amber-600 transition-colors">ضغط وتصغير الحجم</h3>
+        
+      </div>
+      <div class="pt-3 mt-3 border-t border-[#e2e8f0] flex items-center justify-between text-on-surface-variant group-hover:text-amber-600 transition-colors">
+        <span class="text-[11px] font-medium flex items-center gap-1">
+          <span class="">ضغط ذكي</span>
+        </span>
+        <span class="material-symbols-outlined text-[16px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+      </div>
+    </div>
+    <!-- Card 3: صور إلى PDF -->
+    <div class="group relative rounded-xl border border-[#e2e8f0] hover:border-emerald-500/50 bg-[#ffffff] hover:bg-emerald-50/50 p-3.5 flex flex-col justify-between transition-all cursor-pointer hover:shadow-md">
+      <div>
+        <div class="flex items-start justify-between gap-2 mb-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <span class="material-symbols-outlined text-[22px]">image</span>
+          </div>
+          <span class="text-[11px] font-medium bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-full shrink-0">تجميع فوري</span>
+        </div>
+        <h3 class="text-[15px] font-bold text-on-surface leading-tight mb-1 group-hover:text-emerald-600 transition-colors">صور إلى PDF</h3>
+        
+      </div>
+      <div class="pt-3 mt-3 border-t border-[#e2e8f0] flex items-center justify-between text-on-surface-variant group-hover:text-emerald-600 transition-colors">
+        <span class="text-[11px] font-medium flex items-center gap-1">
+          <span class="">تحويل مباشر</span>
+        </span>
+        <span class="material-symbols-outlined text-[16px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+      </div>
+    </div>
+    <!-- Card 4: التوقيع والختم -->
+    <div class="group relative rounded-xl border border-[#e2e8f0] hover:border-purple-500/50 bg-[#ffffff] hover:bg-purple-50/50 p-3.5 flex flex-col justify-between transition-all cursor-pointer hover:shadow-md">
+      <div>
+        <div class="flex items-start justify-between gap-2 mb-3">
+          <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <span class="material-symbols-outlined text-[22px]">draw</span>
+          </div>
+          <span class="text-[11px] font-medium bg-purple-50 text-purple-600 border border-purple-100 px-2 py-0.5 rounded-full shrink-0">معتمد ورسمي</span>
+        </div>
+        <h3 class="text-[15px] font-bold text-on-surface leading-tight mb-1 group-hover:text-purple-600 transition-colors">التوقيع والختم</h3>
+        
+      </div>
+      <div class="pt-3 mt-3 border-t border-[#e2e8f0] flex items-center justify-between text-on-surface-variant group-hover:text-purple-600 transition-colors">
+        <span class="text-[11px] font-medium flex items-center gap-1">
+          <span class="">توقيع سريع</span>
+        </span>
+        <span class="material-symbols-outlined text-[16px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Section 1: Images & Visuals (4 tools - 4 columns) -->
 <section class="space-y-2.5">
 <div class="flex items-center justify-between pb-3 pt-1 border-b border-[#e2e8f0]"><div class="flex items-center gap-2.5"><div class="w-9 h-9 rounded-lg bg-teal-50 text-teal-600 border border-teal-100 flex items-center justify-center"><span class="material-symbols-outlined text-[22px]">photo_library</span></div><h2 class="text-[18px] font-bold text-on-surface tracking-tight">الصور</h2><span class="bg-teal-50 text-teal-600 border border-teal-100 text-[12px] font-bold px-2.5 py-0.5 rounded-full mr-1">4 أدوات</span></div></div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 <!-- صور إلى PDF -->
-<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-emerald-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="bg-[#ffffff] rounded-xl p-3 border border-[#e2e8f0] hover:border-emerald-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
 <div class="flex items-center gap-3 overflow-hidden">
 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-emerald-50 text-emerald-600 border border-emerald-100 group-hover:scale-105 transition-transform">
 <span class="material-symbols-outlined text-[22px]">image</span>
 </div>
 <div class="truncate">
 <h3 class="font-bold text-[14px] text-on-surface leading-snug truncate">صور إلى PDF</h3>
-<p class="text-[12px] text-on-surface-variant truncate mt-0.5">تحويل حزم الصور إلى مستند</p>
+
 </div>
 </div>
 <span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity shrink-0">arrow_back</span>
 </div>
 <!-- PDF إلى صور -->
-<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-teal-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="bg-[#ffffff] rounded-xl p-3 border border-[#e2e8f0] hover:border-teal-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
 <div class="flex items-center gap-3 overflow-hidden">
 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-teal-50 text-teal-600 border border-teal-100 group-hover:scale-105 transition-transform">
 <span class="material-symbols-outlined text-[22px]">photo_library</span>
 </div>
 <div class="truncate">
 <h3 class="font-bold text-[14px] text-on-surface leading-snug truncate">PDF إلى صور</h3>
-<p class="text-[12px] text-on-surface-variant truncate mt-0.5">استخراج وتصدير الصفحات بجودة عالية</p>
+
 </div>
 </div>
 <span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity shrink-0">arrow_back</span>
 </div>
-<!-- مسح وتصحيح -->
-<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-cyan-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<!-- مسح وتصحيح المستندات -->
+<div class="bg-[#ffffff] rounded-xl p-3 border border-[#e2e8f0] hover:border-cyan-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
 <div class="flex items-center gap-3 overflow-hidden">
 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-cyan-50 text-cyan-600 border border-cyan-100 group-hover:scale-105 transition-transform">
 <span class="material-symbols-outlined text-[22px]">document_scanner</span>
 </div>
 <div class="truncate">
 <h3 class="font-bold text-[14px] text-on-surface leading-snug truncate">مسح وتصحيح</h3>
-<p class="text-[12px] text-on-surface-variant truncate mt-0.5">تحسين الوثائق وتصحيح المنظور</p>
+
 </div>
 </div>
 <span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity shrink-0">arrow_back</span>
 </div>
-<!-- استخراج الصور -->
-<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-sky-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<!-- استخراج الصور والوسائط -->
+<div class="bg-[#ffffff] rounded-xl p-3 border border-[#e2e8f0] hover:border-sky-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
 <div class="flex items-center gap-3 overflow-hidden">
 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-sky-50 text-sky-600 border border-sky-100 group-hover:scale-105 transition-transform">
 <span class="material-symbols-outlined text-[22px]">perm_media</span>
 </div>
 <div class="truncate">
 <h3 class="font-bold text-[14px] text-on-surface leading-snug truncate">استخراج الصور</h3>
-<p class="text-[12px] text-on-surface-variant truncate mt-0.5">استخراج XObjects والميديا المضمنة</p>
+
 </div>
 </div>
 <span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity shrink-0">arrow_back</span>
 </div>
 </div>
 </section>
-<!-- Section 2: Editing, Annotations & Signing (5 tools) -->
+<!-- Section 2: Editing, Annotations & Signing (5 tools - 4 columns) -->
 <section class="space-y-2.5">
-<div class="flex items-center justify-between pb-3 pt-1 border-b border-[#e2e8f0]"><div class="flex items-center gap-2.5"><div class="w-9 h-9 rounded-lg bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center"><span class="material-symbols-outlined text-[22px]">edit_document</span></div><h2 class="text-[18px] font-bold text-on-surface tracking-tight">التحرير والتوقيع</h2><span class="bg-purple-50 text-purple-600 border border-purple-100 text-[12px] font-bold px-2.5 py-0.5 rounded-full mr-1">5 أدوات</span></div></div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-<!-- تحرير النصوص -->
-<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-sky-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center justify-between pb-3 pt-1 border-b border-[#e2e8f0]"><div class="flex items-center gap-2.5"><div class="w-9 h-9 rounded-lg bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center"><span class="material-symbols-outlined text-[22px]">edit_document</span></div><h2 class="text-[18px] font-bold text-on-surface tracking-tight">تحرير وتعديل</h2><span class="bg-purple-50 text-purple-600 border border-purple-100 text-[12px] font-bold px-2.5 py-0.5 rounded-full mr-1">5 أدوات</span></div></div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- تحرير وتعديل النصوص -->
+<div class="bg-[#ffffff] rounded-xl p-3 border border-[#e2e8f0] hover:border-sky-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
 <div class="flex items-center gap-3 overflow-hidden">
 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-sky-50 text-sky-600 border border-sky-100 group-hover:scale-105 transition-transform">
 <span class="material-symbols-outlined text-[22px]">edit_note</span>
 </div>
 <div class="truncate">
 <h3 class="font-bold text-[14px] text-on-surface leading-snug truncate">تحرير النصوص</h3>
-<p class="text-[12px] text-on-surface-variant truncate mt-0.5">إضافة وتعديل فقرات ومحتوى PDF</p>
+
 </div>
 </div>
 <span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity shrink-0">arrow_back</span>
 </div>
-<!-- توقيع وختم -->
-<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-purple-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<!-- التوقيع والختم الرقمي -->
+<div class="bg-[#ffffff] rounded-xl p-3 border border-[#e2e8f0] hover:border-purple-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
 <div class="flex items-center gap-3 overflow-hidden">
 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-purple-50 text-purple-600 border border-purple-100 group-hover:scale-105 transition-transform">
 <span class="material-symbols-outlined text-[22px]">draw</span>
 </div>
 <div class="truncate">
 <h3 class="font-bold text-[14px] text-on-surface leading-snug truncate">توقيع وختم</h3>
-<p class="text-[12px] text-on-surface-variant truncate mt-0.5">إدراج التواقيع والأختام المعتمدة</p>
+
 </div>
 </div>
 <span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity shrink-0">arrow_back</span>
 </div>
-<!-- تظليل وملاحظات -->
-<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-amber-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<!-- تظليل وتعليقات وملاحظات -->
+<div class="bg-[#ffffff] rounded-xl p-3 border border-[#e2e8f0] hover:border-amber-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
 <div class="flex items-center gap-3 overflow-hidden">
 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-amber-50 text-amber-600 border border-amber-100 group-hover:scale-105 transition-transform">
 <span class="material-symbols-outlined text-[22px]">format_ink_highlighter</span>
 </div>
 <div class="truncate">
 <h3 class="font-bold text-[14px] text-on-surface leading-snug truncate">تظليل وملاحظات</h3>
-<p class="text-[12px] text-on-surface-variant truncate mt-0.5">إبراز نصوص وإضافة أسهم وإطارات</p>
+
 </div>
 </div>
 <span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity shrink-0">arrow_back</span>
 </div>
-<!-- حجب وطمس -->
-<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-rose-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<!-- طمس وحجب البيانات -->
+<div class="bg-[#ffffff] rounded-xl p-3 border border-[#e2e8f0] hover:border-rose-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
 <div class="flex items-center gap-3 overflow-hidden">
 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-rose-50 text-rose-600 border border-rose-100 group-hover:scale-105 transition-transform">
 <span class="material-symbols-outlined text-[22px]">hide_source</span>
 </div>
 <div class="truncate">
 <h3 class="font-bold text-[14px] text-on-surface leading-snug truncate">حجب وطمس</h3>
-<p class="text-[12px] text-on-surface-variant truncate mt-0.5">حماية الخصوصية وتغطية السرّي</p>
+
 </div>
 </div>
 <span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity shrink-0">arrow_back</span>
 </div>
-<!-- استخراج OCR -->
-<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-violet-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<!-- استخراج النصوص OCR -->
+<div class="bg-[#ffffff] rounded-xl p-3 border border-[#e2e8f0] hover:border-violet-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
 <div class="flex items-center gap-3 overflow-hidden">
 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-violet-50 text-violet-600 border border-violet-100 group-hover:scale-105 transition-transform">
 <span class="material-symbols-outlined text-[22px]">text_fields</span>
 </div>
 <div class="truncate">
 <h3 class="font-bold text-[14px] text-on-surface leading-snug truncate">استخراج OCR</h3>
-<p class="text-[12px] text-on-surface-variant truncate mt-0.5">التعرف الضوئي الذكي على الحروف</p>
+
 </div>
 </div>
 <span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity shrink-0">arrow_back</span>
 </div>
 </div>
 </section>
-<!-- Section 3: Organize & Structure (7 tools) -->
+<!-- Section 3: Organize & Structure (6 tools - 4 columns) -->
 <section class="space-y-2.5">
-<div class="flex items-center justify-between pb-3 pt-1 border-b border-[#e2e8f0]"><div class="flex items-center gap-2.5"><div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center"><span class="material-symbols-outlined text-[22px]">layers</span></div><h2 class="text-[18px] font-bold text-on-surface tracking-tight">التنظيم والأمان</h2><span class="bg-indigo-50 text-indigo-600 border border-indigo-100 text-[12px] font-bold px-2.5 py-0.5 rounded-full mr-1">7 أدوات</span></div></div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-<!-- دمج PDF -->
-<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-indigo-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center justify-between pb-3 pt-1 border-b border-[#e2e8f0]"><div class="flex items-center gap-2.5"><div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center"><span class="material-symbols-outlined text-[22px]">layers</span></div><h2 class="text-[18px] font-bold text-on-surface tracking-tight">تنظيم</h2><span class="bg-indigo-50 text-indigo-600 border border-indigo-100 text-[12px] font-bold px-2.5 py-0.5 rounded-full mr-1">6 أدوات</span></div></div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- دمج ملفات PDF -->
+<div class="bg-[#ffffff] rounded-xl p-3 border border-[#e2e8f0] hover:border-indigo-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
 <div class="flex items-center gap-3 overflow-hidden">
 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-indigo-50 text-indigo-600 border border-indigo-100 group-hover:scale-105 transition-transform">
 <span class="material-symbols-outlined text-[22px]">call_merge</span>
 </div>
 <div class="truncate">
 <h3 class="font-bold text-[14px] text-on-surface leading-snug truncate">دمج PDF</h3>
-<p class="text-[12px] text-on-surface-variant truncate mt-0.5">جمع عدة مستندات بترتيب مخصص</p>
+
 </div>
 </div>
 <span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity shrink-0">arrow_back</span>
 </div>
-<!-- تقسيم PDF -->
-<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-fuchsia-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<!-- تقسيم واستخراج الصفحات -->
+<div class="bg-[#ffffff] rounded-xl p-3 border border-[#e2e8f0] hover:border-fuchsia-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
 <div class="flex items-center gap-3 overflow-hidden">
 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-100 group-hover:scale-105 transition-transform">
 <span class="material-symbols-outlined text-[22px]">call_split</span>
 </div>
 <div class="truncate">
 <h3 class="font-bold text-[14px] text-on-surface leading-snug truncate">تقسيم PDF</h3>
-<p class="text-[12px] text-on-surface-variant truncate mt-0.5">فصل وحفظ أجزاء من المستند</p>
+
 </div>
 </div>
 <span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity shrink-0">arrow_back</span>
 </div>
-<!-- تنظيم الصفحات -->
-<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-blue-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<!-- تنظيم وتعديل الصفحات -->
+<div class="bg-[#ffffff] rounded-xl p-3 border border-[#e2e8f0] hover:border-blue-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
 <div class="flex items-center gap-3 overflow-hidden">
 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-blue-50 text-blue-600 border border-blue-100 group-hover:scale-105 transition-transform">
 <span class="material-symbols-outlined text-[22px]">layers</span>
 </div>
 <div class="truncate">
 <h3 class="font-bold text-[14px] text-on-surface leading-snug truncate">تنظيم الصفحات</h3>
-<p class="text-[12px] text-on-surface-variant truncate mt-0.5">إعادة ترتيب، حذف، وتكرار الصفحات</p>
+
 </div>
 </div>
 <span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity shrink-0">arrow_back</span>
 </div>
-<!-- تدوير وقص -->
-<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-yellow-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<!-- تدوير وقص الصفحات -->
+<div class="bg-[#ffffff] rounded-xl p-3 border border-[#e2e8f0] hover:border-yellow-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
 <div class="flex items-center gap-3 overflow-hidden">
 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-yellow-50 text-yellow-600 border border-yellow-100 group-hover:scale-105 transition-transform">
 <span class="material-symbols-outlined text-[22px]">rotate_right</span>
 </div>
 <div class="truncate">
 <h3 class="font-bold text-[14px] text-on-surface leading-snug truncate">تدوير وقص</h3>
-<p class="text-[12px] text-on-surface-variant truncate mt-0.5">ضبط الاتجاه والهوامش واقتصاص الأطراف</p>
+
 </div>
 </div>
 <span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity shrink-0">arrow_back</span>
 </div>
-<!-- علامة وترقيم -->
-<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-orange-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<!-- علامة مائية وترقيم -->
+<div class="bg-[#ffffff] rounded-xl p-3 border border-[#e2e8f0] hover:border-orange-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
 <div class="flex items-center gap-3 overflow-hidden">
 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-orange-50 text-orange-600 border border-orange-100 group-hover:scale-105 transition-transform">
 <span class="material-symbols-outlined text-[22px]">branding_watermark</span>
 </div>
 <div class="truncate">
 <h3 class="font-bold text-[14px] text-on-surface leading-snug truncate">علامة وترقيم</h3>
-<p class="text-[12px] text-on-surface-variant truncate mt-0.5">إضافة أرقام وهوامش وعلامات أمان</p>
+
 </div>
 </div>
 <span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity shrink-0">arrow_back</span>
 </div>
-<!-- ضغط PDF -->
-<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-amber-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<!-- ضغط وتصغير الحجم -->
+<div class="bg-[#ffffff] rounded-xl p-3 border border-[#e2e8f0] hover:border-amber-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
 <div class="flex items-center gap-3 overflow-hidden">
 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-amber-50 text-amber-600 border border-amber-100 group-hover:scale-105 transition-transform">
 <span class="material-symbols-outlined text-[22px]">compress</span>
 </div>
 <div class="truncate">
 <h3 class="font-bold text-[14px] text-on-surface leading-snug truncate">ضغط PDF</h3>
-<p class="text-[12px] text-on-surface-variant truncate mt-0.5">تقليل الحجم مع الحفاظ على الجودة</p>
-</div>
-</div>
-<span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity shrink-0">arrow_back</span>
-</div>
-<!-- حماية وتشفير -->
-<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-red-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
-<div class="flex items-center gap-3 overflow-hidden">
-<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-red-50 text-red-600 border border-red-100 group-hover:scale-105 transition-transform">
-<span class="material-symbols-outlined text-[22px]">lock</span>
-</div>
-<div class="truncate">
-<h3 class="font-bold text-[14px] text-on-surface leading-snug truncate">حماية وتشفير</h3>
-<p class="text-[12px] text-on-surface-variant truncate mt-0.5">إضافة كلمات مرور وصلاحيات</p>
+
 </div>
 </div>
 <span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity shrink-0">arrow_back</span>
@@ -478,4 +567,12 @@
 </section>
 </div></div>
 </main>
+<!-- Dock Footer -->
+
+
+
+
+
+
 </body></html>
+
