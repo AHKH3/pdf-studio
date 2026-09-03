@@ -418,64 +418,9 @@ function initDashboard() {
     toast("تم تفريغ سجل الملفات الأخيرة.", "info");
   });
 
-  // 3. ربط حقل البحث وفلاتر الفئات
-  const searchInput = /** @type {HTMLInputElement | null} */ (el("tool-search-input"));
-  const filterChips = qsa(".filter-chip");
-  const sections = qsa(".dashboard-section");
-
-  let activeCategory = "all";
-
-  function applyFilter() {
-    const q = (searchInput?.value || "").trim().toLowerCase();
-    for (const section of sections) {
-      const sectionCat = section.getAttribute("data-section");
-      const categoryMatch = activeCategory === "all" || activeCategory === sectionCat;
-      let visibleInSec = 0;
-
-      const secCards = qsa(".tool-card-h", section);
-      for (const card of secCards) {
-        const title = (card.querySelector(".tool-card-h__title")?.textContent || "").toLowerCase();
-        const desc = (card.querySelector(".tool-card-h__desc")?.textContent || "").toLowerCase();
-        const queryMatch = !q || title.includes(q) || desc.includes(q);
-
-        const show = categoryMatch && queryMatch;
-        card.hidden = !show;
-        if (show) visibleInSec++;
-      }
-
-      section.hidden = visibleInSec === 0;
-    }
-  }
-
-  searchInput?.addEventListener("input", applyFilter);
-
-  for (const chip of filterChips) {
-    chip.addEventListener("click", () => {
-      for (const c of filterChips) c.classList.remove("filter-chip--active");
-      chip.classList.add("filter-chip--active");
-      activeCategory = chip.getAttribute("data-category") || "all";
-      applyFilter();
-    });
-  }
-
-  // اختصار Ctrl+K و Cmd+K للبحث
-  window.addEventListener("keydown", (event) => {
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
-      event.preventDefault();
-      searchInput?.focus();
-      searchInput?.select();
-    }
-  });
-
-  // 4. السحب والإفلات وتصفح الملفات
+  // 3. السحب والإفلات
   const dashboard = el("hub-drop");
   const input = /** @type {HTMLInputElement | null} */ (el("hub-input"));
-  const browseBtn = el("hub-browse");
-
-  browseBtn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    input?.click();
-  });
 
   if (dashboard && input) {
     let depth = 0;
