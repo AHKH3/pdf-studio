@@ -1,11 +1,11 @@
-import { el } from "../dom.js";
+import { el, qsa } from "../dom.js";
 import { humanSize, isImageFile } from "../lib/files.js";
 import { suggestImageOrder } from "../lib/image-order.js";
 import { probeDocument } from "../pdf/core.js";
 import { confirmDiscard } from "./dialog.js";
 import { toast } from "./feedback.js";
-import { wireIntake } from "./intake.js";
 import { openPreview } from "./preview.js";
+import { route } from "./router.js";
 import { setSource, setState } from "./titleblock.js";
 import {
   addCapture,
@@ -209,9 +209,9 @@ function render() {
   dropUnusedUrls(files);
 
   const has = files.length > 0;
-  const drop = el("hub-drop");
+  const dashboard = el("hub-drop");
   const panel = el("hub-panel");
-  if (drop) drop.hidden = has;
+  if (dashboard) dashboard.hidden = has;
   if (panel) panel.hidden = !has;
 
   const title = el("start-title");
@@ -288,6 +288,232 @@ async function suggestOrder() {
   toast(note, "info");
 }
 
+const DEFAULT_RECENTS = [
+  { name: "عقد_إيجار_2026.pdf", size: "1.8 MB", time: "منذ 15 دقيقة", tone: "rose" },
+  { name: "تقرير_الربع_الأول.docx", size: "4.2 MB", time: "اليوم، 10:30 ص", tone: "blue" },
+  { name: "ميزانية_المشروع.xlsx", size: "3.1 MB", time: "أمس، 04:15 م", tone: "emerald" }
+];
+
+function getStoredRecents() {
+  try {
+    const raw = localStorage.getItem("pdf_studio_recents");
+    if (!raw) return DEFAULT_RECENTS;
+    const list = JSON.parse(raw);
+    return Array.isArray(list) && list.length ? list : DEFAULT_RECENTS;
+  } catch {
+    return DEFAULT_RECENTS;
+  }
+}
+
+function saveRecents(list) {
+  try {
+    localStorage.setItem("pdf_studio_recents", JSON.stringify(list));
+  } catch {}
+}
+
+export function recordRecentFile(file) {
+  const isPdf = file.name.toLowerCase().endsWith(".pdf");
+  const isDoc = /\.(doc|docx|txt|rtf)$/i.test(file.name);
+  const tone = isPdf ? "rose" : isDoc ? "blue" : "emerald";
+  const now = new Date();
+  const timeStr = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+  const item = {
+    name: file.name,
+    size: humanSize(file.size),
+    time: `اليوم، ${timeStr}`,
+    tone
+  };
+  const current = getStoredRecents().filter((r) => r.name !== file.name);
+  current.unshift(item);
+  saveRecents(current.slice(0, 6));
+  renderRecentFiles();
+}
+
+function renderRecentFiles() {
+  const grid = el("recents-grid");
+  const badge = el("recents-count-badge");
+  if (!grid) return;
+  const list = getStoredRecents();
+  if (badge) badge.textContent = `${list.length} ملفات`;
+
+  grid.replaceChildren();
+  for (const item of list.slice(0, 3)) {
+    const card = document.createElement("div");
+    card.className = "recent-card";
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.dataset.file = item.name;
+
+    const iconWrap = document.createElement("div");
+    iconWrap.className = `recent-card__icon recent-card__icon--${item.tone || "rose"}`;
+    const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    icon.setAttribute("class", "icon");
+    icon.setAttribute("aria-hidden", "true");
+    const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    use.setAttribute("href", "#icon-file");
+    icon.append(use);
+    iconWrap.append(icon);
+
+    const info = document.createElement("div");
+    info.className = "recent-card__info";
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "recent-card__name";
+    nameSpan.textContent = item.name;
+    nameSpan.title = item.name;
+
+    const metaDiv = document.createElement("div");
+    metaDiv.className = "recent-card__meta";
+    const sizeSpan = document.createElement("span");
+    sizeSpan.className = "num";
+    sizeSpan.textContent = item.size || "";
+    const sepSpan = document.createElement("span");
+    sepSpan.className = "sep";
+    sepSpan.textContent = "•";
+    const timeSpan = document.createElement("span");
+    timeSpan.textContent = item.time || "";
+    metaDiv.append(sizeSpan, sepSpan, timeSpan);
+    info.append(nameSpan, metaDiv);
+
+    const arrow = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    arrow.setAttribute("class", "icon recent-card__arrow");
+    arrow.setAttribute("aria-hidden", "true");
+    const arrowUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    arrowUse.setAttribute("href", "#icon-arrow");
+    arrow.append(arrowUse);
+
+    card.append(iconWrap, info, arrow);
+
+    card.addEventListener("click", () => {
+      if (item.name.toLowerCase().endsWith(".pdf")) {
+        void route("organize");
+      } else {
+        void route("images");
+      }
+      toast(`تم الانتقال لمساحة العمل: ${item.name}`, "info");
+    });
+
+    grid.append(card);
+  }
+}
+
+let dashboardInitialized = false;
+function initDashboard() {
+  if (dashboardInitialized) return;
+  dashboardInitialized = true;
+
+  // 1. ربط بطاقات الأدوات بالموجّه
+  const cards = qsa(".tool-card-h");
+  for (const card of cards) {
+    card.addEventListener("click", () => {
+      const toolId = card.getAttribute("data-tool");
+      if (toolId) void route(toolId);
+    });
+  }
+
+  // 2. ربط رف الملفات الأخيرة
+  renderRecentFiles();
+  el("recents-clear-btn")?.addEventListener("click", () => {
+    saveRecents([]);
+    renderRecentFiles();
+    toast("تم تفريغ سجل الملفات الأخيرة.", "info");
+  });
+
+  // 3. ربط حقل البحث وفلاتر الفئات
+  const searchInput = /** @type {HTMLInputElement | null} */ (el("tool-search-input"));
+  const filterChips = qsa(".filter-chip");
+  const sections = qsa(".dashboard-section");
+
+  let activeCategory = "all";
+
+  function applyFilter() {
+    const q = (searchInput?.value || "").trim().toLowerCase();
+    for (const section of sections) {
+      const sectionCat = section.getAttribute("data-section");
+      const categoryMatch = activeCategory === "all" || activeCategory === sectionCat;
+      let visibleInSec = 0;
+
+      const secCards = qsa(".tool-card-h", section);
+      for (const card of secCards) {
+        const title = (card.querySelector(".tool-card-h__title")?.textContent || "").toLowerCase();
+        const desc = (card.querySelector(".tool-card-h__desc")?.textContent || "").toLowerCase();
+        const queryMatch = !q || title.includes(q) || desc.includes(q);
+
+        const show = categoryMatch && queryMatch;
+        card.hidden = !show;
+        if (show) visibleInSec++;
+      }
+
+      section.hidden = visibleInSec === 0;
+    }
+  }
+
+  searchInput?.addEventListener("input", applyFilter);
+
+  for (const chip of filterChips) {
+    chip.addEventListener("click", () => {
+      for (const c of filterChips) c.classList.remove("filter-chip--active");
+      chip.classList.add("filter-chip--active");
+      activeCategory = chip.getAttribute("data-category") || "all";
+      applyFilter();
+    });
+  }
+
+  // اختصار Ctrl+K و Cmd+K للبحث
+  window.addEventListener("keydown", (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+      event.preventDefault();
+      searchInput?.focus();
+      searchInput?.select();
+    }
+  });
+
+  // 4. السحب والإفلات وتصفح الملفات
+  const dashboard = el("hub-drop");
+  const input = /** @type {HTMLInputElement | null} */ (el("hub-input"));
+  const browseBtn = el("hub-browse");
+
+  browseBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    input?.click();
+  });
+
+  if (dashboard && input) {
+    let depth = 0;
+    dashboard.addEventListener("dragenter", (e) => {
+      e.preventDefault();
+      depth++;
+      dashboard.classList.add("is-dragover");
+    });
+    dashboard.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+    });
+    dashboard.addEventListener("dragleave", () => {
+      depth = Math.max(0, depth - 1);
+      if (!depth) dashboard.classList.remove("is-dragover");
+    });
+    dashboard.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      depth = 0;
+      dashboard.classList.remove("is-dragover");
+      const dropped = Array.from(e.dataTransfer?.files || []);
+      if (dropped.length) {
+        for (const file of dropped) recordRecentFile(file);
+        addCapture(dropped);
+      }
+    });
+
+    input.addEventListener("change", () => {
+      const selected = Array.from(input.files || []);
+      if (selected.length) {
+        for (const file of selected) recordRecentFile(file);
+        addCapture(selected);
+      }
+      input.value = "";
+    });
+  }
+}
+
 export function initHub() {
   const host = el("hub-list");
   host?.addEventListener("click", (event) => {
@@ -296,13 +522,7 @@ export function initHub() {
     removeCapture(Number(button.dataset.id));
   });
 
-  wireIntake({
-    dropId: "hub-drop",
-    inputId: "hub-input",
-    browseId: "hub-browse",
-    accept: "any",
-    onFiles: addCapture
-  });
+  initDashboard();
 
   el("hub-add")?.addEventListener("click", () => el("hub-input")?.click());
   el("hub-clear")?.addEventListener("click", () => void requestClear());

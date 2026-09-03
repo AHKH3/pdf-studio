@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar" style=""><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PDF Studio | استوديو المستندات الذكي</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "primary-container": "#4f46e5",
+                "on-secondary-container": "#00567c",
+                "surface-container-high": "#dce9ff",
+                "outline-variant": "#c7c4d8",
+                "secondary-fixed": "#c8e6ff",
+                "on-background": "#0b1c30",
+                "inverse-on-surface": "#eaf1ff",
+                "on-primary": "#ffffff",
+                "on-tertiary-container": "#ffd2be",
+                "on-surface-variant": "#464555",
+                "on-primary-container": "#dad7ff",
+                "tertiary-fixed-dim": "#ffb695",
+                "error-container": "#ffdad6",
+                "tertiary-fixed": "#ffdbcc",
+                "inverse-primary": "#c3c0ff",
+                "outline": "#777587",
+                "tertiary-container": "#a44100",
+                "secondary-container": "#85cbfd",
+                "error": "#ba1a1a",
+                "on-secondary-fixed-variant": "#004c6e",
+                "primary-fixed": "#e2dfff",
+                "on-tertiary-fixed": "#351000",
+                "primary": "#3525cd",
+                "on-surface": "#0b1c30",
+                "on-secondary": "#ffffff",
+                "secondary-fixed-dim": "#89ceff",
+                "on-primary-fixed-variant": "#3323cc",
+                "on-error": "#ffffff",
+                "primary-fixed-dim": "#c3c0ff",
+                "on-error-container": "#93000a",
+                "background": "#f8f9ff",
+                "surface-dim": "#cbdbf5",
+                "on-secondary-fixed": "#001e2f",
+                "tertiary": "#7e3000",
+                "surface-tint": "#4d44e3",
+                "surface-container-low": "#eff4ff",
+                "on-primary-fixed": "#0f0069",
+                "surface-bright": "#f8f9ff",
+                "surface": "#f8f9ff",
+                "surface-container-lowest": "#ffffff",
+                "surface-container": "#e5eeff",
+                "surface-variant": "#d3e4fe",
+                "on-tertiary-fixed-variant": "#7b2f00",
+                "surface-container-highest": "#d3e4fe",
+                "on-tertiary": "#ffffff",
+                "inverse-surface": "#213145",
+                "secondary": "#006590"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "margin": "24px",
+                "base": "4px",
+                "gutter": "16px",
+                "container-max": "1280px"
+        },
+        "fontFamily": {
+                "headline-md": [
+                        "Rubik"
+                ],
+                "body-sm": [
+                        "Rubik"
+                ],
+                "display-lg": [
+                        "Rubik"
+                ],
+                "body-md": [
+                        "Rubik"
+                ],
+                "title-lg": [
+                        "Rubik"
+                ],
+                "label-md": [
+                        "Rubik"
+                ]
+        },
+        "fontSize": {
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-sm": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "display-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "title-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "26px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "label-md": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "500"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        body { font-family: 'Rubik', sans-serif; }
+        .ambient-shadow-low { box-shadow: 0 4px 12px rgba(11, 28, 48, 0.05); }
+        .ambient-shadow-high { box-shadow: 0 16px 48px rgba(11, 28, 48, 0.08); }
+        .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(226, 232, 240, 0.6); }
+        /* Fix Material Symbols RTL issue where icons point the wrong way */
+        .material-symbols-outlined { direction: ltr; display: inline-block; }
+    </style>
+</head>
+<body class="bg-[#f8f9ff] text-on-surface h-screen flex flex-col overflow-hidden">
+<!-- TopBar -->
+<header class="bg-surface-container-lowest border-b border-border shadow-sm h-12 flex justify-between items-center w-full px-4 shrink-0">
+<div class="flex items-center h-full">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#4f46e5] text-[24px]" style='font-variation-settings: "FILL" 1;'>picture_as_pdf</span>
+<span class="font-title-lg text-title-lg font-bold text-on-surface">PDF Studio</span>
+</div>
+<div class="border-l border-border h-full px-3 mx-2"></div>
+<div class="flex items-end h-full pt-1.5 gap-1">
+<div class="relative bg-surface border-x border-t border-border rounded-t-lg shadow-sm px-4 pb-2 pt-1.5 flex items-center gap-2 cursor-pointer text-primary">
+<span class="material-symbols-outlined text-[18px]">home</span>
+<span class="font-label-md text-label-md font-bold">الرئيسية</span>
+<div class="absolute bottom-0 left-0 right-0 h-[2px] bg-primary-container rounded-t-sm"></div>
+</div>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-variant/50 transition-colors mb-1" title="علامة تبويب جديدة">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-variant/50 transition-colors">
+<span class="material-symbols-outlined text-[18px]">minimize</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-variant/50 transition-colors">
+<span class="material-symbols-outlined text-[16px]">crop_square</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-error hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto overflow-x-hidden p-gutter md:p-margin pb-24">
+<div class="max-w-container-max mx-auto space-y-margin">
+<!-- Hero Intake Zone -->
+<section class="bg-[#ffffff] rounded-xl border-2 border-dashed border-[#e2e8f0] transition-all duration-300 group cursor-pointer flex flex-col items-center justify-center p-12 text-center min-h-[320px]">
+<div class="bg-surface-container-low p-5 rounded-2xl mb-6 group-hover:scale-105 transition-transform duration-300">
+<span class="material-symbols-outlined text-[48px] text-[#4f46e5]" style='font-variation-settings: "FILL" 1;'>cloud_upload</span>
+</div>
+<h1 class="text-display-lg font-display-lg text-on-surface mb-4">اسحب ملفات PDF أو الصور وأفلتها هنا للبدء</h1>
+<div class="flex items-center justify-center gap-2 mb-8">
+<span class="text-[12px] font-mono px-2.5 py-1 border border-border rounded-full text-on-surface-variant bg-surface-container-lowest">PDF</span>
+<span class="text-[12px] font-mono px-2.5 py-1 border border-border rounded-full text-on-surface-variant bg-surface-container-lowest">JPG</span>
+<span class="text-[12px] font-mono px-2.5 py-1 border border-border rounded-full text-on-surface-variant bg-surface-container-lowest">PNG</span>
+<span class="text-[12px] font-mono px-2.5 py-1 border border-border rounded-full text-on-surface-variant bg-surface-container-lowest">WEBP</span>
+</div>
+<button class="bg-[#4f46e5] text-white font-title-lg text-title-lg px-8 py-3 rounded-lg flex items-center gap-3 hover:bg-primary transition-colors shadow-sm">
+<span class="material-symbols-outlined">folder_open</span>
+    تصفّح الملفات من الجهاز
+    <span class="bg-black/20 px-2 py-1 rounded text-[12px] font-mono opacity-80 mr-2">Ctrl+O</span>
+</button>
+</section>
+<!-- Recent & Staged Files -->
+<section class="w-full bg-[#ffffff] border border-[#e2e8f0] rounded-xl p-5 shadow-sm space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant">schedule</span>
+<h2 class="font-title-lg text-title-lg font-bold text-on-surface">الملفات الأخيرة والمجهزة <span class="text-on-surface-variant font-normal text-body-md">(3 ملفات)</span></h2>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+<div class="bg-[#ffffff] border border-[#e2e8f0] rounded-xl p-3.5 flex items-center justify-between gap-3">
+<div class="flex items-center gap-3 overflow-hidden">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low text-[#4f46e5] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">picture_as_pdf</span>
+</div>
+<div class="overflow-hidden">
+<h4 class="text-body-sm font-bold text-on-surface truncate">عقد_إيجار_2026.pdf</h4>
+<p class="text-label-md text-on-surface-variant flex items-center gap-1.5 mt-0.5">
+<span class="">1.8 MB</span>
+<span class="">•</span>
+<span class="">منذ 25 دقيقة</span>
+</p>
+</div>
+</div>
+<div class="flex items-center gap-1 shrink-0">
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container-high text-on-surface-variant flex items-center justify-center" title="فتح"><span class="material-symbols-outlined text-[18px]">open_in_new</span></button>
+<button class="w-8 h-8 rounded-lg hover:bg-error/10 hover:text-error text-on-surface-variant flex items-center justify-center" title="إزالة"><span class="material-symbols-outlined text-[18px]">close</span></button>
+</div>
+</div>
+<div class="bg-[#ffffff] border border-[#e2e8f0] rounded-xl p-3.5 flex items-center justify-between gap-3">
+<div class="flex items-center gap-3 overflow-hidden">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low text-[#4f46e5] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">description</span>
+</div>
+<div class="overflow-hidden">
+<h4 class="text-body-sm font-bold text-on-surface truncate">تقرير_الربع_الأول.pdf</h4>
+<p class="text-label-md text-on-surface-variant flex items-center gap-1.5 mt-0.5">
+<span class="">4.2 MB</span>
+<span class="">•</span>
+<span class="">منذ ساعتين</span>
+</p>
+</div>
+</div>
+<div class="flex items-center gap-1 shrink-0">
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container-high text-on-surface-variant flex items-center justify-center" title="فتح"><span class="material-symbols-outlined text-[18px]">open_in_new</span></button>
+<button class="w-8 h-8 rounded-lg hover:bg-error/10 hover:text-error text-on-surface-variant flex items-center justify-center" title="إزالة"><span class="material-symbols-outlined text-[18px]">close</span></button>
+</div>
+</div>
+<div class="bg-[#ffffff] border border-[#e2e8f0] rounded-xl p-3.5 flex items-center justify-between gap-3">
+<div class="flex items-center gap-3 overflow-hidden">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low text-[#4f46e5] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">picture_as_pdf</span>
+</div>
+<div class="overflow-hidden">
+<h4 class="text-body-sm font-bold text-on-surface truncate">دراسة_جدوى_المشروع.pdf</h4>
+<p class="text-label-md text-on-surface-variant flex items-center gap-1.5 mt-0.5">
+<span class="">8.9 MB</span>
+<span class="">•</span>
+<span class="">أمس، 4:15 م</span>
+</p>
+</div>
+</div>
+<div class="flex items-center gap-1 shrink-0">
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container-high text-on-surface-variant flex items-center justify-center" title="فتح"><span class="material-symbols-outlined text-[18px]">open_in_new</span></button>
+<button class="w-8 h-8 rounded-lg hover:bg-error/10 hover:text-error text-on-surface-variant flex items-center justify-center" title="إزالة"><span class="material-symbols-outlined text-[18px]">close</span></button>
+</div>
+</div>
+</div>
+</section>
+<!-- Tool Filter & Grid -->
+<section class="w-full space-y-4" id="unified-tools-section">
+<div class="flex items-center gap-2 overflow-x-auto pb-2" id="tool-filter-chips">
+<button class="filter-btn px-4 py-1.5 text-[14px] font-label-md rounded-full bg-surface-container-low border border-transparent text-on-surface font-bold hover:bg-surface-variant transition-all">الكل</button>
+<button class="filter-btn px-4 py-1.5 text-[14px] font-label-md rounded-full bg-[#ffffff] border border-[#e2e8f0] text-on-surface-variant hover:border-primary hover:text-primary transition-all">تنظيم وصفحات</button>
+<button class="filter-btn px-4 py-1.5 text-[14px] font-label-md rounded-full bg-[#ffffff] border border-[#e2e8f0] text-on-surface-variant hover:border-primary hover:text-primary transition-all">تحويل ومسح</button>
+<button class="filter-btn px-4 py-1.5 text-[14px] font-label-md rounded-full bg-[#ffffff] border border-[#e2e8f0] text-on-surface-variant hover:border-primary hover:text-primary transition-all">أمان وتوقيع</button>
+<button class="filter-btn px-4 py-1.5 text-[14px] font-label-md rounded-full bg-[#ffffff] border border-[#e2e8f0] text-on-surface-variant hover:border-primary hover:text-primary transition-all">تعديل وملاحظات</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="tools-container">
+<div class="bg-[#ffffff] rounded-xl p-5 border border-[#e2e8f0] hover:border-[#4f46e5]/50 hover:shadow-md transition-all cursor-pointer group flex flex-col gap-3 relative">
+<div class="bg-surface-container-low text-[#4f46e5] w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">call_merge</span>
+</div>
+<div>
+<h3 class="font-title-lg text-title-lg font-bold text-on-surface mb-1">دمج ملفات PDF</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">دمج عدة مستندات في ملف واحد منظم بسرعة وسهولة.</p>
+</div>
+<div class="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#4f46e5]">
+<span class="material-symbols-outlined text-[20px]">arrow_back</span>
+</div>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-5 border border-[#e2e8f0] hover:border-[#4f46e5]/50 hover:shadow-md transition-all cursor-pointer group flex flex-col gap-3 relative">
+<div class="bg-surface-container-low text-[#4f46e5] w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">compress</span>
+</div>
+<div>
+<h3 class="font-title-lg text-title-lg font-bold text-on-surface mb-1">ضغط PDF</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">تقليل حجم الملف مع الحفاظ على أعلى جودة ودقة ممكنة.</p>
+</div>
+<div class="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#4f46e5]">
+<span class="material-symbols-outlined text-[20px]">arrow_back</span>
+</div>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-5 border border-[#e2e8f0] hover:border-[#4f46e5]/50 hover:shadow-md transition-all cursor-pointer group flex flex-col gap-3 relative">
+<div class="bg-surface-container-low text-[#4f46e5] w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">image</span>
+</div>
+<div>
+<h3 class="font-title-lg text-title-lg font-bold text-on-surface mb-1">صور إلى PDF</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">تحويل مجموعة من الصور إلى ملف PDF متكامل جاهز للطباعة.</p>
+</div>
+<div class="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#4f46e5]">
+<span class="material-symbols-outlined text-[20px]">arrow_back</span>
+</div>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-5 border border-[#e2e8f0] hover:border-[#4f46e5]/50 hover:shadow-md transition-all cursor-pointer group flex flex-col gap-3 relative">
+<div class="bg-surface-container-low text-[#4f46e5] w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">layers</span>
+</div>
+<div>
+<h3 class="font-title-lg text-title-lg font-bold text-on-surface mb-1">تنظيم وتعديل الصفحات</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">إعادة ترتيب، تدوير، أو حذف صفحات المستند بسهولة وبصرياً.</p>
+</div>
+<div class="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity text-[#4f46e5]">
+<span class="material-symbols-outlined text-[20px]">arrow_back</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Dock Footer -->
+<footer class="bg-surface-container-lowest border-t border-border shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] h-16 flex items-center justify-between px-6 shrink-0 z-50">
+<div class="flex items-center gap-3">
+<div class="relative flex items-center justify-center w-3 h-3">
+<div class="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-success"></div>
+<div class="relative inline-flex w-2 h-2 rounded-full bg-success"></div>
+</div>
+<span class="text-body-sm font-body-sm text-on-surface-variant">جاهز للعمل</span>
+<div class="w-px h-4 bg-border mx-2"></div>
+<button class="bg-[#4f46e5] text-white font-label-md text-[13px] px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-primary transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">add</span>
+      فتح ملف جديد (Ctrl+O)
+    </button>
+</div>
+<div class="hidden md:flex items-center justify-center">
+<span class="bg-surface-container-low text-on-surface-variant border border-border px-3 py-1 rounded-full text-[12px] font-label-md font-medium flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px]">offline_pin</span>
+      16 أداة متاحة دون اتصال بالإنترنت (Offline 100%)
+    </span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant opacity-70">
+<span class="text-body-sm font-label-md font-medium">PDF Studio — مركز الأدوات والاستقبال</span>
+<span class="material-symbols-outlined text-[20px]">home</span>
+</div>
+</footer>
+</body></html>

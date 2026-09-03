@@ -81,6 +81,9 @@
     <symbol id="icon-duplicate" viewBox="0 0 24 24"><path d="M8 8H18C19.1 8 20 8.9 20 10V20C20 21.1 19.1 22 18 22H8C6.9 22 6 21.1 6 20V10C6 8.9 6.9 8 8 8ZM4 16V4C4 2.9 4.9 2 6 2H18"/></symbol>
     <symbol id="icon-sidebar" viewBox="0 0 24 24"><path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4ZM15 6V18H20V6H15Z"/></symbol>
     <symbol id="icon-lock-open" viewBox="0 0 24 24"><path d="M7 11V7C7 4.2 9.2 2 12 2C14.8 2 17 4.2 17 7M4.2678 18.8447C4.49268 20.515 5.87612 21.8235 7.55965 21.9009C8.97627 21.966 10.4153 22 12 22C13.5847 22 15.0237 21.966 16.4403 21.9009C18.1239 21.8235 19.5073 20.515 19.7322 18.8447C19.8789 17.7547 20 16.6376 20 15.5C20 14.3624 19.8789 13.2453 19.7322 12.1553C19.5073 10.485 18.1239 9.17649 16.4403 9.09909C15.0237 9.03397 13.5847 9 12 9C10.4153 9 8.97627 9.03397 7.55965 9.09909C5.87612 9.17649 4.49268 10.485 4.2678 12.1553C4.12104 13.2453 3.99999 14.3624 3.99999 15.5C3.99999 16.6376 4.12104 17.7547 4.2678 18.8447Z"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="icon-layers" viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
   </svg>
 
   <div class="board">
@@ -125,18 +128,320 @@
         <main class="work" id="work">
           <section id="view-start" class="view view--active" aria-labelledby="start-title" role="region">
             <div class="start">
-              <!-- Field: لا يوجد مربع : الشاشة كلها هي مكان الإسقاط -->
-              <div id="hub-drop" class="field-drop" data-kind="any" aria-label="أسقط الملفات" tabindex="0" role="button">
-                <div class="field-drop__glow" aria-hidden="true"></div>
-                <div class="field-drop__center">
-                  <div class="field-drop__iconwrap" aria-hidden="true">
-                    <svg class="icon field-drop__icon" aria-hidden="true"><use href="#icon-upload"></use></svg>
+              <!-- Command Center Dashboard (Tool-First Launcher & Recents) -->
+              <div id="hub-drop" class="hub-dashboard" data-kind="any">
+                <h1 id="start-title" class="sr-only">استوديو المستندات الذكي</h1>
+
+                <!-- Search & Category Filters -->
+                <div class="hub-dashboard__top">
+                  <div class="hub-search">
+                    <svg class="icon hub-search__icon" aria-hidden="true"><use href="#icon-search"></use></svg>
+                    <input id="tool-search-input" class="hub-search__input" type="search" placeholder="ابحث عن أداة أو اضغط Ctrl+K..." aria-label="بحث سريع عن أداة" />
+                    <kbd class="hub-search__kbd">Ctrl+K</kbd>
                   </div>
-                  <h1 id="start-title" class="field-drop__title" tabindex="-1">أسقط الملفات هنا</h1>
-                  <button id="hub-browse" type="button" class="btn btn--act field-drop__cta">
+                  <div class="hub-filters" role="tablist" aria-label="تصنيفات الأدوات">
+                    <button class="filter-chip filter-chip--active" type="button" data-category="all">الكل (16)</button>
+                    <button class="filter-chip" type="button" data-category="images">الصور</button>
+                    <button class="filter-chip" type="button" data-category="edit">التحرير والتوقيع</button>
+                    <button class="filter-chip" type="button" data-category="organize">التنظيم والأمان</button>
+                  </div>
+                  <button id="hub-browse" type="button" class="btn btn--act hub-browse-btn" title="تصفح ملفات من الجهاز">
                     <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg>
                     تصفّح الملفات
                   </button>
+                </div>
+
+                <!-- Recent Files Shelf -->
+                <section class="hub-recents" id="hub-recents-section" aria-labelledby="recents-heading">
+                  <div class="hub-recents__head">
+                    <div class="hub-recents__head-title">
+                      <div class="hub-recents__icon-wrap">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-clock"></use></svg>
+                      </div>
+                      <h2 id="recents-heading" class="hub-recents__title">مؤخراً</h2>
+                      <span class="hub-recents__badge" id="recents-count-badge">3 ملفات</span>
+                    </div>
+                    <button type="button" id="recents-clear-btn" class="hub-recents__action" title="تفريغ السجل">
+                      مسح السجل
+                    </button>
+                  </div>
+                  <div class="hub-recents__grid" id="recents-grid">
+                    <div class="recent-card" data-file="عقد_إيجار_2026.pdf" role="button" tabindex="0">
+                      <div class="recent-card__icon recent-card__icon--rose">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-file"></use></svg>
+                      </div>
+                      <div class="recent-card__info">
+                        <span class="recent-card__name" title="عقد_إيجار_2026.pdf">عقد_إيجار_2026.pdf</span>
+                        <div class="recent-card__meta">
+                          <span class="num">1.8 MB</span>
+                          <span class="sep">•</span>
+                          <span>منذ 15 دقيقة</span>
+                        </div>
+                      </div>
+                      <svg class="icon recent-card__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                    </div>
+
+                    <div class="recent-card" data-file="تقرير_الربع_الأول.docx" role="button" tabindex="0">
+                      <div class="recent-card__icon recent-card__icon--blue">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-file"></use></svg>
+                      </div>
+                      <div class="recent-card__info">
+                        <span class="recent-card__name" title="تقرير_الربع_الأول.docx">تقرير_الربع_الأول.docx</span>
+                        <div class="recent-card__meta">
+                          <span class="num">4.2 MB</span>
+                          <span class="sep">•</span>
+                          <span>اليوم، 10:30 ص</span>
+                        </div>
+                      </div>
+                      <svg class="icon recent-card__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                    </div>
+
+                    <div class="recent-card" data-file="ميزانية_المشروع.xlsx" role="button" tabindex="0">
+                      <div class="recent-card__icon recent-card__icon--emerald">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-file"></use></svg>
+                      </div>
+                      <div class="recent-card__info">
+                        <span class="recent-card__name" title="ميزانية_المشروع.xlsx">ميزانية_المشروع.xlsx</span>
+                        <div class="recent-card__meta">
+                          <span class="num">3.1 MB</span>
+                          <span class="sep">•</span>
+                          <span>أمس، 04:15 م</span>
+                        </div>
+                      </div>
+                      <svg class="icon recent-card__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- 16 Tools Across 3 Sections -->
+                <div class="dashboard-sections" id="dashboard-sections">
+                  <!-- Section 1: الصور (4 tools) -->
+                  <section class="dashboard-section" data-section="images">
+                    <div class="dashboard-section__head">
+                      <div class="dashboard-section__icon dashboard-section__icon--teal">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-images"></use></svg>
+                      </div>
+                      <h3 class="dashboard-section__title">الصور</h3>
+                      <span class="dashboard-section__pill dashboard-section__pill--teal">4 أدوات</span>
+                    </div>
+                    <div class="dashboard-grid">
+                      <!-- 1. صور إلى PDF -->
+                      <button type="button" class="tool-card-h" data-tool="images" data-route="images" data-category="images">
+                        <div class="tool-card-h__icon tool-card-h__icon--emerald">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-images"></use></svg>
+                        </div>
+                        <div class="tool-card-h__text">
+                          <span class="tool-card-h__title">صور إلى PDF</span>
+                          <span class="tool-card-h__desc">تحويل حزم الصور إلى مستند</span>
+                        </div>
+                        <svg class="icon tool-card-h__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+
+                      <!-- 2. PDF إلى صور -->
+                      <button type="button" class="tool-card-h" data-tool="rasterize" data-route="rasterize" data-category="images">
+                        <div class="tool-card-h__icon tool-card-h__icon--teal">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-pdf-to-images"></use></svg>
+                        </div>
+                        <div class="tool-card-h__text">
+                          <span class="tool-card-h__title">PDF إلى صور</span>
+                          <span class="tool-card-h__desc">استخراج وتصدير الصفحات بجودة عالية</span>
+                        </div>
+                        <svg class="icon tool-card-h__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+
+                      <!-- 3. مسح وتصحيح -->
+                      <button type="button" class="tool-card-h" data-tool="scan" data-route="scan" data-category="images">
+                        <div class="tool-card-h__icon tool-card-h__icon--cyan">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-scan"></use></svg>
+                        </div>
+                        <div class="tool-card-h__text">
+                          <span class="tool-card-h__title">مسح وتصحيح</span>
+                          <span class="tool-card-h__desc">تحسين الوثائق وتصحيح المنظور</span>
+                        </div>
+                        <svg class="icon tool-card-h__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+
+                      <!-- 4. استخراج الصور -->
+                      <button type="button" class="tool-card-h" data-tool="extract-images" data-route="extract-images" data-category="images">
+                        <div class="tool-card-h__icon tool-card-h__icon--sky">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-enhance"></use></svg>
+                        </div>
+                        <div class="tool-card-h__text">
+                          <span class="tool-card-h__title">استخراج الصور</span>
+                          <span class="tool-card-h__desc">استخراج الوسائط والصور المضمنة</span>
+                        </div>
+                        <svg class="icon tool-card-h__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+                    </div>
+                  </section>
+
+                  <!-- Section 2: التحرير والتوقيع (5 tools) -->
+                  <section class="dashboard-section" data-section="edit">
+                    <div class="dashboard-section__head">
+                      <div class="dashboard-section__icon dashboard-section__icon--purple">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-edit"></use></svg>
+                      </div>
+                      <h3 class="dashboard-section__title">التحرير والتوقيع</h3>
+                      <span class="dashboard-section__pill dashboard-section__pill--purple">5 أدوات</span>
+                    </div>
+                    <div class="dashboard-grid">
+                      <!-- 5. تحرير النصوص -->
+                      <button type="button" class="tool-card-h" data-tool="edit" data-route="edit" data-category="edit">
+                        <div class="tool-card-h__icon tool-card-h__icon--sky">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-edit"></use></svg>
+                        </div>
+                        <div class="tool-card-h__text">
+                          <span class="tool-card-h__title">تحرير النصوص</span>
+                          <span class="tool-card-h__desc">إضافة وتعديل فقرات ومحتوى PDF</span>
+                        </div>
+                        <svg class="icon tool-card-h__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+
+                      <!-- 6. توقيع وختم -->
+                      <button type="button" class="tool-card-h" data-tool="sign" data-route="sign" data-category="edit">
+                        <div class="tool-card-h__icon tool-card-h__icon--purple">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-sign"></use></svg>
+                        </div>
+                        <div class="tool-card-h__text">
+                          <span class="tool-card-h__title">توقيع وختم</span>
+                          <span class="tool-card-h__desc">إدراج التواقيع والأختام المعتمدة</span>
+                        </div>
+                        <svg class="icon tool-card-h__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+
+                      <!-- 7. تظليل وملاحظات -->
+                      <button type="button" class="tool-card-h" data-tool="watermark" data-route="watermark" data-category="edit">
+                        <div class="tool-card-h__icon tool-card-h__icon--amber">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-highlighter"></use></svg>
+                        </div>
+                        <div class="tool-card-h__text">
+                          <span class="tool-card-h__title">تظليل وملاحظات</span>
+                          <span class="tool-card-h__desc">إبراز نصوص وإضافة أسهم وإطارات</span>
+                        </div>
+                        <svg class="icon tool-card-h__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+
+                      <!-- 8. حجب وطمس -->
+                      <button type="button" class="tool-card-h" data-tool="protect" data-route="protect" data-category="edit">
+                        <div class="tool-card-h__icon tool-card-h__icon--rose">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-eye-off"></use></svg>
+                        </div>
+                        <div class="tool-card-h__text">
+                          <span class="tool-card-h__title">حجب وطمس</span>
+                          <span class="tool-card-h__desc">حماية الخصوصية وتغطية السرّي</span>
+                        </div>
+                        <svg class="icon tool-card-h__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+
+                      <!-- 9. استخراج OCR -->
+                      <button type="button" class="tool-card-h" data-tool="ocr" data-route="ocr" data-category="edit">
+                        <div class="tool-card-h__icon tool-card-h__icon--violet">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-file"></use></svg>
+                        </div>
+                        <div class="tool-card-h__text">
+                          <span class="tool-card-h__title">استخراج OCR</span>
+                          <span class="tool-card-h__desc">التعرف الضوئي الذكي على الحروف</span>
+                        </div>
+                        <svg class="icon tool-card-h__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+                    </div>
+                  </section>
+
+                  <!-- Section 3: التنظيم والأمان (7 tools) -->
+                  <section class="dashboard-section" data-section="organize">
+                    <div class="dashboard-section__head">
+                      <div class="dashboard-section__icon dashboard-section__icon--indigo">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-layers"></use></svg>
+                      </div>
+                      <h3 class="dashboard-section__title">التنظيم والأمان</h3>
+                      <span class="dashboard-section__pill dashboard-section__pill--indigo">7 أدوات</span>
+                    </div>
+                    <div class="dashboard-grid">
+                      <!-- 10. دمج PDF -->
+                      <button type="button" class="tool-card-h" data-tool="merge" data-route="merge" data-category="organize">
+                        <div class="tool-card-h__icon tool-card-h__icon--indigo">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-merge"></use></svg>
+                        </div>
+                        <div class="tool-card-h__text">
+                          <span class="tool-card-h__title">دمج PDF</span>
+                          <span class="tool-card-h__desc">جمع عدة مستندات بترتيب مخصص</span>
+                        </div>
+                        <svg class="icon tool-card-h__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+
+                      <!-- 11. تقسيم PDF -->
+                      <button type="button" class="tool-card-h" data-tool="split" data-route="split" data-category="organize">
+                        <div class="tool-card-h__icon tool-card-h__icon--fuchsia">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-split"></use></svg>
+                        </div>
+                        <div class="tool-card-h__text">
+                          <span class="tool-card-h__title">تقسيم PDF</span>
+                          <span class="tool-card-h__desc">فصل وحفظ أجزاء من المستند</span>
+                        </div>
+                        <svg class="icon tool-card-h__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+
+                      <!-- 12. تنظيم الصفحات -->
+                      <button type="button" class="tool-card-h" data-tool="organize" data-route="organize" data-category="organize">
+                        <div class="tool-card-h__icon tool-card-h__icon--blue">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-organize"></use></svg>
+                        </div>
+                        <div class="tool-card-h__text">
+                          <span class="tool-card-h__title">تنظيم الصفحات</span>
+                          <span class="tool-card-h__desc">إعادة ترتيب، حذف، وتكرار الصفحات</span>
+                        </div>
+                        <svg class="icon tool-card-h__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+
+                      <!-- 13. تدوير وقص -->
+                      <button type="button" class="tool-card-h" data-tool="crop" data-route="crop" data-category="organize">
+                        <div class="tool-card-h__icon tool-card-h__icon--yellow">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-rotate"></use></svg>
+                        </div>
+                        <div class="tool-card-h__text">
+                          <span class="tool-card-h__title">تدوير وقص</span>
+                          <span class="tool-card-h__desc">ضبط الاتجاه والهوامش واقتصاص الأطراف</span>
+                        </div>
+                        <svg class="icon tool-card-h__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+
+                      <!-- 14. علامة وترقيم -->
+                      <button type="button" class="tool-card-h" data-tool="numbers" data-route="numbers" data-category="organize">
+                        <div class="tool-card-h__icon tool-card-h__icon--orange">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-numbers"></use></svg>
+                        </div>
+                        <div class="tool-card-h__text">
+                          <span class="tool-card-h__title">علامة وترقيم</span>
+                          <span class="tool-card-h__desc">إضافة أرقام وهوامش وعلامات أمان</span>
+                        </div>
+                        <svg class="icon tool-card-h__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+
+                      <!-- 15. ضغط PDF -->
+                      <button type="button" class="tool-card-h" data-tool="compress" data-route="compress" data-category="organize">
+                        <div class="tool-card-h__icon tool-card-h__icon--amber">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-compress"></use></svg>
+                        </div>
+                        <div class="tool-card-h__text">
+                          <span class="tool-card-h__title">ضغط PDF</span>
+                          <span class="tool-card-h__desc">تقليل الحجم مع الحفاظ على الجودة</span>
+                        </div>
+                        <svg class="icon tool-card-h__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+
+                      <!-- 16. حماية وتشفير -->
+                      <button type="button" class="tool-card-h" data-tool="protect" data-route="protect" data-category="organize">
+                        <div class="tool-card-h__icon tool-card-h__icon--rose">
+                          <svg class="icon" aria-hidden="true"><use href="#icon-lock"></use></svg>
+                        </div>
+                        <div class="tool-card-h__text">
+                          <span class="tool-card-h__title">حماية وتشفير</span>
+                          <span class="tool-card-h__desc">إضافة كلمة سر والتحكم بالأذونات</span>
+                        </div>
+                        <svg class="icon tool-card-h__arrow" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+                    </div>
+                  </section>
                 </div>
               </div>
               <input id="hub-input" type="file" accept="image/*,application/pdf,.pdf,.heic,.heif" multiple hidden />

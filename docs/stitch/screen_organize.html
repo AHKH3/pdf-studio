@@ -1,0 +1,464 @@
+<!DOCTYPE html><html dir="rtl" lang="ar"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>PDF Studio - Organize &amp; Reorder</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#004666",
+                        "tertiary-fixed-dim": "#ffb695",
+                        "inverse-primary": "#c3c0ff",
+                        "on-surface": "#0b1c30",
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#d3e4fe",
+                        "on-secondary-fixed-variant": "#004c6e",
+                        "background": "#f8fafc",
+                        "tertiary-container": "#a44100",
+                        "surface-container-highest": "#d3e4fe",
+                        "secondary-fixed-dim": "#89ceff",
+                        "outline": "#777587",
+                        "primary": "#3525cd",
+                        "surface": "#ffffff",
+                        "surface-container-high": "#dce9ff",
+                        "inverse-surface": "#213145",
+                        "primary-container": "#4f46e5",
+                        "on-background": "#0b1c30",
+                        "surface-tint": "#4d44e3",
+                        "surface-container-low": "#eff4ff",
+                        "surface-container": "#e5eeff",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "secondary-fixed": "#c9e6ff",
+                        "on-tertiary-fixed-variant": "#7b2f00",
+                        "on-secondary-fixed": "#001e2f",
+                        "on-surface-variant": "#464555",
+                        "warning": "#f59e0b",
+                        "on-tertiary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "tertiary": "#7e3000",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#f8f9ff",
+                        "surface-dim": "#cbdbf5",
+                        "outline-variant": "#c7c4d8",
+                        "on-tertiary-container": "#ffd2be",
+                        "tertiary-fixed": "#ffdbcc",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#39b8fd",
+                        "on-error": "#ffffff",
+                        "primary-fixed": "#e2dfff",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed": "#0f0069",
+                        "secondary": "#006591",
+                        "on-primary-fixed-variant": "#3323cc",
+                        "on-error-container": "#93000a",
+                        "danger": "#ef4444",
+                        "border": "#e2e8f0",
+                        "inverse-on-surface": "#eaf1ff",
+                        "success": "#10b981",
+                        "on-primary-container": "#dad7ff",
+                        "on-tertiary-fixed": "#351000"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "margin": "24px",
+                        "container-max": "1280px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Rubik"],
+                        "headline-md-mobile": ["Rubik"],
+                        "headline-md": ["Rubik"],
+                        "body-sm": ["Rubik"],
+                        "body-md": ["Rubik"],
+                        "title-lg": ["Rubik"],
+                        "display-lg": ["Rubik"]
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-md-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "title-lg": ["18px", { "lineHeight": "26px", "fontWeight": "500" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Rubik', sans-serif; }
+        .grid-item-selected {
+            box-shadow: 0 0 0 2px #4f46e5, 0 4px 6px -1px rgba(79, 70, 229, 0.1), 0 2px 4px -1px rgba(79, 70, 229, 0.06);
+        }
+        .grid-item-drag {
+            opacity: 0.8;
+            transform: scale(1.05) rotate(2deg);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            z-index: 50;
+        }
+        .insert-indicator {
+            width: 4px;
+            background-color: #4f46e5;
+            border-radius: 9999px;
+            box-shadow: 0 0 8px rgba(79, 70, 229, 0.6);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface h-screen flex flex-col overflow-hidden select-none">
+<!-- 1. Custom Window Titlebar -->
+<header class="bg-surface border-b border-border h-12 flex items-center justify-between px-2 shrink-0">
+<!-- Right: Logo & Tabs -->
+<div class="flex items-center h-full">
+<div class="flex items-center gap-2 px-3 border-l border-border h-full">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: &quot;FILL&quot; 1;">picture_as_pdf</span>
+<span class="font-title-lg text-title-lg font-bold text-on-surface">PDF Studio</span>
+</div>
+<div class="flex h-full mt-2">
+<!-- Active Tab -->
+<div class="bg-surface border-x border-t border-border rounded-t-lg px-4 flex items-center gap-3 min-w-[200px] h-full relative z-10 shadow-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">description</span>
+<span class="font-body-sm text-body-sm text-on-surface truncate flex-1" title="تقرير_المشروع_النهائي.pdf">تقرير_المشروع_النهائي.pdf <span class="text-on-surface-variant text-xs">(18 صفحة)</span></span>
+<button class="w-5 h-5 rounded hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+<!-- Active Indicator at bottom edge -->
+<div class="absolute bottom-0 left-0 right-0 h-[2px] bg-primary-container rounded-full"></div>
+</div>
+<!-- New Tab Button -->
+<button class="w-10 h-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors ml-1">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
+<!-- Left: Window Controls -->
+<div class="flex items-center h-full space-x-reverse space-x-1">
+<button class="w-10 h-full hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[16px]">minimize</span>
+</button>
+<button class="w-10 h-full hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[14px]">crop_square</span>
+</button>
+<button class="w-10 h-full hover:bg-danger hover:text-white flex items-center justify-center text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</header>
+<!-- Main Workspace -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Left/Main Canvas Area -->
+<div class="flex-1 flex flex-col min-w-0 bg-background">
+<!-- 2. Pages Batch Toolbar (Top) -->
+<div class="bg-surface border-b border-border h-14 flex items-center justify-between px-margin shrink-0 shadow-sm z-10">
+<!-- Right Side: Add Actions -->
+<div class="flex items-center gap-3">
+<button class="bg-surface-container-low hover:bg-surface-container text-primary-container px-3 py-1.5 rounded flex items-center gap-2 transition-colors border border-primary-container/20">
+<span class="material-symbols-outlined text-[18px]">note_add</span>
+<span class="font-label-md text-label-md">إضافة صفحات PDF جديدة</span>
+</button>
+<button class="bg-surface-container-low hover:bg-surface-container text-primary-container px-3 py-1.5 rounded flex items-center gap-2 transition-colors border border-primary-container/20">
+<span class="material-symbols-outlined text-[18px]">add_photo_alternate</span>
+<span class="font-label-md text-label-md">إدراج صور</span>
+</button>
+</div>
+<!-- Center: Batch Tools -->
+<div class="flex items-center bg-surface-bright border border-border rounded-lg p-1">
+<button class="px-3 py-1.5 rounded hover:bg-surface-container-low text-on-surface flex items-center gap-1.5 transition-colors" title="تحديد الكل">
+<span class="material-symbols-outlined text-[18px]">select_all</span>
+<span class="font-label-md text-label-md">تحديد الكل</span>
+</button>
+<div class="w-px h-5 bg-border mx-1"></div>
+<button class="px-3 py-1.5 rounded hover:bg-surface-container-low text-on-surface flex items-center gap-1.5 transition-colors" title="تدوير المحدد 90°">
+<span class="material-symbols-outlined text-[18px]">rotate_right</span>
+<span class="font-label-md text-label-md">تدوير 90°</span>
+</button>
+<button class="px-3 py-1.5 rounded hover:bg-surface-container-low text-on-surface flex items-center gap-1.5 transition-colors" title="عكس ترتيب الصفحات">
+<span class="material-symbols-outlined text-[18px]">swap_horiz</span>
+<span class="font-label-md text-label-md">عكس</span>
+</button>
+<div class="w-px h-5 bg-border mx-1"></div>
+<button class="px-3 py-1.5 rounded hover:bg-error-container text-error flex items-center gap-1.5 transition-colors" title="حذف المحدد">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+<span class="font-label-md text-label-md">حذف</span>
+</button>
+</div>
+<!-- Left Side: View Controls -->
+<div class="flex items-center gap-3">
+<div class="flex items-center bg-surface-bright border border-border rounded-lg p-1">
+<button class="w-8 h-8 rounded hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors" title="صغير">
+<span class="material-symbols-outlined text-[16px]">grid_on</span>
+</button>
+<button class="w-8 h-8 rounded bg-surface-container shadow-sm flex items-center justify-center text-primary-container transition-colors" title="متوسط">
+<span class="material-symbols-outlined text-[20px]">grid_view</span>
+</button>
+<button class="w-8 h-8 rounded hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors" title="كبير">
+<span class="material-symbols-outlined text-[24px]">dataset</span>
+</button>
+</div>
+<button class="w-9 h-9 rounded-full bg-surface border border-border hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors" title="ملء الشاشة">
+<span class="material-symbols-outlined text-[20px]">fullscreen</span>
+</button>
+</div>
+</div>
+<!-- 3. Main Interactive Grid -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-6 bg-background relative">
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 max-w-container-max mx-auto">
+<!-- Page 1 (Selected) -->
+<div class="relative group cursor-pointer">
+<div class="bg-surface rounded-lg p-2 grid-item-selected transition-all duration-200 aspect-[1/1.4] flex flex-col relative">
+<!-- Selected Badge -->
+<div class="absolute -top-2 -right-2 w-6 h-6 bg-primary-container text-white rounded-full flex items-center justify-center shadow-sm z-10 border-2 border-surface">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: &quot;FILL&quot; 1;">check</span>
+</div>
+<!-- Document Preview Placeholder -->
+<div class="flex-1 bg-surface-container-lowest border border-border rounded flex items-center justify-center overflow-hidden mb-2 relative">
+<img class="w-full h-full object-cover" data-alt="A pristine, minimalist architectural technical drawing of a modern office layout, rendered in crisp black lines on a stark white background. The image has a clean, light-mode aesthetic, suitable for a professional document preview, with a soft, ambient glow to indicate a high-quality scan." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXuMSjfwteBFjCw3XWrMhgqQArld-HTwIzFm_st3_RctAF3IioJBFs7vfYi1cFPLrot37yejOEURAXAPaoFFYTikRbQTVidNTwYReXCJvXbUQe23J8gh5fSwu9NItqsFrU4X8UWMpflvTr_oh9YHen0GRT5T966-OK29hbPJcQ1TWGA52wybJ1Bh1QbAdMm_NmyCC_OgSQhNSVCQJ356gDLBVS5LZsaWvtEJgbr3ZD3FNUJeRvFpeeoO3a6ZQEX0DiKpMwxAC4Cy0">
+<!-- Hover Actions Overlay -->
+<div class="absolute bottom-0 left-0 right-0 bg-surface/90 backdrop-blur-sm border-t border-border p-1 flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 rounded hover:bg-surface-container-low text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">rotate_left</span></button>
+<button class="p-1 rounded hover:bg-surface-container-low text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">rotate_right</span></button>
+<button class="p-1 rounded hover:bg-surface-container-low text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">content_copy</span></button>
+<button class="p-1 rounded hover:bg-error-container text-on-surface-variant hover:text-error transition-colors"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</div>
+</div>
+<div class="text-center font-label-md text-label-md text-on-surface font-medium">صفحة 1</div>
+</div>
+</div>
+<!-- Page 2 -->
+<div class="relative group cursor-pointer">
+<div class="bg-surface rounded-lg p-2 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-border hover:border-outline-variant transition-all duration-200 aspect-[1/1.4] flex flex-col relative">
+<div class="flex-1 bg-surface-container-lowest border border-border rounded flex items-center justify-center overflow-hidden mb-2 relative">
+<img class="w-full h-full object-cover opacity-90" data-alt="A clean, professional title page for a corporate report, featuring a subtle geometric design in light indigo and deep navy on a pure white background. The text is illegible but suggests a formal Arabic layout, embodying a minimalist, clinical yet friendly corporate style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEQOP9uyeV4WRQ9eYrOchqSRTRQo6NQlK6zt6ii0-JjfQ5Zsf_V_UYLtak-3UPWJcF78a_4_dpefCotlyZXLeSSnlSErHRuPXDrQjV38MYGVexIJWap7ob8QepmOxPlhhtQQRhc27Kq85X5iQs6Z2R7eBotSIuUOx8-KrMLGk56r9NRv8fAqlOrccrSSHNWDGPrxHqP5hmmykk09VI2s44rBhDSauZEOTAiie6OT2C8yfx5kGD4MPbfEKAIs6Lxj7AYvDyA-lXZkM">
+<div class="absolute bottom-0 left-0 right-0 bg-surface/90 backdrop-blur-sm border-t border-border p-1 flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 rounded hover:bg-surface-container-low text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">rotate_left</span></button>
+<button class="p-1 rounded hover:bg-surface-container-low text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">rotate_right</span></button>
+<button class="p-1 rounded hover:bg-surface-container-low text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">content_copy</span></button>
+<button class="p-1 rounded hover:bg-error-container text-on-surface-variant hover:text-error transition-colors"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</div>
+</div>
+<div class="text-center font-label-md text-label-md text-on-surface-variant">صفحة 2</div>
+</div>
+</div>
+<!-- Insert Indicator (Between 2 and 3) -->
+<div class="relative flex items-center justify-center w-4 -mx-5 z-20">
+<div class="insert-indicator h-3/4 absolute"></div>
+<!-- Drop target visual -->
+<div class="w-8 h-8 rounded-full bg-primary-container text-white flex items-center justify-center absolute shadow-lg">
+<span class="material-symbols-outlined text-[16px]">arrow_downward</span>
+</div>
+</div>
+<!-- Page 3 (Being Dragged) -->
+<div class="relative group cursor-grab">
+<div class="bg-surface rounded-lg p-2 grid-item-drag aspect-[1/1.4] flex flex-col relative ring-2 ring-primary-container/50">
+<div class="flex-1 bg-surface-container-lowest border-2 border-dashed border-primary-container/40 rounded flex items-center justify-center overflow-hidden mb-2 relative bg-surface-container-low">
+<img class="w-full h-full object-cover opacity-90" data-alt="A page layout displaying a neat, structured data table and a modern pie chart in soft indigo and gray tones. The background is pristine white, conveying a sense of data precision, clarity, and minimalist professional utility. The image represents a high-quality data report page." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1pRAH1imzNvfTThu8TWcFkAsLqLeNKMTQuuvVwoi20JgY3He88D8belbfPXK2AKUo6egnWyJK5fNt4hCmC0aSpan87M_Jyv1HimHJdD8oTgKmRs6K9Xct_4MIxXyoNBgtKnbpMdUpzaAA1YXOx5zjsAM-9EgYc6xKlZrMC2H6XIOmNOzxmRIsv_LngI3Aqj7026bbwGzxHSyL8asoyhG9PcYPy_wR--wIxcNX7nsbzQVZpPTFSaJWqtKv7izXKzMe2asXdzc1I0g">
+</div>
+<div class="text-center font-label-md text-label-md text-primary-container font-medium">صفحة 3</div>
+</div>
+<!-- Placeholder left behind while dragging -->
+<div class="absolute inset-0 border-2 border-dashed border-border rounded-lg bg-surface-container-low/30 -z-10"></div>
+</div>
+<!-- Page 4 (Selected in Inspector) -->
+<div class="relative group cursor-pointer">
+<div class="bg-surface rounded-lg p-2 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-primary-container/30 ring-1 ring-primary-container/20 transition-all duration-200 aspect-[1/1.4] flex flex-col relative bg-surface-container-low/20">
+<div class="flex-1 bg-surface-container-lowest border border-border rounded flex items-center justify-center overflow-hidden mb-2 relative">
+<img class="w-full h-full object-cover" data-alt="A page from a professional document showing a large, high-resolution lifestyle photograph of a modern, well-lit office interior, placed above two columns of sleek, structured text. The aesthetic is bright, airy, and premium, fitting a clinical and friendly corporate brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUChXKjhfVKwgFUlFmT7wj9ZegnbqSuS5F4bCspioagJomrtU5DdnaZILWrLlIRcYBecwXcAy_j1j0SH_qJB1QLLJgWFjay8uXp8oXf_XKy9zz0waleWX40Cije5X2ayUQbj2IPcQ92McFSlmgggu1tRDbWaTbkvQ6ZVzYP--RisG4_HtOii96JtXRFzARSgouoBMmFmlXILfmlWB6zNjla6onNSgqKxDlDCy7TmllnrsXId06ip-0DQ8mkpxdeq8Lj1Su_tg5UrA">
+<div class="absolute bottom-0 left-0 right-0 bg-surface/90 backdrop-blur-sm border-t border-border p-1 flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 rounded hover:bg-surface-container-low text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">rotate_left</span></button>
+<button class="p-1 rounded hover:bg-surface-container-low text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">rotate_right</span></button>
+<button class="p-1 rounded hover:bg-surface-container-low text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">content_copy</span></button>
+<button class="p-1 rounded hover:bg-error-container text-on-surface-variant hover:text-error transition-colors"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</div>
+</div>
+<div class="text-center font-label-md text-label-md text-primary font-medium">صفحة 4</div>
+</div>
+</div>
+<!-- Page 5 -->
+<div class="relative group cursor-pointer">
+<div class="bg-surface rounded-lg p-2 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-border hover:border-outline-variant transition-all duration-200 aspect-[1/1.4] flex flex-col relative">
+<div class="flex-1 bg-surface-container-lowest border border-border rounded flex items-center justify-center overflow-hidden mb-2 relative">
+<div class="w-full h-full bg-surface-bright flex items-center justify-center text-outline-variant">
+<span class="material-symbols-outlined text-[32px]">text_snippet</span>
+</div>
+</div>
+<div class="text-center font-label-md text-label-md text-on-surface-variant">صفحة 5</div>
+</div>
+</div>
+<!-- Page 6 -->
+<div class="relative group cursor-pointer">
+<div class="bg-surface rounded-lg p-2 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] border border-border hover:border-outline-variant transition-all duration-200 aspect-[1/1.4] flex flex-col relative">
+<div class="flex-1 bg-surface-container-lowest border border-border rounded flex items-center justify-center overflow-hidden mb-2 relative">
+<div class="w-full h-full bg-surface-bright flex items-center justify-center text-outline-variant">
+<span class="material-symbols-outlined text-[32px]">text_snippet</span>
+</div>
+</div>
+<div class="text-center font-label-md text-label-md text-on-surface-variant">صفحة 6</div>
+</div>
+</div>
+<!-- Page 7 (Selected) -->
+<div class="relative group cursor-pointer">
+<div class="bg-surface rounded-lg p-2 grid-item-selected transition-all duration-200 aspect-[1/1.4] flex flex-col relative">
+<div class="absolute -top-2 -right-2 w-6 h-6 bg-primary-container text-white rounded-full flex items-center justify-center shadow-sm z-10 border-2 border-surface">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: &quot;FILL&quot; 1;">check</span>
+</div>
+<div class="flex-1 bg-surface-container-lowest border border-border rounded flex items-center justify-center overflow-hidden mb-2 relative">
+<div class="w-full h-full bg-surface-bright flex items-center justify-center text-outline-variant">
+<span class="material-symbols-outlined text-[32px]">image</span>
+</div>
+</div>
+<div class="text-center font-label-md text-label-md text-on-surface font-medium">صفحة 7</div>
+</div>
+</div>
+</div>
+<!-- Bottom spacing for dock -->
+<div class="h-24"></div>
+</div>
+</div>
+<!-- 4. Right Inspector Panel -->
+<aside class="w-[320px] bg-surface border-r border-border shrink-0 flex flex-col shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.03)] z-10">
+<!-- Inspector Header -->
+<div class="h-14 border-b border-border flex items-center px-4 shrink-0 bg-surface-bright">
+<span class="material-symbols-outlined text-primary ml-2 text-[20px]">info</span>
+<h2 class="font-title-lg text-title-lg font-medium text-on-surface">خصائص الصفحة (4)</h2>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-6">
+<!-- Large Preview -->
+<div class="flex flex-col gap-2">
+<span class="font-label-md text-label-md text-on-surface-variant">معاينة</span>
+<div class="bg-surface-container-lowest border border-border rounded-lg shadow-sm overflow-hidden aspect-[1/1.4] relative p-1 group">
+<div class="w-full h-full border border-border/50 rounded overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A high-resolution, detailed close-up preview of a corporate document page. It shows a sleek, modern layout with a crisp, geometric sans-serif Arabic heading, a soft indigo accent line, and well-structured body text blocks. The lighting is bright and even, emphasizing a minimalist, premium software interface context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpsKPmzpqgjuWOJB8hzeokadXMhfAhBYS4FEIClpko0SXSsSKAYLK0JWVVvpksIEXZ-CoEC6TYLIWuZRPrD_boKZFjdRoOFthxmwgjCbvFg5oBpBFD3fT7PjDbm5mkSTCef9CjeIrgjHcJHoVJIEQG-cscJwT8zAJg2Wgdp0fK3EQweBFs5PIJMsvZGCnjUPBJZIih389UJOTdw63CiwxcE9M0-b-20qmT1fmvucMRKfS48z7rJj5H9JKmNupC0zWmPIc5PLWRzMQ">
+</div>
+<button class="absolute bottom-3 left-3 bg-surface/80 backdrop-blur border border-border shadow-sm p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:text-primary">
+<span class="material-symbols-outlined text-[18px]">zoom_in</span>
+</button>
+</div>
+</div>
+<!-- Stats / Info -->
+<div class="flex flex-col gap-3">
+<span class="font-label-md text-label-md text-on-surface-variant">المعلومات الأساسية</span>
+<div class="bg-surface-bright rounded-lg border border-border overflow-hidden">
+<div class="flex justify-between items-center p-3 border-b border-border">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">aspect_ratio</span>
+<span class="font-body-sm text-body-sm">الحجم</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface font-medium" dir="ltr">A4 (210 × 297 mm)</span>
+</div>
+<div class="flex justify-between items-center p-3 border-b border-border">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">screen_rotation</span>
+<span class="font-body-sm text-body-sm">الاتجاه</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface font-medium">عمودي (Portrait)</span>
+</div>
+<div class="flex justify-between items-center p-3">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">high_quality</span>
+<span class="font-body-sm text-body-sm">الدقة</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface font-medium" dir="ltr">300 DPI</span>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex flex-col gap-3 mt-auto">
+<span class="font-label-md text-label-md text-on-surface-variant">إجراءات سريعة</span>
+<button class="w-full bg-surface hover:bg-surface-container-low border border-border rounded-lg p-3 flex items-center justify-between text-on-surface transition-colors group shadow-sm">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container-lowest border border-border flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[18px]">output</span>
+</div>
+<span class="font-body-sm text-body-sm font-medium">استخراج هذه الصفحة كملف منفصل</span>
+</div>
+</button>
+<button class="w-full bg-surface hover:bg-surface-container-low border border-border rounded-lg p-3 flex items-center justify-between text-on-surface transition-colors group shadow-sm">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container-lowest border border-border flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[18px]">find_replace</span>
+</div>
+<span class="font-body-sm text-body-sm font-medium">استبدال بصورة</span>
+</div>
+</button>
+</div>
+</div>
+</aside>
+</div>
+<!-- 5. Unified Dock Footer -->
+<footer class="bg-surface border-t border-border h-16 fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between px-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] w-[calc(100%-320px)] md:w-[calc(100%-320px)] ltr:right-0 rtl:left-0 mr-[320px]">
+<!-- Right (Stats) -->
+<div class="flex items-center gap-4 h-full">
+<div class="flex items-center gap-2 text-primary-container">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: &quot;FILL&quot; 1;">dashboard_customize</span>
+<span class="font-title-lg text-title-lg font-bold">تنظيم الصفحات</span>
+</div>
+<div class="w-px h-6 bg-border mx-2"></div>
+<div class="flex items-center gap-4 text-on-surface-variant font-body-sm text-body-sm">
+<div class="flex items-center gap-1.5 bg-surface-container-low px-2 py-1 rounded">
+<span class="material-symbols-outlined text-[16px]">description</span>
+<span class="">تقرير_المشروع_النهائي.pdf</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">layers</span>
+<span class="">18 صفحة (محدد: 2)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">sd_storage</span>
+<span dir="ltr" class="">4.2 MB</span>
+</div>
+</div>
+</div>
+<!-- Center (Save As Input) - Hidden on smaller screens to keep layout clean, visible on wide -->
+<div class="hidden xl:flex items-center flex-1 max-w-md mx-8">
+<div class="relative w-full group">
+<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">save_as</span>
+</div>
+<input class="block w-full rounded-md border-border bg-surface-bright py-1.5 pl-3 pr-10 text-on-surface focus:border-primary-container focus:ring-primary-container focus:ring-1 focus:bg-surface sm:text-sm font-body-sm text-body-sm transition-all shadow-sm" placeholder="اسم الملف الجديد..." type="text" value="تقرير_المشروع_منظم.pdf">
+</div>
+</div>
+<!-- Left (Status & Action) -->
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<div class="relative flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-20"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-success"></span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">جاهز للحفظ</span>
+</div>
+<button class="bg-primary-container hover:bg-surface-tint text-white px-5 py-2 rounded-lg shadow-sm flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-container">
+<span class="material-symbols-outlined text-[20px]">save</span>
+<span class="font-title-lg text-title-lg font-medium text-sm">حفظ وتصدير المستند</span>
+<span class="bg-white/20 px-1.5 py-0.5 rounded text-[10px] ml-1 uppercase font-mono tracking-wider opacity-80" dir="ltr">Ctrl+Enter</span>
+</button>
+</div>
+</footer>
+
+
+</body></html>

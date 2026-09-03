@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar" style=""><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PDF Studio | استوديو المستندات الذكي</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "surface-container": "#e5eeff",
+                "surface-dim": "#cbdbf5",
+                "on-secondary-container": "#00567c",
+                "surface-variant": "#d3e4fe",
+                "on-secondary-fixed": "#001e2f",
+                "on-tertiary-fixed": "#351000",
+                "primary": "#3525cd",
+                "inverse-on-surface": "#eaf1ff",
+                "surface-bright": "#f8f9ff",
+                "surface": "#f8f9ff",
+                "surface-container-high": "#dce9ff",
+                "on-secondary-fixed-variant": "#004c6e",
+                "primary-fixed-dim": "#c3c0ff",
+                "on-surface-variant": "#464555",
+                "surface-container-highest": "#d3e4fe",
+                "outline": "#777587",
+                "inverse-primary": "#c3c0ff",
+                "secondary": "#006590",
+                "on-tertiary-container": "#ffd2be",
+                "tertiary-fixed": "#ffdbcc",
+                "on-background": "#0b1c30",
+                "error": "#ba1a1a",
+                "secondary-fixed-dim": "#89ceff",
+                "on-primary-fixed": "#0f0069",
+                "on-error-container": "#93000a",
+                "error-container": "#ffdad6",
+                "tertiary-fixed-dim": "#ffb695",
+                "surface-container-low": "#eff4ff",
+                "secondary-fixed": "#c8e6ff",
+                "on-tertiary": "#ffffff",
+                "on-primary": "#ffffff",
+                "tertiary-container": "#a44100",
+                "outline-variant": "#c7c4d8",
+                "on-secondary": "#ffffff",
+                "inverse-surface": "#213145",
+                "background": "#f8f9ff",
+                "on-surface": "#0b1c30",
+                "surface-tint": "#4d44e3",
+                "on-error": "#ffffff",
+                "surface-container-lowest": "#ffffff",
+                "secondary-container": "#85cbfd",
+                "on-primary-container": "#dad7ff",
+                "tertiary": "#7e3000",
+                "primary-container": "#4f46e5",
+                "on-tertiary-fixed-variant": "#7b2f00",
+                "primary-fixed": "#e2dfff",
+                "on-primary-fixed-variant": "#3323cc"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "margin": "24px",
+                "container-max": "1280px",
+                "gutter": "16px",
+                "base": "4px"
+        },
+        "fontFamily": {
+                "title-lg": [
+                        "Rubik"
+                ],
+                "body-md": [
+                        "Rubik"
+                ],
+                "label-md": [
+                        "Rubik"
+                ],
+                "headline-md": [
+                        "Rubik"
+                ],
+                "body-sm": [
+                        "Rubik"
+                ],
+                "display-lg": [
+                        "Rubik"
+                ]
+        },
+        "fontSize": {
+                "title-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "26px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-md": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-sm": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "display-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "700"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        body { font-family: 'Rubik', sans-serif; }
+        .ambient-shadow-low { box-shadow: 0 4px 12px rgba(11, 28, 48, 0.05); }
+        .ambient-shadow-high { box-shadow: 0 16px 48px rgba(11, 28, 48, 0.08); }
+        .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(226, 232, 240, 0.6); }
+        /* Fix Material Symbols RTL issue where icons point the wrong way */
+        .material-symbols-outlined { direction: ltr; display: inline-block; }
+    </style>
+</head>
+<body class="bg-[#f8f9ff] text-on-surface h-screen flex flex-col overflow-hidden">
+<!-- TopBar -->
+<header class="bg-surface border-b border-border h-12 flex items-center justify-between px-2 shrink-0">
+<!-- Right: Logo & Tabs -->
+<div class="flex items-center h-full">
+<div class="flex items-center gap-2 px-3 border-l border-border h-full">
+<span class="material-symbols-outlined text-primary text-[20px]" style='font-variation-settings: "FILL" 1;'>picture_as_pdf</span>
+<span class="font-title-lg text-title-lg font-bold text-on-surface">PDF Studio</span>
+</div>
+<div class="flex h-full mt-2">
+<!-- Active Tab -->
+<div class="bg-surface border-x border-t border-border rounded-t-lg px-4 flex items-center gap-3 min-w-[200px] h-full relative z-10 shadow-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">home</span>
+<span class="font-body-sm text-body-sm text-on-surface truncate flex-1" title="الرئيسية">الرئيسية</span>
+<button class="w-5 h-5 rounded hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+<!-- Active Indicator at bottom edge -->
+<div class="absolute bottom-0 left-0 right-0 h-[2px] bg-primary-container rounded-full"></div>
+</div>
+<!-- New Tab Button -->
+<button class="w-10 h-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors ml-1">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
+<!-- Left: Window Controls -->
+<div class="flex items-center h-full space-x-reverse space-x-1">
+<button class="w-10 h-full hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[16px]">minimize</span>
+</button>
+<button class="w-10 h-full hover:bg-surface-container-low flex items-center justify-center text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[14px]">crop_square</span>
+</button>
+<button class="w-10 h-full hover:bg-danger hover:text-white flex items-center justify-center text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-hidden p-4 md:p-6 pb-2 flex flex-col h-full">
+<div class="max-w-container-max mx-auto h-full flex flex-col gap-4">
+<!-- Search & Filter Bar -->
+<div class="flex items-center justify-between gap-4 shrink-0">
+<div class="relative flex-1 max-w-md">
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-[#ffffff] border border-[#e2e8f0] rounded-xl py-2.5 pr-10 pl-4 text-body-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="ابحث عن أداة سريعة... (Ctrl+K)" type="text"/>
+</div>
+<div class="flex items-center gap-2 overflow-x-auto hide-scrollbar">
+<button class="px-4 py-1.5 text-[14px] font-label-md rounded-full bg-surface-container-low border border-transparent text-on-surface font-bold hover:bg-surface-variant transition-all shrink-0">الكل - 16 أداة</button>
+<button class="px-4 py-1.5 text-[14px] font-label-md rounded-full bg-[#ffffff] border border-[#e2e8f0] text-on-surface-variant hover:border-primary hover:text-primary transition-all shrink-0">تنظيم ودمج</button>
+<button class="px-4 py-1.5 text-[14px] font-label-md rounded-full bg-[#ffffff] border border-[#e2e8f0] text-on-surface-variant hover:border-primary hover:text-primary transition-all shrink-0">تحويل ومسح</button>
+<button class="px-4 py-1.5 text-[14px] font-label-md rounded-full bg-[#ffffff] border border-[#e2e8f0] text-on-surface-variant hover:border-primary hover:text-primary transition-all shrink-0">أمان وتوقيع</button>
+<button class="px-4 py-1.5 text-[14px] font-label-md rounded-full bg-[#ffffff] border border-[#e2e8f0] text-on-surface-variant hover:border-primary hover:text-primary transition-all shrink-0">تعديل وملاحظات</button>
+</div>
+</div>
+<!-- Compact Recent Files Shelf -->
+<div class="bg-[#ffffff] border border-[#e2e8f0] rounded-xl px-4 py-2 flex items-center justify-between gap-4 shrink-0 shadow-sm h-[60px]">
+<div class="flex items-center gap-2 shrink-0">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">history</span>
+<span class="font-title-lg text-[15px] font-bold text-on-surface">مؤخراً</span>
+</div>
+<div class="flex items-center gap-3 overflow-x-auto flex-1 hide-scrollbar">
+<div class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-transparent hover:border-border transition-all cursor-pointer">
+<span class="material-symbols-outlined text-[18px] text-pink-600" style="font-variation-settings: 'FILL' 1;">picture_as_pdf</span>
+<span class="text-body-sm font-medium text-on-surface truncate max-w-[120px]">عقد_إيجار_2026.pdf</span>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-transparent hover:border-border transition-all cursor-pointer">
+<span class="material-symbols-outlined text-[18px] text-blue-600" style="font-variation-settings: 'FILL' 1;">description</span>
+<span class="text-body-sm font-medium text-on-surface truncate max-w-[120px]">تقرير_الربع_الأول.docx</span>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-transparent hover:border-border transition-all cursor-pointer">
+<span class="material-symbols-outlined text-[18px] text-green-600" style="font-variation-settings: 'FILL' 1;">table</span>
+<span class="text-body-sm font-medium text-on-surface truncate max-w-[120px]">ميزانية_المشروع.xlsx</span>
+</div>
+</div>
+<button class="text-primary text-label-md hover:underline shrink-0">عرض الكل</button>
+</div>
+<!-- 16 Tools Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 flex-1 overflow-y-auto pb-4 content-start">
+<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-indigo-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-indigo-50 text-indigo-600 border border-indigo-100 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[20px]">call_merge</span>
+</div>
+<h3 class="font-bold text-[15px] text-on-surface leading-tight">دمج ملفات PDF</h3>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">arrow_back</span>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-blue-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-blue-50 text-blue-600 border border-blue-100 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[20px]">layers</span>
+</div>
+<h3 class="font-bold text-[15px] text-on-surface leading-tight">تنظيم وتعديل الصفحات</h3>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">arrow_back</span>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-amber-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-amber-50 text-amber-600 border border-amber-100 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[20px]">compress</span>
+</div>
+<h3 class="font-bold text-[15px] text-on-surface leading-tight">ضغط وتصغير PDF</h3>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">arrow_back</span>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-emerald-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-emerald-50 text-emerald-600 border border-emerald-100 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[20px]">image</span>
+</div>
+<h3 class="font-bold text-[15px] text-on-surface leading-tight">صور إلى PDF</h3>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">arrow_back</span>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-teal-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-teal-50 text-teal-600 border border-teal-100 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[20px]">photo_library</span>
+</div>
+<h3 class="font-bold text-[15px] text-on-surface leading-tight">PDF إلى صور</h3>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">arrow_back</span>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-purple-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-purple-50 text-purple-600 border border-purple-100 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[20px]">draw</span>
+</div>
+<h3 class="font-bold text-[15px] text-on-surface leading-tight">التوقيع والختم الرقمي</h3>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">arrow_back</span>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-sky-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-sky-50 text-sky-600 border border-sky-100 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[20px]">edit_note</span>
+</div>
+<h3 class="font-bold text-[15px] text-on-surface leading-tight">تحرير وملاحظات</h3>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">arrow_back</span>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-cyan-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-cyan-50 text-cyan-600 border border-cyan-100 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[20px]">document_scanner</span>
+</div>
+<h3 class="font-bold text-[15px] text-on-surface leading-tight">مسح وتصحيح المستندات</h3>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">arrow_back</span>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-violet-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-violet-50 text-violet-600 border border-violet-100 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[20px]">text_fields</span>
+</div>
+<h3 class="font-bold text-[15px] text-on-surface leading-tight">استخراج النصوص OCR</h3>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">arrow_back</span>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-rose-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-rose-50 text-rose-600 border border-rose-100 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[20px]">lock</span>
+</div>
+<h3 class="font-bold text-[15px] text-on-surface leading-tight">حماية وتشفير</h3>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">arrow_back</span>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-orange-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-orange-50 text-orange-600 border border-orange-100 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[20px]">branding_watermark</span>
+</div>
+<h3 class="font-bold text-[15px] text-on-surface leading-tight">علامة مائية وترقيم</h3>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">arrow_back</span>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-lime-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-lime-50 text-lime-600 border border-lime-100 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[20px]">crop</span>
+</div>
+<h3 class="font-bold text-[15px] text-on-surface leading-tight">قص وهوامش الصفحات</h3>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">arrow_back</span>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-fuchsia-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-100 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[20px]">call_split</span>
+</div>
+<h3 class="font-bold text-[15px] text-on-surface leading-tight">تقسيم واستخراج الصفحات</h3>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">arrow_back</span>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-slate-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-slate-50 text-slate-600 border border-slate-100 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[20px]">lock_open</span>
+</div>
+<h3 class="font-bold text-[15px] text-on-surface leading-tight">إزالة كلمة المرور</h3>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">arrow_back</span>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-yellow-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-yellow-50 text-yellow-600 border border-yellow-100 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[20px]">rotate_right</span>
+</div>
+<h3 class="font-bold text-[15px] text-on-surface leading-tight">تدوير الصفحات</h3>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">arrow_back</span>
+</div>
+<div class="bg-[#ffffff] rounded-xl p-3.5 border border-[#e2e8f0] hover:border-zinc-500/50 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 relative h-[72px]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-zinc-50 text-zinc-600 border border-zinc-100 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[20px]">print</span>
+</div>
+<h3 class="font-bold text-[15px] text-on-surface leading-tight">معاينة وطباعة</h3>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">arrow_back</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Dock Footer -->
+</body></html>
