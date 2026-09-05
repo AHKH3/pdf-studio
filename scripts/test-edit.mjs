@@ -1,3 +1,11 @@
+import * as PDFLib from "pdf-lib";
+import { initPdfEngines, lib } from "../assets/js/pdf/core.js";
+import { flattenObjects } from "../assets/js/tools/edit/flatten.js";
+
+globalThis.window = globalThis.window || {};
+globalThis.window.PDFLib = PDFLib;
+globalThis.window["pdfjs-dist/build/pdf"] = { GlobalWorkerOptions: {} };
+initPdfEngines();
 /**
  * Unit checks for the edit overlay's coordinate math — the bits that used to
  * silently mismatch the on-screen preview (page /Rotate, ink rotation, clamp).
@@ -207,6 +215,141 @@ console.log("\nedit fit (page CSS width must not oscillate on open)");
     new Set(stable).size === 1 && stable[0] > 120,
     stable.join(" → ")
   );
+}
+
+
+console.log("\nedit flattenObjects (vector shapes, whiteout, highlight, double-arrow, ink)");
+
+{
+  const PDFDocument = lib().PDFDocument;
+  const pdfDoc = await PDFDocument.create();
+  pdfDoc.addPage([595, 842]);
+  const originalBytes = await pdfDoc.save();
+
+  const testObjects = [
+    {
+      pageIndex: 0,
+      type: "whiteout",
+      x: 50,
+      y: 700,
+      width: 200,
+      height: 40,
+      color: "#FFFFFF",
+      stroke: "#E2E8F0"
+    },
+    {
+      pageIndex: 0,
+      type: "highlight",
+      x: 50,
+      y: 640,
+      width: 200,
+      height: 30,
+      color: "#FDE047",
+      opacity: 0.35
+    },
+    {
+      pageIndex: 0,
+      type: "shape",
+      kind: "rect",
+      x: 50,
+      y: 500,
+      width: 100,
+      height: 80,
+      fillOn: true,
+      fill: "#BFDBFE",
+      stroke: "#1E3A8A",
+      strokeWidth: 2,
+      opacity: 1
+    },
+    {
+      pageIndex: 0,
+      type: "shape",
+      kind: "ellipse",
+      x: 200,
+      y: 500,
+      width: 100,
+      height: 80,
+      fillOn: true,
+      fill: "#BBF7D0",
+      stroke: "#059669",
+      strokeWidth: 2,
+      opacity: 0.9
+    },
+    {
+      pageIndex: 0,
+      type: "shape",
+      kind: "triangle",
+      x: 350,
+      y: 500,
+      width: 100,
+      height: 80,
+      fillOn: true,
+      fill: "#FBCFE8",
+      stroke: "#DB2777",
+      strokeWidth: 2,
+      opacity: 1
+    },
+    {
+      pageIndex: 0,
+      type: "shape",
+      kind: "line",
+      x: 50,
+      y: 400,
+      width: 200,
+      height: 30,
+      stroke: "#1E3A8A",
+      strokeWidth: 3
+    },
+    {
+      pageIndex: 0,
+      type: "shape",
+      kind: "arrow",
+      x: 50,
+      y: 340,
+      width: 200,
+      height: 30,
+      stroke: "#DC2626",
+      strokeWidth: 3
+    },
+    {
+      pageIndex: 0,
+      type: "shape",
+      kind: "double-arrow",
+      x: 50,
+      y: 280,
+      width: 200,
+      height: 30,
+      stroke: "#7C3AED",
+      strokeWidth: 3
+    },
+    {
+      pageIndex: 0,
+      type: "ink",
+      x: 50,
+      y: 150,
+      width: 100,
+      height: 80,
+      points: [
+        { x: 50, y: 150 },
+        { x: 75, y: 200 },
+        { x: 100, y: 180 },
+        { x: 150, y: 230 }
+      ],
+      color: "#1E3A8A",
+      strokeWidth: 2.5
+    }
+  ];
+
+  try {
+    const flattenedBytes = await flattenObjects(originalBytes, testObjects);
+    check("flattenObjects returns non-empty Uint8Array", flattenedBytes instanceof Uint8Array && flattenedBytes.length > 0);
+
+    const reloaded = await PDFDocument.load(flattenedBytes);
+    check("reloaded flattened PDF has 1 page", reloaded.getPageCount() === 1);
+    check("flattened PDF produces valid PDF bytes (%PDF header)", new TextDecoder().decode(flattenedBytes.slice(0, 5)).startsWith("%PDF"));
+  } catch (err) {
+    check("flattenObjects executes without throwing", false, err.stack);
+  }
 }
 
 console.log(`\n${checks - failures}/${checks} checks passed`);

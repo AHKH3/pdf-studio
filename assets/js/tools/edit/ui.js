@@ -1378,6 +1378,7 @@ export function buildUi(root) {
                     <button type="button" class="edit-popover-item" data-shape="triangle">${icon("icon-alert")} مثلث</button>
                     <button type="button" class="edit-popover-item" data-shape="arrow">${icon("icon-arrow-line")} سهم</button>
                     <button type="button" class="edit-popover-item" data-shape="line">${icon("icon-line")} خط</button>
+                    <button type="button" class="edit-popover-item" data-shape="double-arrow">${icon("icon-arrow-line")} سهم مزدوج</button>
                   </div>
                   <!-- Hidden radio inputs for individual shapes so programmatic and test selectors work -->
                   <div style="display:none">
@@ -1386,6 +1387,7 @@ export function buildUi(root) {
                     <input type="radio" name="edit-tool" value="triangle" />
                     <input type="radio" name="edit-tool" value="arrow" />
                     <input type="radio" name="edit-tool" value="line" />
+                    <input type="radio" name="edit-tool" value="double-arrow" />
                   </div>
                 </div>
 

@@ -20,7 +20,8 @@ const SHAPE_NAMES = {
   ellipse: "دائرة",
   triangle: "مثلث",
   arrow: "سهم",
-  line: "خط"
+  line: "خط",
+  "double-arrow": "سهم مزدوج"
 };
 
 const session = {
@@ -277,7 +278,7 @@ function setTool(toolName) {
   const radio = session.root?.querySelector(`input[name="edit-tool"][value="${toolName}"]`);
   if (radio) radio.checked = true;
 
-  const isShape = ["rect", "ellipse", "triangle", "arrow", "line"].includes(toolName);
+  const isShape = ["rect", "ellipse", "triangle", "arrow", "line", "double-arrow"].includes(toolName);
   if (isShape) {
     session.currentShape = toolName;
     if (session.ui?.shapesBtn) {
@@ -298,7 +299,7 @@ function updateViewportCursor(tool) {
   const vp = session.ui?.viewport;
   if (!vp?.classList) return;
   vp.classList.remove("tool-crosshair", "tool-text", "tool-eraser");
-  if (["rect", "ellipse", "triangle", "arrow", "line", "pen", "highlight", "whiteout"].includes(tool)) {
+  if (["rect", "ellipse", "triangle", "arrow", "line", "double-arrow", "pen", "highlight", "whiteout"].includes(tool)) {
     vp.classList.add("tool-crosshair");
   } else if (tool === "text") {
     vp.classList.add("tool-text");
@@ -311,7 +312,7 @@ function updateInspectorPanels(tool) {
   const panels = session.root?.querySelectorAll ? session.root.querySelectorAll("[data-edit-panel]") : [];
   panels.forEach((p) => (p.hidden = true));
 
-  if (["rect", "ellipse", "triangle", "arrow", "line"].includes(tool)) {
+  if (["rect", "ellipse", "triangle", "arrow", "line", "double-arrow"].includes(tool)) {
     const p = session.root?.querySelector('[data-edit-panel="shape"]');
     if (p) p.hidden = false;
   } else if (tool && tool !== "select" && tool !== "hand" && tool !== "eraser") {
@@ -623,13 +624,18 @@ function renderObjectsOnLayer() {
         svg.innerHTML = `<ellipse cx="${obj.width / 2}" cy="${obj.height / 2}" rx="${Math.max(1, obj.width / 2 - strokeW / 2)}" ry="${Math.max(1, obj.height / 2 - strokeW / 2)}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeW}" opacity="${opacity}" />`;
       } else if (obj.kind === "triangle") {
         svg.innerHTML = `<polygon points="${obj.width / 2},${strokeW} ${obj.width - strokeW},${obj.height - strokeW} ${strokeW},${obj.height - strokeW}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeW}" opacity="${opacity}" />`;
-      } else if (obj.kind === "arrow" || obj.kind === "line") {
+      } else if (obj.kind === "arrow" || obj.kind === "line" || obj.kind === "double-arrow") {
         const headW = Math.max(8, strokeW * 3.5);
         const yMid = obj.height / 2;
-        let d = `M 4 ${yMid} L ${obj.width - (obj.kind === "arrow" ? headW : 4)} ${yMid}`;
+        const startX = obj.kind === "double-arrow" ? headW : 4;
+        const endX = obj.width - (obj.kind === "arrow" || obj.kind === "double-arrow" ? headW : 4);
+        let d = `M ${startX} ${yMid} L ${endX} ${yMid}`;
         let headSvg = "";
-        if (obj.kind === "arrow") {
-          headSvg = `<polygon points="${obj.width - 2},${yMid} ${obj.width - headW},${yMid - headW / 2} ${obj.width - headW},${yMid + headW / 2}" fill="${stroke}" />`;
+        if (obj.kind === "arrow" || obj.kind === "double-arrow") {
+          headSvg += `<polygon points="${obj.width - 2},${yMid} ${obj.width - headW},${yMid - headW / 2} ${obj.width - headW},${yMid + headW / 2}" fill="${stroke}" />`;
+        }
+        if (obj.kind === "double-arrow") {
+          headSvg += `<polygon points="2,${yMid} ${headW},${yMid - headW / 2} ${headW},${yMid + headW / 2}" fill="${stroke}" />`;
         }
         svg.innerHTML = `<path d="${d}" stroke="${stroke}" stroke-width="${strokeW}" stroke-linecap="round" />${headSvg}`;
       } else {

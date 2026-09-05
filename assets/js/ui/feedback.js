@@ -159,8 +159,10 @@ export function startProgress(options = {}) {
  * @param {string} [options.detail]
  */
 export function updateProgress(options = {}) {
-  if (options.title != null) el("progress-title").textContent = options.title;
-  if (options.desc != null) el("progress-desc").textContent = options.desc;
+  const titleEl = el("progress-title");
+  if (titleEl && options.title != null) titleEl.textContent = options.title;
+  const descEl = el("progress-desc");
+  if (descEl && options.desc != null) descEl.textContent = options.desc;
 
   const detail = el("progress-detail");
   if (detail && options.detail !== undefined) {

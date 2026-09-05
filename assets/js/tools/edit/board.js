@@ -1,3 +1,4 @@
+import { ARABIC_FONTS } from "./text-png.js";
 import {
   bboxFromPoints,
   clampedMove,
@@ -136,14 +137,21 @@ export function createBoard(options) {
     const el = layer.querySelector(`[data-id="${obj.id}"]`);
     if (!el) return;
 
+    const z = zoom() || 1;
     const textarea = document.createElement("textarea");
     textarea.className = "edit-inline-textarea";
     textarea.value = obj.text || "";
-    textarea.style.fontSize = `${(obj.fontSize || 18)}px`;
+    textarea.style.fontSize = `${(obj.fontSize || 18) * z}px`;
+    textarea.style.fontFamily = ARABIC_FONTS[obj.fontFamily] || obj.fontFamily || "inherit";
     textarea.style.color = obj.color || "#1E3A8A";
     textarea.style.textAlign = obj.align || "right";
     textarea.style.fontWeight = obj.bold ? "bold" : "normal";
     textarea.style.fontStyle = obj.italic ? "italic" : "normal";
+    textarea.style.direction = "rtl";
+    textarea.setAttribute("dir", "rtl");
+    if (obj.bgOn && obj.bgColor) {
+      textarea.style.backgroundColor = obj.bgColor;
+    }
 
     el.append(textarea);
     textarea.focus();
@@ -503,7 +511,7 @@ export function createBoard(options) {
       if (Math.hypot(maxX - minX, maxY - minY) < 8) {
         if (op.tool === "text") { w = 220; h = 60; }
         else if (op.tool === "stamp") { w = 180; h = 80; }
-        else if (op.tool === "arrow" || op.tool === "line") { w = 160; h = 32; }
+        else if (op.tool === "arrow" || op.tool === "line" || op.tool === "double-arrow") { w = 160; h = 32; }
         else if (op.tool === "highlight" || op.tool === "whiteout") { w = 180; h = 32; }
         else { w = 120; h = 100; }
         x = Math.max(0, Math.min(pw - w, op.startPt.x - w / 2));
@@ -572,7 +580,7 @@ export function createBoard(options) {
           shape: "rect",
           rotation: 0
         };
-      } else if (["rect", "ellipse", "triangle", "arrow", "line"].includes(op.tool)) {
+      } else if (["rect", "ellipse", "triangle", "arrow", "line", "double-arrow"].includes(op.tool)) {
         newObj = {
           id,
           type: "shape",

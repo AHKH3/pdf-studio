@@ -1,11 +1,11 @@
 /** @param {string} id */
-export const el = (id) => document.getElementById(id);
+export const el = (id) => (typeof document !== "undefined" && document.getElementById ? document.getElementById(id) : null);
 
 /** @param {string} selector @param {ParentNode} [scope] */
-export const qs = (selector, scope = document) => scope.querySelector(selector);
+export const qs = (selector, scope = typeof document !== "undefined" ? document : null) => (scope && scope.querySelector ? scope.querySelector(selector) : null);
 
 /** @param {string} selector @param {ParentNode} [scope] */
-export const qsa = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
+export const qsa = (selector, scope = typeof document !== "undefined" ? document : null) => (scope && scope.querySelectorAll ? Array.from(scope.querySelectorAll(selector)) : []);
 
 /** @param {string} id @param {string} event @param {(e: any) => void} handler */
 export function on(id, event, handler) {
