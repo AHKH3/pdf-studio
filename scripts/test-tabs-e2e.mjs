@@ -299,8 +299,13 @@ srv.listen(0, "127.0.0.1", async () => {
 
 fs.writeFileSync(harnessPath, harnessCode, "utf8");
 
-const electronBin = path.join(root, "node_modules", "electron", "dist", "electron.exe");
-const useBin = fs.existsSync(electronBin) ? electronBin : path.join(root, "node_modules", ".bin", "electron.cmd");
+const candidateBins = [
+  path.join(root, "node_modules", "electron", "dist", "electron"),
+  path.join(root, "node_modules", "electron", "dist", "electron.exe"),
+  path.join(root, "node_modules", ".bin", "electron"),
+  path.join(root, "node_modules", ".bin", "electron.cmd")
+];
+const useBin = candidateBins.find((b) => fs.existsSync(b)) || "electron";
 
 const child = spawn(useBin, [harnessPath], {
   cwd: root,
