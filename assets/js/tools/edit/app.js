@@ -9,7 +9,7 @@ import { rasterizeImageFile } from "./text-png.js";
 import { buildUi, injectStyles, removeStyles } from "./ui.js";
 
 export const id = "edit";
-export const title = "تحرير";
+export const title = "تعديل PDF";
 
 const session = {
   /** @type {HTMLElement | null} */
@@ -751,7 +751,7 @@ export async function run() {
     return;
   }
   if (hasTitleblock()) setState("busy");
-  startProgress({ title: "حفظ التحرير", desc: "ندمج العناصر فوق الصفحات." });
+  startProgress({ title: "حفظ التعديل", desc: "ندمج العناصر فوق الصفحات." });
   try {
     const bytes = await flattenObjects(session.bytes, session.objects);
     endProgress();
@@ -941,11 +941,11 @@ export async function acceptFiles(files) {
 export function asTool() {
   return {
     id,
-    name: "تحرير",
+    name: "تعديل PDF",
     icon: "icon-edit",
     input: "PDF",
     actionLabel: "حفظ",
-    tabTitle: () => tabTitle("تحرير", session.fileName || ""),
+    tabTitle: () => tabTitle("تعديل PDF", session.fileName || ""),
     setup() {
       const root = document.getElementById("view-edit");
       if (root) mount(root);

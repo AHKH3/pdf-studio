@@ -45,7 +45,7 @@ const ACTION_FLOW = {
 
 const HUB_TONE = {
   scan: "scan",
-  images: "scan",
+  images: "images",
   rasterize: "rasterize",
   "extract-images": "extract",
   merge: "merge",

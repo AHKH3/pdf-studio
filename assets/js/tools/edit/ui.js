@@ -384,7 +384,7 @@ export function buildUi(root) {
   root.classList.add("edit-root");
   root.innerHTML = `
     <div class="view__head">
-      <h2 class="view__title" id="edit-title" tabindex="-1">تحرير</h2>
+      <h2 class="view__title" id="edit-title" tabindex="-1">تعديل PDF</h2>
       <p class="view__lede">أضف نصاً، قلماً، أشكالاً وصوراً فوق الصفحة. الناتج يُدمج محلياً — النص الأصلي لا يُعدَّل.</p>
     </div>
 
@@ -430,7 +430,7 @@ export function buildUi(root) {
         <aside class="edit-panel">
           <div class="panel-block">
             <h3 class="panel-block__title">الأداة</h3>
-            <div class="edit-toolbar" role="radiogroup" aria-label="أداة التحرير">
+            <div class="edit-toolbar" role="radiogroup" aria-label="أداة التعديل">
               ${choice("edit-tool", "select", "تحديد", "icon-quad", true)}
               ${choice("edit-tool", "text", "نص", "icon-file")}
               ${choice("edit-tool", "pen", "قلم", "icon-sign")}
@@ -561,7 +561,7 @@ export function buildUi(root) {
           </div>
 
           <div class="panel-block panel-block--bare">
-            <button id="edit-save" type="button" class="btn btn--act btn--wide">حفظ التحرير — دمج الطبقات</button>
+            <button id="edit-save" type="button" class="btn btn--act btn--wide">حفظ التعديل — دمج الطبقات</button>
             <button id="edit-clear" type="button" class="btn btn--wide">
               ${icon("icon-close")} إغلاق المستند
             </button>

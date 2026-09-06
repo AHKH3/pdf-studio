@@ -998,15 +998,16 @@ code { font-family: var(--data); font-variant-numeric: tabular-nums; font-size:0
 .hub-tool[aria-disabled="true"] { opacity:0.45; cursor:not-allowed; }
 /* هوية لونية لكل أداة — خلفية صلبة مثل الزر الرئيسي */
 :is(.hub-tool, .tabstrip__tab)[data-tone="scan"] { --tool-accent:#4F46E5; --tool-hover:#4338CA; }
+:is(.hub-tool, .tabstrip__tab)[data-tone="images"] { --tool-accent:#C026D3; --tool-hover:#A21CAF; }
 :is(.hub-tool, .tabstrip__tab)[data-tone="rasterize"] { --tool-accent:#0284C7; --tool-hover:#0369A1; }
 :is(.hub-tool, .tabstrip__tab)[data-tone="extract"] { --tool-accent:#0D9488; --tool-hover:#0F766E; }
 :is(.hub-tool, .tabstrip__tab)[data-tone="merge"] { --tool-accent:#7C3AED; --tool-hover:#6D28D9; }
-:is(.hub-tool, .tabstrip__tab)[data-tone="organize"] { --tool-accent:#B45309; --tool-hover:#92400E; }
-:is(.hub-tool, .tabstrip__tab)[data-tone="split"] { --tool-accent:#EA580C; --tool-hover:#C2410C; }
-:is(.hub-tool, .tabstrip__tab)[data-tone="compress"] { --tool-accent:#059669; --tool-hover:#047857; }
-:is(.hub-tool, .tabstrip__tab)[data-tone="numbers"] { --tool-accent:#0891B2; --tool-hover:#0E7490; }
-:is(.hub-tool, .tabstrip__tab)[data-tone="crop"] { --tool-accent:#A16207; --tool-hover:#854D0E; }
-:is(.hub-tool, .tabstrip__tab)[data-tone="edit"] { --tool-accent:#4338CA; --tool-hover:#3730A3; }
+:is(.hub-tool, .tabstrip__tab)[data-tone="organize"] { --tool-accent:#CA8A04; --tool-hover:#A16207; }
+:is(.hub-tool, .tabstrip__tab)[data-tone="split"] { --tool-accent:#65A30D; --tool-hover:#4D7C0F; }
+:is(.hub-tool, .tabstrip__tab)[data-tone="compress"] { --tool-accent:#16A34A; --tool-hover:#15803D; }
+:is(.hub-tool, .tabstrip__tab)[data-tone="numbers"] { --tool-accent:#EA580C; --tool-hover:#C2410C; }
+:is(.hub-tool, .tabstrip__tab)[data-tone="crop"] { --tool-accent:#475569; --tool-hover:#334155; }
+:is(.hub-tool, .tabstrip__tab)[data-tone="edit"] { --tool-accent:#DC2626; --tool-hover:#B91C1C; }
 [data-theme="blueprint"] .hub-tool { border-color: color-mix(in srgb, var(--tool-accent) 60%, #000); }
 
 /* ---------- التابات داخل الهيدر ---------- */
