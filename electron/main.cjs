@@ -12,6 +12,13 @@ const fs = require("fs");
 const fsp = require("fs/promises");
 
 const ROOT = path.join(__dirname, "..");
+// AppUserModelId ثابت: يجمع نافذة التطبيق وأيقونة التاسكبار واختصارات المثبت
+// تحت هوية واحدة بدل أيقونة Electron الافتراضية.
+try {
+  app.setAppUserModelId("app.pdfstudio.desktop");
+} catch {
+  /* non-Windows or very old Electron — safe to ignore */
+}
 const BOOT_T0 = Date.now();
 const BACKGROUND_UPDATE_FLAG = "--background-update";
 const EXIT_WATCHDOG_MS = 5000;
@@ -426,7 +433,12 @@ function attachCloseGuard(win) {
 async function createWindow() {
   const serverReady = ensureServer();
 
-  const iconPath = path.join(ROOT, "assets", "branding", "app-icon-512.png");
+  // Windows يحتاج ‎.ico متعدد المقاسات (التاسكبار/شريط العنوان/Alt-Tab)،
+  // أما باقي المنصات فيستخدم PNG.
+  const iconPath =
+    process.platform === "win32"
+      ? path.join(ROOT, "build", "icon.ico")
+      : path.join(ROOT, "assets", "branding", "app-icon-512.png");
   const winOpts = {
     width: 1320,
     height: 880,

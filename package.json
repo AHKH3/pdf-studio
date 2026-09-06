@@ -39,7 +39,8 @@
   "devDependencies": {
     "@hugeicons/core-free-icons": "^4.2.3",
     "electron": "^34.2.0",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^25.1.8",
+    "rcedit": "^5.0.2"
   },
   "build": {
     "appId": "app.pdfstudio.desktop",
@@ -52,17 +53,19 @@
     "files": [
       "electron/**/*",
       "index.html",
-      "assets/**/*"
+      "assets/**/*",
+      "build/icon.ico"
     ],
     "directories": {
       "output": "release"
     },
-    "icon": "assets/branding/app-icon-512.png",
+    "afterPack": "scripts/apply-exe-icon.cjs",
+    "icon": "build/icon.ico",
     "win": {
       "target": [
         "nsis"
       ],
-      "icon": "assets/branding/app-icon-512.png",
+      "icon": "build/icon.ico",
       "signAndEditExecutable": false,
       "publisherName": "AHKH3",
       "verifyUpdateCodeSignature": false,
