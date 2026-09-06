@@ -383,10 +383,7 @@ function choice(name, value, label, iconHref, checked = false) {
 export function buildUi(root) {
   root.classList.add("edit-root");
   root.innerHTML = `
-    <div class="view__head">
-      <h2 class="view__title" id="edit-title" tabindex="-1">تعديل PDF</h2>
-      <p class="view__lede">أضف نصاً، قلماً، أشكالاً وصوراً فوق الصفحة. الناتج يُدمج محلياً — النص الأصلي لا يُعدَّل.</p>
-    </div>
+      <h2 class="view__title sr-only" id="edit-title" tabindex="-1">تعديل PDF</h2>
 
     <div class="view__body">
       <div id="edit-drop" class="intake" data-kind="pdf">

@@ -78,11 +78,6 @@
       <div class="sheet__frame" aria-hidden="true"></div>
 
       <header class="sheet__head app-titlebar titlebar-drag">
-          <button class="mark titlebar-nodrag" type="button" data-route="start" aria-label="العودة إلى البداية">
-            <svg class="icon mark__glyph" aria-hidden="true"><use href="#icon-app"></use></svg>
-            <span class="mark__name" lang="en">PDF Studio</span>
-          </button>
-
         <nav class="legend titlebar-nodrag" aria-label="إجراءات المستند">
           <h2 class="legend__title sr-only" id="legend-title">الإجراءات</h2>
           <p class="legend__lede sr-only" id="legend-lede">أسقط ملفات أولاً</p>
@@ -196,17 +191,7 @@
           </section>
 
           <section id="view-scan" class="view" aria-labelledby="scan-title" role="region" hidden>
-            <div class="view__head view__head--scan">
-              <h2 class="view__title" id="scan-title" tabindex="-1">صور ← PDF</h2>
-              <ol class="flow flow--compact" aria-hidden="true">
-                <li class="flow__node"><span class="flow__glyph" data-tone="in"><svg class="icon"><use href="#icon-scan"></use></svg></span></li>
-                <li class="flow__arrow"><svg class="icon"><use href="#icon-arrow"></use></svg></li>
-                <li class="flow__node"><span class="flow__glyph" data-tone="mid"><svg class="icon"><use href="#icon-quad"></use></svg></span></li>
-                <li class="flow__arrow"><svg class="icon"><use href="#icon-arrow"></use></svg></li>
-                <li class="flow__node"><span class="flow__glyph" data-tone="out"><svg class="icon"><use href="#icon-file"></use></svg></span></li>
-              </ol>
-              <p class="view__lede">أسقط الصورة، اسحب الأركان على الأصل، وشاهد التدوير والألوان فوراً.</p>
-            </div>
+            <h2 class="view__title sr-only" id="scan-title" tabindex="-1">صور ← PDF</h2>
 
             <div id="scan-start" class="view__body">
               <div id="scan-drop" class="intake intake--hero" data-kind="image">
@@ -304,10 +289,7 @@
           </section>
 
           <section id="view-images" class="view" aria-labelledby="images-title" role="region" hidden>
-            <div class="view__head">
-              <h2 class="view__title" id="images-title" tabindex="-1">صور ← PDF</h2>
-              <p class="view__lede">رتّب الصفحات، واضبط المقاس والهوامش.</p>
-            </div>
+            <h2 class="view__title sr-only" id="images-title" tabindex="-1">صور ← PDF</h2>
 
             <div class="view__body">
               <div id="images-drop" class="intake" data-kind="image">
@@ -364,10 +346,7 @@
           </section>
 
           <section id="view-merge" class="view" aria-labelledby="merge-title" role="region" hidden>
-            <div class="view__head">
-              <h2 class="view__title" id="merge-title" tabindex="-1">دمج</h2>
-              <p class="view__lede">PDF + PDF في ملف واحد.</p>
-            </div>
+            <h2 class="view__title sr-only" id="merge-title" tabindex="-1">دمج</h2>
 
             <div class="view__body">
               <div id="merge-drop" class="intake" data-kind="pdf">
@@ -398,10 +377,7 @@
           </section>
 
           <section id="view-organize" class="view" aria-labelledby="organize-title" role="region" hidden>
-            <div class="view__head">
-              <h2 class="view__title" id="organize-title" tabindex="-1">ترتيب</h2>
-              <p class="view__lede">أعد الترتيب، دوّر، احذف، أو أدرج صفحات وصوراً جديدة داخل المستند.</p>
-            </div>
+            <h2 class="view__title sr-only" id="organize-title" tabindex="-1">ترتيب</h2>
 
             <div class="view__body">
               <div id="organize-drop" class="intake" data-kind="pdf">
@@ -438,10 +414,7 @@
           </section>
 
           <section id="view-split" class="view" aria-labelledby="split-title" role="region" hidden>
-            <div class="view__head">
-              <h2 class="view__title" id="split-title" tabindex="-1">تقسيم</h2>
-              <p class="view__lede">قسّم المستند إلى ملفات، أو استخرج نطاق صفحات في ملف مستقل.</p>
-            </div>
+            <h2 class="view__title sr-only" id="split-title" tabindex="-1">تقسيم</h2>
 
             <div class="view__body">
               <div id="split-drop" class="intake" data-kind="pdf">
@@ -487,10 +460,7 @@
           </section>
 
           <section id="view-compress" class="view" aria-labelledby="compress-title" role="region" hidden>
-            <div class="view__head">
-              <h2 class="view__title" id="compress-title" tabindex="-1">ضغط</h2>
-              <p class="view__lede">يعيد بناء الصفحات كصور مضغوطة بدقة تختارها. مناسب للمستندات الممسوحة والمصوّرة.</p>
-            </div>
+            <h2 class="view__title sr-only" id="compress-title" tabindex="-1">ضغط</h2>
 
             <div class="view__body">
               <div id="compress-drop" class="intake" data-kind="pdf">
@@ -535,10 +505,7 @@
           </section>
 
           <section id="view-numbers" class="view" aria-labelledby="numbers-title" role="region" hidden>
-            <div class="view__head">
-              <h2 class="view__title" id="numbers-title" tabindex="-1">ترقيم</h2>
-              <p class="view__lede">أرقام نصية حقيقية داخل الملف، قابلة للبحث والنسخ.</p>
-            </div>
+            <h2 class="view__title sr-only" id="numbers-title" tabindex="-1">ترقيم</h2>
 
             <div class="view__body">
               <div id="numbers-drop" class="intake" data-kind="pdf">
@@ -609,10 +576,7 @@
           </section>
 
           <section id="view-rasterize" class="view" aria-labelledby="rasterize-title" role="region" hidden>
-            <div class="view__head">
-              <h2 class="view__title" id="rasterize-title" tabindex="-1">PDF ← صور</h2>
-              <p class="view__lede">صفحة ← صورة. مجلد أو ZIP.</p>
-            </div>
+            <h2 class="view__title sr-only" id="rasterize-title" tabindex="-1">PDF ← صور</h2>
 
             <div class="view__body">
               <div id="rasterize-drop" class="intake" data-kind="pdf">
@@ -663,14 +627,11 @@
           </section>
 
           <section id="view-edit" class="view" aria-labelledby="edit-title" role="region" hidden>
-            <h2 class="view__title" id="edit-title" tabindex="-1">تعديل PDF</h2>
+            <h2 class="view__title sr-only" id="edit-title" tabindex="-1">تعديل PDF</h2>
           </section>
 
           <section id="view-crop" class="view" aria-labelledby="crop-title" role="region" hidden>
-            <div class="view__head">
-              <h2 class="view__title" id="crop-title" tabindex="-1">قص</h2>
-              <p class="view__lede">اسحب المربع على المعاينة. هذه الصفحة أو الكل.</p>
-            </div>
+            <h2 class="view__title sr-only" id="crop-title" tabindex="-1">قص</h2>
             <div class="view__body">
               <div id="crop-drop" class="intake" data-kind="pdf">
                 <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-crop"></use></svg>
@@ -747,10 +708,7 @@
           </section>
 
           <section id="view-extract-images" class="view" aria-labelledby="extract-images-title" role="region" hidden>
-            <div class="view__head">
-              <h2 class="view__title" id="extract-images-title" tabindex="-1">صور أصلية</h2>
-              <p class="view__lede">XObject كما خُزّن — ليس رسم الصفحة.</p>
-            </div>
+            <h2 class="view__title sr-only" id="extract-images-title" tabindex="-1">صور أصلية</h2>
             <div class="view__body">
               <div id="extract-images-drop" class="intake" data-kind="pdf">
                 <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-images"></use></svg>

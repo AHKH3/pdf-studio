@@ -439,6 +439,12 @@ html.is-desktop[data-platform="linux"] .win-controls { display:flex; }
 .view__title { font-family: var(--display); font-size: var(--t-title); font-weight:800; letter-spacing:-0.02em; line-height:1.2; color: var(--ink); }
 .view__title:focus { outline:none; }
 .view__lede { margin-top: var(--space-2); max-width:62ch; font-size: var(--t-sm); line-height:1.7; color: var(--ink-2); }
+/* Tool headers are visually hidden by policy (kept in DOM for screen readers:
+   aria-labelledby + router focus). Any dynamically injected head/lede stays hidden too,
+   and emptied heads collapse so no gap remains. */
+.view__head .view__lede,
+.view__head .flow { display: none; }
+.view__head:has(> .view__title.sr-only:only-child) { margin-bottom: 0; }
 .work.is-changing .view--active { animation: fadeIn 280ms var(--ease) both; }
 @keyframes fadeIn { from{opacity:0; transform: translateY(8px)} to{opacity:1; transform:none} }
 [dir="rtl"] .work { direction: rtl; }
