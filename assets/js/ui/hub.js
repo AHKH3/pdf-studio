@@ -209,13 +209,11 @@ function render() {
   dropUnusedUrls(files);
 
   const has = files.length > 0;
-  const drop = el("hub-drop");
-  const panel = el("hub-panel");
-  if (drop) drop.hidden = has;
-  if (panel) panel.hidden = !has;
-
-  const title = el("start-title");
-  if (title) title.textContent = has ? mixLabel() : "أسقط الملفات";
+  // الحاوية الرئيسية ظاهرة دائمًا — زر الرفع الفارغ يظهر بدل الهيرو المحذوف
+  const empty = el("hub-empty-browse");
+  if (empty) empty.hidden = has;
+  const clear = el("hub-clear");
+  if (clear) clear.hidden = !has;
 
   const mix = el("hub-mix");
   if (mix) mix.textContent = has ? mixLabel() : "الملفات";
@@ -297,9 +295,9 @@ export function initHub() {
   });
 
   wireIntake({
-    dropId: "hub-drop",
+    dropId: "hub-empty-browse",
     inputId: "hub-input",
-    browseId: "hub-browse",
+    browseId: "hub-empty-browse",
     accept: "any",
     onFiles: addCapture
   });

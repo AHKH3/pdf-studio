@@ -31,14 +31,6 @@ let sweepTimer = 0;
 let routing = false;
 let routerStarted = false;
 
-/** @type {Array<(ids: string[]) => void>} */
-const toolsListeners = [];
-
-/** يُشعر عند وصول أدوات جديدة (التحميل التدريجي) — تستخدمه شبكة الرئيسية. */
-export function onToolsChanged(fn) {
-  toolsListeners.push(fn);
-}
-
 /** @type {Set<(id: string) => void>} */
 const routeListeners = new Set();
 
@@ -196,13 +188,6 @@ export function addTools(list) {
   buildLegend();
   // أدوات جديدة أصبحت معروفة — حدّث عناوين التابات التي تشير لها.
   if (activeId) emitRoute(activeId);
-  for (const fn of toolsListeners) {
-    try {
-      fn(fresh.map((tool) => tool.id));
-    } catch (error) {
-      console.error(error);
-    }
-  }
 }
 
 export function hasUnsavedWork() {
@@ -235,7 +220,7 @@ function syncLegendChrome() {
   const title = el("legend-title");
   const lede = el("legend-lede");
   if (title) title.textContent = "الإجراءات";
-  if (lede) lede.textContent = hasCapture() ? `${captureFiles().length} ملف` : "أسقط ملفات أولاً";
+  if (lede) lede.textContent = hasCapture() ? `${captureFiles().length} ملف` : "اختر أداة أو أسقط ملفات";
 }
 
 function buildLegend() {
@@ -243,6 +228,12 @@ function buildLegend() {
   syncLegendChrome();
 
   const allowed = new Set(actionIds());
+  // بلا ملفات: كل الأدوات معروضة ومفعّلة — الضغط يفتح الأداة بمنطقة إسقاطها الخاصة
+  if (!hasCapture()) {
+    for (const tool of tools.values()) {
+      if (!tool.hidden) allowed.add(tool.id);
+    }
+  }
   if (activeId && activeId !== "start") allowed.add(activeId);
   for (const tool of tools.values()) {
     if (tool.isDirty?.()) allowed.add(tool.id);

@@ -11,8 +11,13 @@ const KEY = "pdfstudio.toolprefs.v1";
 /** أدوات حُذفت من التطبيق — تُرشَّح من أي تفضيلات محفوظة قد تشير لها. */
 const REMOVED_TOOL_IDS = new Set(["sign", "protect", "watermark", "ocr"]);
 
-/** @type {{ order: string[]; pinned: string[]; hidden: string[] }} */
-let prefs = { order: [], pinned: [], hidden: [] };
+/** مثبّتة افتراضيًا: الأكثر استخدامًا يوميًا — تُزرع مرة واحدة لكل نسخة. */
+const DEFAULT_PINNED = ["edit", "rasterize", "images", "scan"];
+/** ارفع الرقم عند تغيير الافتراضيات ليصل من زرع نسخة أقدم. */
+const PREFS_SEED_VERSION = 2;
+
+/** @type {{ order: string[]; pinned: string[]; hidden: string[]; seeded: number }} */
+let prefs = { order: [], pinned: [], hidden: [], seeded: 0 };
 
 /** @type {Array<(toolId: string, action: string) => void>} */
 const listeners = [];
@@ -33,14 +38,24 @@ export function loadPrefs() {
       prefs = {
         order: Array.isArray(parsed.order) ? parsed.order : [],
         pinned: Array.isArray(parsed.pinned) ? parsed.pinned : [],
-        hidden: Array.isArray(parsed.hidden) ? parsed.hidden : []
+        hidden: Array.isArray(parsed.hidden) ? parsed.hidden : [],
+        seeded: Number(parsed.seeded) || 0
       };
     }
   } catch {
-    prefs = { order: [], pinned: [], hidden: [] };
+    prefs = { order: [], pinned: [], hidden: [], seeded: 0 };
   }
   for (const key of ["order", "pinned", "hidden"]) {
     prefs[key] = prefs[key].filter((id) => !REMOVED_TOOL_IDS.has(id));
+  }
+  // زرع التثبيت الافتراضي مرة واحدة لكل نسخة — إلغاء المستخدم بعدها يُحترم
+  if (prefs.seeded !== PREFS_SEED_VERSION) {
+    for (const id of DEFAULT_PINNED) {
+      prefs.hidden = prefs.hidden.filter((pinned) => pinned !== id);
+      if (!prefs.pinned.includes(id)) prefs.pinned.push(id);
+    }
+    prefs.seeded = PREFS_SEED_VERSION;
+    save();
   }
   return prefs;
 }
@@ -161,7 +176,7 @@ export function initToolMenu() {
   loadPrefs();
 
   document.addEventListener("contextmenu", (event) => {
-    const trigger = /** @type {HTMLElement} */ (event.target).closest(".hub-tool, .home-tool");
+    const trigger = /** @type {HTMLElement} */ (event.target).closest(".hub-tool");
     if (!(trigger instanceof HTMLElement) || !trigger.dataset.route) return;
     event.preventDefault();
     openMenu(event.clientX, event.clientY, trigger.dataset.route);

@@ -64,7 +64,10 @@ export function wireIntake(config) {
 
   const open = () => input.click();
   browse?.addEventListener("click", (event) => {
-    event.stopPropagation();
+    // stopImmediatePropagation: زر التصفح قد يكون هو نفسه منطقة الإسقاط
+    // (hub-empty-browse) — stopPropagation وحدها لا تمنع مستمع العنصر نفسه
+    // فيُفتح حوار اختيار الملف مرتين.
+    event.stopImmediatePropagation();
     open();
   });
   drop.addEventListener("click", open);

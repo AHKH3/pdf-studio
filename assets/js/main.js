@@ -2,7 +2,6 @@ import { el } from "./dom.js";
 import { initPdfEngines } from "./pdf/core.js";
 import { initFeedback, toast } from "./ui/feedback.js";
 import { enterHub, initHub } from "./ui/hub.js";
-import { initHome } from "./ui/home.js";
 import { guardWindowDrops } from "./ui/intake.js";
 import { initKeys } from "./ui/keys.js";
 import { initFilePreview } from "./ui/preview.js";
@@ -108,7 +107,6 @@ async function boot() {
   initKeys();
   initToolMenu();
   initFilePreview();
-  initHome();
   initRecents();
 
   registerTools([startTool]);

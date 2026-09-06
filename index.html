@@ -90,10 +90,11 @@
         </nav>
 
         <div class="tabstrip titlebar-nodrag" id="tab-strip" role="tablist" aria-label="التابات المفتوحة">
-          <div class="tabstrip__list" id="tab-list"></div>
-          <button id="tab-new" class="tabstrip__new" type="button" aria-label="تاب جديدة" title="تاب جديدة (Ctrl+T)">
-            <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg>
-          </button>
+          <div class="tabstrip__list" id="tab-list">
+            <button id="tab-new" class="tabstrip__new" type="button" aria-label="تاب جديدة" title="تاب جديدة (Ctrl+T)">
+              <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg>
+            </button>
+          </div>
         </div>
 
         <button id="theme-toggle" class="theme-toggle titlebar-nodrag" type="button" aria-label="تبديل الوضع الفاتح والداكن">
@@ -131,25 +132,10 @@
                 </div>
                 <div id="home-recents-list" class="home-recents__list" role="list"></div>
               </section>
-
-              <!-- Field: لا يوجد مربع — الشاشة كلها هي مكان الإسقاط -->
-              <div id="hub-drop" class="field-drop" data-kind="any" aria-label="أسقط الملفات" tabindex="0" role="button">
-                <div class="field-drop__glow" aria-hidden="true"></div>
-                <div class="field-drop__center">
-                  <div class="field-drop__iconwrap" aria-hidden="true">
-                    <svg class="icon field-drop__icon" aria-hidden="true"><use href="#icon-upload"></use></svg>
-                  </div>
-                  <h1 id="start-title" class="field-drop__title" tabindex="-1">أسقط الملفات هنا</h1>
-                  <button id="hub-browse" type="button" class="btn btn--act field-drop__cta">
-                    <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg>
-                    تصفّح الملفات
-                  </button>
-                </div>
-              </div>
               <input id="hub-input" type="file" accept="image/*,application/pdf,.pdf,.heic,.heif" multiple hidden />
 
-              <!-- Files: has-files state — تصميم hub الجديد: ملفات + حاوية أدوات جانبية -->
-              <div id="hub-panel" class="files-panel hub-panel" hidden>
+              <!-- الرئيسية: الملفات + اختيار الأداة — ظاهرة دائمًا -->
+              <div id="hub-panel" class="files-panel hub-panel">
                 <div class="hub-layout">
                   <section class="hub-files" aria-labelledby="hub-mix">
                     <div class="files-panel__head">
@@ -170,6 +156,11 @@
                       </div>
                     </div>
                     <div id="hub-list" class="hub-files__grid" role="list"></div>
+                    <div id="hub-empty-browse" class="hub-empty" data-kind="any" aria-label="أسقط الملفات أو اضغط للتصفح">
+                      <svg class="icon hub-empty__icon" aria-hidden="true"><use href="#icon-upload"></use></svg>
+                      <span class="hub-empty__title">أسقط الملفات هنا أو اضغط للتصفح</span>
+                      <span class="hub-empty__hint">صور أو PDF — كل شيء على جهازك</span>
+                    </div>
                     <p class="hub-files__hint" id="hub-hint">اضغط زر المعاينة على البطاقة لرؤية الملف كاملاً — كليك يمين على الأداة لتثبيتها أو إخفائها.</p>
                   </section>
 
@@ -201,28 +192,6 @@
                 </div>
                 <div id="hub-actions" hidden></div>
               </div>
-
-              <!-- كل الأدوات: ظاهرة دائمًا تحت منطقة الرفع -->
-              <section id="home-tools" class="home-tools" aria-labelledby="home-tools-title">
-                <div class="home-tools__head">
-                  <div class="home-tools__head-main">
-                    <h2 class="home-tools__title" id="home-tools-title">كل الأدوات</h2>
-                    <span class="home-tools__count num" id="home-tools-count" aria-live="polite"></span>
-                  </div>
-                  <p class="home-tools__sub">اضغط أي أداة للبدء مباشرة — حتى قبل رفع الملفات</p>
-                </div>
-                <div id="home-tools-body">
-                  <p class="home-tools__loading">جاري تحميل الأدوات…</p>
-                </div>
-                <details class="home-tools__hidden" id="home-tools-hidden-details" hidden>
-                  <summary class="home-tools__hidden-summary">
-                    <svg class="icon" aria-hidden="true"><use href="#icon-eye-off"></use></svg>
-                    مخفية <span class="home-tools__hidden-count num" id="home-hidden-count"></span>
-                  </summary>
-                  <div id="home-legend-hidden" class="home-tools__grid" role="list" aria-label="الأدوات المخفية"></div>
-                  <p class="home-tools__hidden-hint">اضغط على أداة مخفية لإعادتها للقائمة.</p>
-                </details>
-              </section>
             </div>
           </section>
 

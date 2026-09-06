@@ -46,6 +46,8 @@ export function renderTabs() {
   if (snap === lastSnapshot) return;
   lastSnapshot = snap;
 
+  // الزر + يعيش داخل القائمة نفسها — نلتقطه قبل المسح ثم نعيده بعد آخر تاب.
+  const add = el("tab-new");
   host.replaceChildren();
   for (const tab of tabs) {
     const tool = getTool(tab.toolId);
@@ -96,6 +98,8 @@ export function renderTabs() {
     });
     host.append(node);
   }
+  // زر + يلازم آخر تاب (مثل المتصفحات) بدل أقصى الطرف.
+  if (add) host.append(add);
   host.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest", inline: "nearest" });
 }
 
@@ -112,12 +116,15 @@ export async function activateTab(key) {
     renderTabs();
     return;
   }
-  const prevKey = activeKey;
   activeKey = key;
   renderTabs();
   const landed = await settleNavigation(key, tab.toolId);
-  // تعذّر التنقل والمستخدم لم يغادر — نرجع للتاب السابقة.
-  if (!landed && activeKey === key) activeKey = prevKey;
+  if (!landed) {
+    // تعذّر الوصول للتاب (موجّه مشغول وانتهت المهلة) — التاب النشطة تعكس
+    // الواقع الحالي بدل كسر التزامن مع العرض.
+    const current = tabs.find((item) => item.key === key);
+    if (current && activeKey === key) current.toolId = activeTool()?.id || current.toolId;
+  }
   renderTabs();
 }
 
