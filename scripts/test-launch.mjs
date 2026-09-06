@@ -39,7 +39,7 @@ check("quitAndInstall صامت (true, true)", /quitAndInstall\(\s*true\s*,\s*tru
 check("--background-update بلا نوافذ", /BACKGROUND_UPDATE_FLAG/.test(mainCjs) && /runMode === "background"/.test(mainCjs));
 check("second-instance يتجاهل التحديث الخلفي", /ignoring background-update \(app already open\)/.test(mainCjs));
 check("heic2any ليس في head", !/<head>[\s\S]*heic2any[\s\S]*<\/head>/.test(html));
-check("addTools تدريجي بعد الهيرو", /export function addTools/.test(routerJs) && /loadToolsProgressively/.test(mainJs) && /initRouter\(\);\s*markHero\(\);\s*loadToolsProgressively/.test(mainJs));
+check("addTools تدريجي بعد الهيرو", /export function addTools/.test(routerJs) && /loadToolsProgressively/.test(mainJs) && /initRouter\(\);[\s\S]*?markHero\(\);[\s\S]*?loadToolsProgressively\(\)/.test(mainJs));
 check("السيرفر يبدأ بالتوازي", /if \(runMode === "ui"\) ensureServer\(\)/.test(mainCjs) && /const serverReady = ensureServer\(\)/.test(mainCjs));
 check("installer.nsh: مهمة كل 6 ساعات", /HOURLY/.test(installerNsh) && /MO 6/.test(installerNsh) && /--background-update/.test(installerNsh));
 check("installer.nsh: مهمة Logon", /ONLOGON/.test(installerNsh));
