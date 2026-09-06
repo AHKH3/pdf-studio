@@ -55,8 +55,11 @@ jobs:
 
       # Push the bumped version back so the repo never drifts from releases.
       # [skip ci] keeps this sync commit from triggering another release.
-      # Best-effort: the release is already published at this point, so a
-      # lost race here only means the next run bumps from latest instead.
+      # Install/test byproducts may dirty the tree and block the rebase, so
+      # they are stashed first and dropped after: only the version bump
+      # committed above is synced back. Best-effort: the release is already
+      # published at this point, so a lost race only means the next run
+      # bumps from latest instead.
       - name: Sync bumped version back to main
         if: github.ref_type == 'branch'
         run: |
@@ -64,14 +67,17 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add package.json package-lock.json
           git commit -m "chore: auto-bump version to $env:NEW_VERSION [skip ci]"
+          git stash push -m "ci byproducts" 2>$null | Out-Null
           git pull --rebase origin main
           if ($LASTEXITCODE -ne 0) {
-            git rebase --abort
-            echo "sync skipped: remote moved, next run will bump from it"
+            git rebase --abort 2>$null | Out-Null
+            git stash drop 2>$null | Out-Null
+            echo "sync skipped: could not rebase, next run will bump from latest"
             exit 0
           }
           git push origin HEAD:main
           if ($LASTEXITCODE -ne 0) {
             echo "sync push lost the race, next run will bump from latest"
-            exit 0
           }
+          git stash drop 2>$null | Out-Null
+          exit 0
