@@ -2,10 +2,13 @@ import { el } from "./dom.js";
 import { initPdfEngines } from "./pdf/core.js";
 import { initFeedback, toast } from "./ui/feedback.js";
 import { enterHub, initHub } from "./ui/hub.js";
+import { initHome } from "./ui/home.js";
 import { guardWindowDrops } from "./ui/intake.js";
 import { initKeys } from "./ui/keys.js";
 import { initFilePreview } from "./ui/preview.js";
+import { initRecents } from "./ui/recents.js";
 import { initRouter, registerTools, addTools } from "./ui/router.js";
+import { initTabs } from "./ui/tabs.js";
 import { initTheme } from "./ui/theme.js";
 import { initTitleBlock } from "./ui/titleblock.js";
 import { initToolMenu } from "./ui/toolprefs.js";
@@ -20,6 +23,7 @@ function wiredManifest(manifest) {
     input: manifest.input,
     actionLabel: manifest.actionLabel,
     outputName: manifest.outputName,
+    tabTitle: () => manifest.tabTitle?.() ?? manifest.name ?? manifest.title,
     setup: () => manifest.mount(),
     enter: () => manifest.enter(),
     leave: () => manifest.leave?.(),
@@ -51,15 +55,11 @@ const TOOL_LOADERS = [
   ["organize", () => import("./tools/organize.js").then((m) => m.organizeTool)],
   ["split", () => import("./tools/split.js").then((m) => m.splitTool)],
   ["compress", () => import("./tools/compress.js").then((m) => m.compressTool)],
-  ["watermark", () => import("./tools/watermark.js").then((m) => m.watermarkTool)],
   ["numbers", () => import("./tools/numbers.js").then((m) => m.numbersTool)],
   ["rasterize", () => import("./tools/rasterize.js").then((m) => m.rasterizeTool)],
-  ["sign", () => import("./tools/sign/manifest.js").then((m) => m.asTool())],
   ["edit", () => import("./tools/edit/manifest.js").then((m) => m.asTool())],
-  ["protect", () => import("./tools/protect/manifest.js").then((m) => m.protectTool)],
   ["crop", () => import("./tools/crop/manifest.js").then((m) => wiredManifest(m.default))],
   ["extract-images", () => import("./tools/extract-images/manifest.js").then((m) => m.extractImagesTool)],
-  ["ocr", () => import("./tools/ocr/manifest.js").then((m) => wiredManifest(m.default))]
 ];
 
 function markHero() {
@@ -108,9 +108,12 @@ async function boot() {
   initKeys();
   initToolMenu();
   initFilePreview();
+  initHome();
+  initRecents();
 
   registerTools([startTool]);
   initRouter();
+  initTabs();
   markHero();
   loadToolsProgressively();
 

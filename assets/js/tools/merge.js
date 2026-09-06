@@ -7,7 +7,7 @@ import { confirmDiscard } from "../ui/dialog.js";
 import { endProgress, startProgress, throwIfCancelled, toast, updateProgress } from "../ui/feedback.js";
 import { wireIntake } from "../ui/intake.js";
 import { setName, setRunEnabled, setSource, setState } from "../ui/titleblock.js";
-import { reportFailure, reportSave, uid } from "./shared.js";
+import { reportFailure, reportSave, tabTitle, uid } from "./shared.js";
 
 /** @type {Array<{ id: string; name: string; bytes: Uint8Array; pages: number; size: number; thumbUrl: string; password: string }>} */
 let items = [];
@@ -160,6 +160,7 @@ export const mergeTool = {
   input: "PDF+",
   actionLabel: "دمج",
   outputName: () => "مستند-مدمج.pdf",
+  tabTitle: () => tabTitle(mergeTool.name, items[0]?.name),
 
   setup() {
     list = new DocList("merge-list", {

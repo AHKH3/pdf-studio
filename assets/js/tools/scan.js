@@ -9,7 +9,7 @@ import { autoUpscaleIfSmall } from "../enhance/quality.js";
 import { endProgress, startProgress, throwIfCancelled, updateProgress } from "../ui/feedback.js";
 import { wireIntake } from "../ui/intake.js";
 import { setName, setRunEnabled, setSource, setState } from "../ui/titleblock.js";
-import { pad, reportFailure, reportSave, uid } from "./shared.js";
+import { pad, reportFailure, reportSave, tabTitle, uid } from "./shared.js";
 
 /**
  * @typedef {object} ScanPage
@@ -693,6 +693,7 @@ export const scanTool = {
   input: "صورة",
   actionLabel: "أنشئ",
   outputName: () => "مستند-ممسوح.pdf",
+  tabTitle: () => tabTitle(scanTool.name, pages[0]?.name),
 
   setup() {
     canvas = /** @type {HTMLCanvasElement} */ (el("scan-canvas"));

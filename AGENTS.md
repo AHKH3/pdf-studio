@@ -1,6 +1,6 @@
 # PDF Studio
 
-PDF Studio (`أدوات PDF عربية`) is an **Electron desktop application** that provides Arabic (RTL) PDF tools: images→PDF, merge PDFs, edit/reorder pages, watermark, page numbering, and PDF→images. The UI is a static HTML/CSS/JS front end (`index.html` + `assets/`) that runs entirely client-side using `pdf-lib`, `pdfjs-dist`, and `sortablejs`. At runtime `electron/main.cjs` starts a tiny local HTTP server on `127.0.0.1` and loads it in a `BrowserWindow`.
+PDF Studio (`أدوات PDF عربية`) is an **Electron desktop application** that provides Arabic (RTL) PDF tools: images→PDF, merge PDFs, edit/reorder pages, page numbering, and PDF→images. The UI is a static HTML/CSS/JS front end (`index.html` + `assets/`) that runs entirely client-side using `pdf-lib`, `pdfjs-dist`, and `sortablejs`. At runtime `electron/main.cjs` starts a tiny local HTTP server on `127.0.0.1` and loads it in a `BrowserWindow`.
 
 Standard commands live in `package.json` scripts (`start`, `pack`, `dist:*`, `vendor`). There is no dev server, no lint config, and no automated test suite in this repo.
 

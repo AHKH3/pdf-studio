@@ -17,6 +17,25 @@ const STATE_TEXT = {
 let runHandler = null;
 let running = false;
 
+/** مستمعون لإعادة رسم شريط التابات عند تغيّر حالة الأداة النشطة. */
+const chromeListeners = new Set();
+
+/** @param {() => void} fn */
+export function onChromeChange(fn) {
+  chromeListeners.add(fn);
+  return () => chromeListeners.delete(fn);
+}
+
+function emitChromeChange() {
+  for (const fn of chromeListeners) {
+    try {
+      fn();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
+
 export function initTitleBlock() {
   const button = /** @type {HTMLButtonElement | null} */ (el("tb-run"));
   if (!button) return;
@@ -65,6 +84,7 @@ export function setSource(source = {}) {
   el("tb-source").textContent = source.label || "—";
   el("tb-pages").textContent = source.pages || "—";
   el("tb-size").textContent = source.size || "—";
+  emitChromeChange();
 }
 
 /**
@@ -74,6 +94,7 @@ export function setSource(source = {}) {
 export function setState(state, text) {
   el("tb-state-cell").dataset.state = state === "waiting" ? "idle" : state;
   el("tb-state").textContent = text || STATE_TEXT[state] || STATE_TEXT.idle;
+  emitChromeChange();
 }
 
 /** @param {boolean} enabled */
@@ -81,6 +102,7 @@ export function setRunEnabled(enabled) {
   const button = /** @type {HTMLButtonElement} */ (el("tb-run"));
   button.dataset.wantEnabled = String(Boolean(enabled));
   button.disabled = running || !enabled;
+  emitChromeChange();
 }
 
 /** @param {string} value */

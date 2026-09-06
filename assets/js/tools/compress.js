@@ -6,7 +6,7 @@ import { confirmDiscard, confirmReplace } from "../ui/dialog.js";
 import { endProgress, startProgress, throwIfCancelled, updateProgress } from "../ui/feedback.js";
 import { wireIntake } from "../ui/intake.js";
 import { setName, setRunEnabled, setSource, setState } from "../ui/titleblock.js";
-import { confirmLarge, readPdfFile, reportFailure, reportSave } from "./shared.js";
+import { confirmLarge, readPdfFile, reportFailure, reportSave, tabTitle } from "./shared.js";
 
 /** @type {{ name: string; bytes: Uint8Array; pages: number; size: number; password: string } | null} */
 let doc = null;
@@ -153,6 +153,7 @@ export const compressTool = {
   icon: "icon-compress",
   input: "PDF",
   actionLabel: "ضغط",
+  tabTitle: () => tabTitle(compressTool.name, doc?.name),
 
   setup() {
     wireIntake({

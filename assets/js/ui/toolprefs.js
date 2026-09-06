@@ -8,6 +8,9 @@ import { toast } from "./feedback.js";
 
 const KEY = "pdfstudio.toolprefs.v1";
 
+/** أدوات حُذفت من التطبيق — تُرشَّح من أي تفضيلات محفوظة قد تشير لها. */
+const REMOVED_TOOL_IDS = new Set(["sign", "protect", "watermark", "ocr"]);
+
 /** @type {{ order: string[]; pinned: string[]; hidden: string[] }} */
 let prefs = { order: [], pinned: [], hidden: [] };
 
@@ -35,6 +38,9 @@ export function loadPrefs() {
     }
   } catch {
     prefs = { order: [], pinned: [], hidden: [] };
+  }
+  for (const key of ["order", "pinned", "hidden"]) {
+    prefs[key] = prefs[key].filter((id) => !REMOVED_TOOL_IDS.has(id));
   }
   return prefs;
 }
@@ -155,7 +161,7 @@ export function initToolMenu() {
   loadPrefs();
 
   document.addEventListener("contextmenu", (event) => {
-    const trigger = /** @type {HTMLElement} */ (event.target).closest(".hub-tool");
+    const trigger = /** @type {HTMLElement} */ (event.target).closest(".hub-tool, .home-tool");
     if (!(trigger instanceof HTMLElement) || !trigger.dataset.route) return;
     event.preventDefault();
     openMenu(event.clientX, event.clientY, trigger.dataset.route);

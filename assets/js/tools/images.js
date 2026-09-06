@@ -11,7 +11,7 @@ import { endProgress, startProgress, throwIfCancelled, toast, updateProgress } f
 import { ACTIONS, DocList } from "../ui/doclist.js";
 import { wireIntake } from "../ui/intake.js";
 import { setName, setRunEnabled, setSource, setState } from "../ui/titleblock.js";
-import { reportFailure, reportSave, uid } from "./shared.js";
+import { reportFailure, reportSave, tabTitle, uid } from "./shared.js";
 
 /** @type {Array<{ id: string; file: File; url: string }>} */
 let items = [];
@@ -173,6 +173,7 @@ export const imagesTool = {
   hidden: true,
   actionLabel: "أنشئ",
   outputName: () => "مستند-الصور.pdf",
+  tabTitle: () => tabTitle(imagesTool.name, items[0]?.file?.name),
 
   setup() {
     list = new DocList("images-list", {

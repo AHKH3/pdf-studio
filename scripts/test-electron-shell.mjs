@@ -245,7 +245,7 @@ group("shell — unsaved work per tool (organize/edit)");
   }
   check("تحميل PDF في الأدوات نجح", Boolean(parsed?.dirty) && res.code === 0, res.out.slice(-500));
   check("organize يعتبر غير محفوظ بعد التحميل", parsed?.dirty?.organize === true, JSON.stringify(parsed?.dirty));
-  const pdfDirty = ["split", "compress", "watermark", "numbers", "rasterize"];
+  const pdfDirty = ["split", "compress", "numbers", "rasterize"];
   const pdfOk = pdfDirty.every((id) => parsed?.dirty?.[id] === true);
   check("أدوات PDF ذات isDirty تُبلّغ عن عمل غير محفوظ", pdfOk, JSON.stringify(parsed?.dirty));
   check("edit بدون طبقات ليس dirty (متوقع)", parsed?.dirty?.edit === false, JSON.stringify(parsed?.dirty));

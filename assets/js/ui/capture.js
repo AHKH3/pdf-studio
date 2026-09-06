@@ -59,15 +59,11 @@ export function reorderCapture(ordered) {
 const SINGLE_PDF = [
   "split",
   "compress",
-  "watermark",
   "numbers",
   "rasterize",
-  "sign",
   "edit",
-  "protect",
   "crop",
-  "extract-images",
-  "ocr"
+  "extract-images"
 ];
 
 /** Action ids valid for the current mix, in legend order. */

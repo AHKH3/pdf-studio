@@ -15,7 +15,6 @@ const ICON_MAP = {
   "icon-organize": "Layers01Icon",
   "icon-split": "SplitIcon",
   "icon-compress": "ArrowShrink02Icon",
-  "icon-watermark": "Stamp01Icon",
   "icon-numbers": "LeftToRightListNumberIcon",
   "icon-pdf-to-images": "ImageDownloadIcon",
   "icon-sun": "Sun03Icon",
@@ -37,7 +36,6 @@ const ICON_MAP = {
   "icon-enhance": "MagicWand02Icon",
   "icon-contrast": "ContrastIcon",
   "icon-quad": "VectorSquareIcon",
-  "icon-lock": "SquareLock02Icon",
   "icon-edit": "PencilEdit02Icon"
 };
 

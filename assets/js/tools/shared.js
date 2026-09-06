@@ -53,6 +53,15 @@ export function confirmLarge(pageCount, verb) {
 }
 
 /**
+ * عنوان التاب: اسم الأداة + أول ملف، أو اسم الأداة وحده بلا ملفات.
+ * @param {string} toolName
+ * @param {string} [firstName]
+ */
+export function tabTitle(toolName, firstName) {
+  return firstName ? `${toolName} — ${firstName}` : toolName;
+}
+
+/**
  * Yield to the UI every `every` steps so long PDF walks stay responsive.
  * @param {number} [index]
  * @param {number} [every]

@@ -6,7 +6,7 @@ import { endProgress, startProgress, throwIfCancelled, updateProgress } from "..
 import { wireIntake } from "../ui/intake.js";
 import { setName, setRunEnabled, setSource, setState } from "../ui/titleblock.js";
 import { PagePreview } from "./preview.js";
-import { confirmLarge, readPdfFile, reportFailure, reportSave } from "./shared.js";
+import { confirmLarge, readPdfFile, reportFailure, reportSave, tabTitle } from "./shared.js";
 
 /** @type {{ name: string; bytes: Uint8Array; pages: number; size: number; password: string } | null} */
 let doc = null;
@@ -223,6 +223,7 @@ export const numbersTool = {
   icon: "icon-numbers",
   input: "PDF",
   actionLabel: "ترقيم",
+  tabTitle: () => tabTitle(numbersTool.name, doc?.name),
 
   setup() {
     preview = new PagePreview("numbers-canvas");

@@ -4,7 +4,7 @@ import { ACTIONS, DocList } from "../../ui/doclist.js";
 import { endProgress, startProgress, updateProgress } from "../../ui/feedback.js";
 import { wireIntake } from "../../ui/intake.js";
 import { getName, setName, setRunEnabled, setSource, setState } from "../../ui/titleblock.js";
-import { confirmDiscard, confirmLarge, confirmReplace, pad, readPdfFile, reportFailure, reportSave } from "../shared.js";
+import { confirmDiscard, confirmLarge, confirmReplace, pad, readPdfFile, reportFailure, reportSave, tabTitle } from "../shared.js";
 import { extractEmbeddedImages } from "./extract.js";
 
 export const id = "extract-images";
@@ -244,6 +244,7 @@ export const extractImagesTool = {
   icon: "icon-images",
   input: "PDF",
   actionLabel: "حفظ",
+  tabTitle: () => tabTitle(extractImagesTool.name, session?.name ?? ""),
   setup: () => mount(),
   enter,
   run,

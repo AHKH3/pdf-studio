@@ -8,7 +8,7 @@ import { confirmDiscard } from "../ui/dialog.js";
 import { endProgress, startProgress, throwIfCancelled, toast, updateProgress } from "../ui/feedback.js";
 import { wireIntake, wirePicker } from "../ui/intake.js";
 import { setName, setRunEnabled, setSource, setState } from "../ui/titleblock.js";
-import { confirmLarge, readPdfFile, reportFailure, reportSave, uid } from "./shared.js";
+import { confirmLarge, readPdfFile, reportFailure, reportSave, tabTitle, uid } from "./shared.js";
 
 /** @typedef {{ id: string; kind: "pdf"; docId: string; pageIndex: number; rotation: number }} PdfPage */
 /** @typedef {{ id: string; kind: "image"; file: File; url: string; rotation: number }} ImagePage */
@@ -222,6 +222,7 @@ export const organizeTool = {
   icon: "icon-organize",
   input: "PDF",
   actionLabel: "حفظ",
+  tabTitle: () => tabTitle(organizeTool.name, pages.length ? primaryName : ""),
 
   setup() {
     list = new DocList("organize-list", {

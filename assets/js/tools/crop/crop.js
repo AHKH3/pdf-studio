@@ -25,6 +25,11 @@ let intakeWired = false;
 /** @type {Array<() => void>} */
 let subscriptions = [];
 
+/** اسم الملف الحالي لعنوان التاب. */
+export function currentFileName() {
+  return doc?.name ?? "";
+}
+
 function rootEl() {
   return document.getElementById("view-crop") || document;
 }

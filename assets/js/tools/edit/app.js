@@ -1,7 +1,7 @@
 import { baseName, humanSize, isPdfFile, saveFile, withExtension } from "../../lib/files.js";
 import { endProgress, isCancellation, startProgress, toast } from "../../ui/feedback.js";
 import { getName, setName, setRunEnabled, setSource, setState } from "../../ui/titleblock.js";
-import { confirmDiscard, confirmReplace, readPdfFile, reportFailure as reportFailureToChrome, reportSave as reportSaveToChrome, uid } from "../shared.js";
+import { confirmDiscard, confirmReplace, readPdfFile, reportFailure as reportFailureToChrome, reportSave as reportSaveToChrome, tabTitle, uid } from "../shared.js";
 import { createBoard } from "./board.js";
 import { clampBox } from "./coords.js";
 import { flattenObjects } from "./flatten.js";
@@ -945,6 +945,7 @@ export function asTool() {
     icon: "icon-edit",
     input: "PDF",
     actionLabel: "حفظ",
+    tabTitle: () => tabTitle("تحرير", session.fileName || ""),
     setup() {
       const root = document.getElementById("view-edit");
       if (root) mount(root);

@@ -7,7 +7,7 @@ import { confirmAction, confirmDiscard, confirmReplace } from "../ui/dialog.js";
 import { endProgress, startProgress, throwIfCancelled, toast, updateProgress } from "../ui/feedback.js";
 import { wireIntake } from "../ui/intake.js";
 import { setName, setRunEnabled, setSource, setState } from "../ui/titleblock.js";
-import { confirmLarge, pad, readPdfFile, reportFailure, reportSave } from "./shared.js";
+import { confirmLarge, pad, readPdfFile, reportFailure, reportSave, tabTitle } from "./shared.js";
 import { createZipWriter } from "../lib/zip.js";
 
 /** @type {{ name: string; bytes: Uint8Array; pages: number; size: number; password: string } | null} */
@@ -217,6 +217,7 @@ export const rasterizeTool = {
   icon: "icon-pdf-to-images",
   input: "PDF",
   actionLabel: "تصدير",
+  tabTitle: () => tabTitle(rasterizeTool.name, doc?.name),
 
   setup() {
     list = new DocList("rasterize-list", {

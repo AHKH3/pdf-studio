@@ -18,6 +18,7 @@ import { setOperation } from "./titleblock.js";
  * @property {() => void} [enter]
  * @property {() => void} [leave]
  * @property {() => boolean} [isDirty]
+ * @property {() => string} [tabTitle] عنوان التاب: اسم الأداة + أول ملف
  * @property {() => void | Promise<void>} [run]
  * @property {() => string} [outputName]
  * @property {(files: File[]) => void | Promise<void>} [acceptFiles]
@@ -29,6 +30,17 @@ let activeId = "";
 let sweepTimer = 0;
 let routing = false;
 let routerStarted = false;
+
+/** @type {Array<(ids: string[]) => void>} */
+const toolsListeners = [];
+
+/** يُشعر عند وصول أدوات جديدة (التحميل التدريجي) — تستخدمه شبكة الرئيسية. */
+export function onToolsChanged(fn) {
+  toolsListeners.push(fn);
+}
+
+/** @type {Set<(id: string) => void>} */
+const routeListeners = new Set();
 
 const ACTION_FLOW = {
   scan: ["صور", "PDF"],
@@ -48,14 +60,35 @@ const HUB_TONE = {
   organize: "organize",
   split: "split",
   compress: "compress",
-  watermark: "watermark",
   numbers: "numbers",
   crop: "crop",
-  protect: "protect",
-  ocr: "ocr",
-  sign: "sign",
   edit: "edit"
 };
+
+/** لون الأداة المستخدم في شريط التابات (نفس خريطة أزرار البداية). */
+export function toneFor(id) {
+  return HUB_TONE[id] || id || "scan";
+}
+
+/** @param {(id: string, meta: { navigation: boolean }) => void} fn */
+export function onRouteChange(fn) {
+  routeListeners.add(fn);
+  return () => routeListeners.delete(fn);
+}
+
+/**
+ * @param {string} id
+ * @param {boolean} navigation تنقّل حقيقي (يتبنّاه التاب النشط) أم مجرد تحديث عناوين
+ */
+function emitRoute(id, navigation) {
+  for (const fn of routeListeners) {
+    try {
+      fn(id, { navigation });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
 
 function glyph(id, className = "icon") {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -161,6 +194,15 @@ export function addTools(list) {
     }
   }
   buildLegend();
+  // أدوات جديدة أصبحت معروفة — حدّث عناوين التابات التي تشير لها.
+  if (activeId) emitRoute(activeId);
+  for (const fn of toolsListeners) {
+    try {
+      fn(fresh.map((tool) => tool.id));
+    } catch (error) {
+      console.error(error);
+    }
+  }
 }
 
 export function hasUnsavedWork() {
@@ -178,6 +220,11 @@ export function dirtyToolIds() {
 
 export function activeTool() {
   return tools.get(activeId) ?? null;
+}
+
+/** @param {string} id */
+export function getTool(id) {
+  return tools.get(id) ?? null;
 }
 
 export function allTools() {
@@ -302,6 +349,7 @@ function showRoute(id) {
     name: tool.outputName?.() ?? "",
     onRun: tool.run ? () => tool.run() : undefined
   });
+  emitRoute(id, true);
 
   const work = el("work");
   if (work) {
@@ -326,15 +374,18 @@ async function deliverAndEnter(id) {
   el("work")?.scrollTo({ top: 0 });
 }
 
-/** @param {string} id */
-export async function route(id) {
+/**
+ * @param {string} id
+ * @param {{ skipConfirm?: boolean }} [options] تتجاوز تأكيد المغادرة (تنقّل التابات — العمل محفوظ في التاب)
+ */
+export async function route(id, options = {}) {
   const tool = tools.get(id);
   if (!tool || id === activeId || routing) return;
   if (isDialogOpen()) return;
   if (el("progress")?.classList.contains("is-open")) return;
 
   const previous = tools.get(activeId);
-  if (previous?.isDirty?.()) {
+  if (previous?.isDirty?.() && !options.skipConfirm) {
     routing = true;
     const ok = await confirmLeave(previous.name);
     routing = false;
@@ -343,6 +394,8 @@ export async function route(id) {
 
   showRoute(id);
   await deliverAndEnter(id);
+  // بعد تسليم الملفات قد تتغيّر حالة الأداة (عنوان التاب) فنُشعر مجددًا.
+  emitRoute(id, true);
 }
 
 export function initRouter() {

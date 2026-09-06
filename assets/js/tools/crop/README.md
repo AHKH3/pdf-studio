@@ -22,7 +22,7 @@ Nothing in this folder is wired until you paste the fragment and register the ma
 
 ### 1. Paste the view
 
-Copy the `<section id="view-crop">` from `hub-fragment.html` into `index.html` next to the other `.view` sections (after watermark / numbers is fine).
+Copy the `<section id="view-crop">` from `hub-fragment.html` into `index.html` next to the other `.view` sections (after numbers is fine).
 
 `icon-crop` already exists in the SVG sprite. Overlay CSS is injected by `mount()` — do not add rules to `app.css`.
 

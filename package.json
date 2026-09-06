@@ -9,15 +9,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "postinstall": "node scripts/copy-vendor.cjs && node assets/js/tools/protect/copy-qpdf.mjs && node assets/js/tools/ocr/copy-runtime.mjs && node scripts/copy-upscaler.cjs",
+    "postinstall": "node scripts/copy-vendor.cjs && node scripts/copy-upscaler.cjs",
     "vendor": "node scripts/copy-vendor.cjs",
     "vendor:upscaler": "node scripts/copy-upscaler.cjs",
-    "vendor:qpdf": "node assets/js/tools/protect/copy-qpdf.mjs",
-    "vendor:ocr": "node assets/js/tools/ocr/copy-runtime.mjs",
     "icons": "node scripts/generate-icon-sprite.mjs",
     "fonts": "node scripts/fetch-fonts.mjs",
     "check": "node scripts/check-syntax.mjs",
-    "test": "node scripts/check-syntax.mjs && node scripts/test-scan.mjs && node scripts/test-experience.mjs && node scripts/test-tools.mjs && node scripts/test-edit.mjs && node scripts/test-protect.mjs && node scripts/test-launch.mjs && node scripts/test-electron-shell.mjs && node scripts/test-publish.mjs && node scripts/test-toolprefs.mjs",
+    "test": "node scripts/check-syntax.mjs && node scripts/test-scan.mjs && node scripts/test-experience.mjs && node scripts/test-tools.mjs && node scripts/test-edit.mjs && node scripts/test-launch.mjs && node scripts/test-electron-shell.mjs && node scripts/test-publish.mjs && node scripts/test-toolprefs.mjs",
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --win nsis",
@@ -31,9 +29,7 @@
     "heic2any": "^0.0.4",
     "pdf-lib": "1.17.1",
     "pdfjs-dist": "3.11.174",
-    "qpdf-wasm": "^0.1.0",
     "sortablejs": "1.15.7",
-    "tesseract.js": "^7.0.0",
     "upscaler": "^1.0.0"
   },
   "devDependencies": {

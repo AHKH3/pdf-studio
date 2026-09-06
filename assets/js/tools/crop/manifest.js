@@ -1,4 +1,5 @@
-import { enter, leave, mount, outputName, run, unmount, acceptFiles } from "./crop.js";
+import { currentFileName, enter, leave, mount, outputName, run, unmount, acceptFiles } from "./crop.js";
+import { tabTitle } from "../shared.js";
 
 /**
  * Crop PDF — visual crop box, current page or all pages.
@@ -11,6 +12,7 @@ export const cropManifest = {
   icon: "icon-crop",
   input: "PDF",
   actionLabel: "قص",
+  tabTitle: () => tabTitle(cropManifest.name, currentFileName()),
   mount,
   unmount,
   enter,

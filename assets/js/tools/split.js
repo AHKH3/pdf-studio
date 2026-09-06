@@ -6,7 +6,7 @@ import { confirmDiscard, confirmReplace } from "../ui/dialog.js";
 import { endProgress, startProgress, throwIfCancelled, updateProgress } from "../ui/feedback.js";
 import { wireIntake } from "../ui/intake.js";
 import { setName, setRunEnabled, setSource, setState } from "../ui/titleblock.js";
-import { confirmLarge, pad, parseRanges, rangesToIndexes, readPdfFile, reportFailure, reportSave } from "./shared.js";
+import { confirmLarge, pad, parseRanges, rangesToIndexes, readPdfFile, reportFailure, reportSave, tabTitle } from "./shared.js";
 
 /** @type {{ name: string; bytes: Uint8Array; pages: number; size: number; password: string } | null} */
 let doc = null;
@@ -204,6 +204,7 @@ export const splitTool = {
   icon: "icon-split",
   input: "PDF",
   actionLabel: "تقسيم",
+  tabTitle: () => tabTitle(splitTool.name, doc?.name),
 
   setup() {
     wireIntake({ dropId: "split-drop", inputId: "split-input", browseId: "split-browse", accept: "pdf", onFiles: load });

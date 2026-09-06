@@ -297,7 +297,7 @@ async function runTestProbe(win) {
           drop.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: dt }));
           await new Promise((r) => setTimeout(r, 500));
 
-          const ids = ["organize", "split", "compress", "watermark", "numbers", "rasterize", "edit"];
+          const ids = ["organize", "split", "compress", "numbers", "rasterize", "edit"];
           const dirty = {};
           for (const id of ids) {
             const btn = document.querySelector("[data-route='" + id + "']");
