@@ -777,6 +777,8 @@ canvas { direction: ltr; }
   box-shadow: 0 -6px 24px rgba(0,0,0,0.35);
 }
 .sheet:has(#view-start.view--active) .titleblock { display: none; }
+/* edit owns its save button up top — the bottom execution bar is redundant here */
+.sheet:has(#view-edit.view--active) .titleblock { display: none; }
 .titleblock::before { content:""; position:absolute; inset-inline:14px; top:0; height:2px; border-radius: var(--radius-pill); background: var(--accent); transform: scaleX(0); transform-origin:center; opacity:0; pointer-events:none; }
 .titleblock:has([data-state="busy"])::before { opacity:1; animation: tb-progress 1.4s var(--ease) infinite; }
 @keyframes tb-progress { 0%{transform:scaleX(0.18); opacity:0.45} 50%{transform:scaleX(1); opacity:1} 100%{transform:scaleX(0.18); opacity:0.45} }

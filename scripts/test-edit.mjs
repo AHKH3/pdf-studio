@@ -343,6 +343,10 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
     "edit workspace fills the viewport height",
     /\.work:has\(#view-edit\.view--active\)/.test(flat) && /#view-edit\.view--active\s*\{[^}]*height\s*:\s*100%/.test(flat)
   );
+  check(
+    "bottom execution bar is hidden on edit (top save owns saving)",
+    /\.sheet:has\(#view-edit\.view--active\) \.titleblock\s*\{\s*display\s*:\s*none/.test(flat)
+  );
 }
 
 console.log(`\n${checks - failures}/${checks} checks passed`);
