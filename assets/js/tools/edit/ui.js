@@ -123,6 +123,7 @@ const CSS = `
 .edit-optbar [data-edit-panel][hidden] { display: none; }
 .edit-optbar .field { min-width: 0; }
 .edit-optbar .field label { font-size: 0.72rem; }
+.edit-optbar .field__label { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
 .edit-optbar input[type="number"] { width: 64px; }
 .edit-optbar input[type="color"] { width: 34px; height: 30px; padding: 2px; }
 .edit-optbar textarea {
@@ -241,15 +242,52 @@ const CSS = `
 .edit-chip.is-active { background: var(--accent); border-color: var(--accent-deep); color: #fff; }
 /* shapes panel lives in one strip: figures + preset menu + two pickers */
 .edit-optbar .edit-sep { width: 1px; align-self: stretch; background: var(--border-soft); margin: 2px 0; flex: none; }
-.edit-preview {
-  width: 46px; height: 34px; flex: none;
+/* preset dropdown: button carries the live preview + name, menu rows carry
+   the same mini visuals the old preset chips had */
+.edit-dd { position: relative; display: inline-flex; }
+.edit-dd__btn .icon--chev { transform: rotate(90deg); opacity: 0.6; }
+.edit-dd__prev {
+  width: 34px; height: 24px; flex: none;
   display: inline-grid; place-items: center;
-  border: 1px dashed var(--border-strong);
-  border-radius: 8px;
   background: #fff;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
   overflow: hidden;
 }
-.edit-preview svg { width: 100%; height: 100%; display: block; }
+.edit-dd__prev svg { width: 100%; height: 100%; display: block; }
+.edit-dd__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-start: 0;
+  z-index: 60;
+  min-width: 196px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  background: var(--surface-0, #fff);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(15,23,42,0.18);
+}
+.edit-dd__menu[hidden] { display: none; }
+.edit-presetrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--ink-2);
+  text-align: start;
+}
+.edit-presetrow:hover { background: var(--surface-2); }
+.edit-presetrow[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.edit-presetrow svg { width: 30px; height: 24px; flex: none; }
 .edit-optbar .field { display: inline-flex; align-items: center; gap: 5px; }
 .edit-optbar input[type="range"] { width: 96px; accent-color: var(--accent); }
 .edit-width-val { font-size: 0.74rem; min-width: 26px; text-align: center; color: var(--ink-2); }
@@ -651,21 +689,30 @@ export function buildUi(root) {
               <label><input type="radio" name="edit-shape" value="triangle" /><span class="edit-shapefig"><svg viewBox="0 0 32 26" aria-hidden="true"><polygon points="16,4 4,23 28,23" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/></svg><span class="sr-only">مثلث</span></span></label>
             </span>
             <span class="edit-sep" aria-hidden="true"></span>
-            <span class="field"><label for="edit-shape-style">النمط</label><select id="edit-shape-style" aria-label="نمط الشكل">
-              <option value="custom" selected>مخصص</option>
-              <option value="highlight" data-shape-preset="highlight">تظليل</option>
-              <option value="frame" data-shape-preset="frame">إطار</option>
-              <option value="fill" data-shape-preset="fill">تعبئة</option>
-              <option value="cover" data-shape-preset="cover">تغطية</option>
-            </select></span>
+            <span class="field"><span class="field__label">النمط</span>
+              <span class="edit-dd">
+                <button type="button" class="edit-toolbtn edit-dd__btn" id="edit-shape-style" aria-haspopup="listbox" aria-expanded="false" aria-label="نمط الشكل">
+                  <span class="edit-dd__prev" data-dd-prev></span>
+                  <span data-dd-name>تعبئة بدون إطار</span>
+                  <svg class="icon icon--chev" aria-hidden="true"><use href="#icon-chev"></use></svg>
+                </button>
+                <span class="edit-dd__menu" id="edit-shape-menu" role="listbox" aria-label="نمط الشكل" hidden>
+                  <button type="button" role="option" class="edit-presetrow" data-preset="custom" aria-selected="false"><svg viewBox="0 0 30 24" aria-hidden="true"><rect x="3" y="4" width="24" height="16" rx="3" fill="none" stroke="currentColor" stroke-dasharray="4 3" stroke-width="2"/></svg><span>مخصص</span></button>
+                  <button type="button" role="option" class="edit-presetrow" data-preset="flat" data-shape-preset="flat" aria-selected="false"><svg viewBox="0 0 30 24" aria-hidden="true"><rect x="3" y="4" width="24" height="16" rx="3" fill="#BFDBFE"/></svg><span>تعبئة بدون إطار</span></button>
+                  <button type="button" role="option" class="edit-presetrow" data-preset="highlight" data-shape-preset="highlight" aria-selected="false"><svg viewBox="0 0 30 24" aria-hidden="true"><rect x="3" y="4" width="24" height="16" rx="3" fill="#FDE68A" stroke="#FDE68A"/></svg><span>تظليل</span></button>
+                  <button type="button" role="option" class="edit-presetrow" data-preset="frame" data-shape-preset="frame" aria-selected="false"><svg viewBox="0 0 30 24" aria-hidden="true"><rect x="3" y="4" width="24" height="16" rx="3" fill="none" stroke="#DC2626" stroke-width="2.5"/></svg><span>إطار</span></button>
+                  <button type="button" role="option" class="edit-presetrow" data-preset="fill" data-shape-preset="fill" aria-selected="false"><svg viewBox="0 0 30 24" aria-hidden="true"><rect x="3" y="4" width="24" height="16" rx="3" fill="#BFDBFE" stroke="#1E3A8A" stroke-width="2"/></svg><span>تعبئة</span></button>
+                  <button type="button" role="option" class="edit-presetrow" data-preset="cover" data-shape-preset="cover" aria-selected="false"><svg viewBox="0 0 30 24" aria-hidden="true"><rect x="3" y="4" width="24" height="16" rx="3" fill="#fff" stroke="#94A3B8" stroke-width="1.5"/></svg><span>تغطية</span></button>
+                </span>
+              </span>
+            </span>
             <span class="edit-sep" aria-hidden="true"></span>
             <label class="check"><input id="edit-fill-on" type="checkbox" checked />تعبئة</label>
-            <span class="field"><label for="edit-fill-color">لون التعبئة</label><input id="edit-fill-color" type="color" value="#8AA4E0" aria-label="لون التعبئة — اضغط لاختيار اللون" title="اضغط لاختيار لون التعبئة" /></span>
+            <span class="field"><label for="edit-fill-color">لون التعبئة</label><input id="edit-fill-color" type="color" value="#BFDBFE" aria-label="لون التعبئة — اضغط لاختيار اللون" title="اضغط لاختيار لون التعبئة" /></span>
             <span class="edit-sep" aria-hidden="true"></span>
-            <span class="field"><label for="edit-stroke-color">لون الإطار</label><input id="edit-stroke-color" type="color" value="#1E3A8A" aria-label="لون الإطار — اضغط لاختيار اللون" title="اضغط لاختيار لون الإطار" /></span>
-            <span class="field"><label for="edit-stroke-width">السمك</label><input id="edit-stroke-width" type="range" min="0" max="24" step="0.5" value="1.5" aria-label="سمك الإطار" /></span>
-            <span class="num edit-width-val" id="edit-stroke-width-val">1.5</span>
-            <span class="edit-preview" id="edit-shape-preview" aria-hidden="true"></span>
+            <span class="field"><label for="edit-stroke-color">لون الإطار</label><input id="edit-stroke-color" type="color" value="#BFDBFE" aria-label="لون الإطار — اضغط لاختيار اللون" title="اضغط لاختيار لون الإطار" /></span>
+            <span class="field"><label for="edit-stroke-width">السمك</label><input id="edit-stroke-width" type="range" min="0" max="24" step="0.5" value="0" aria-label="سمك الإطار" /></span>
+            <span class="num edit-width-val" id="edit-stroke-width-val">0</span>
           </div>
         </div>
 
@@ -750,8 +797,8 @@ export function buildUi(root) {
     strokeColor: root.querySelector("#edit-stroke-color"),
     strokeWidth: root.querySelector("#edit-stroke-width"),
     strokeWidthVal: root.querySelector("#edit-stroke-width-val"),
-    shapePreview: root.querySelector("#edit-shape-preview"),
     shapePreset: root.querySelector("#edit-shape-style"),
+    presetMenu: root.querySelector("#edit-shape-menu"),
     undo: root.querySelector("#edit-undo"),
     redo: root.querySelector("#edit-redo"),
     dup: root.querySelector("#edit-dup"),

@@ -148,9 +148,9 @@ function getStyle() {
     penColor: ui?.penColor.value || "#1E3A8A",
     penWeight: finiteNumber(ui?.penWeight.value, 2.2),
     fillOn: Boolean(ui?.fillOn.checked),
-    fill: ui?.fillColor.value || "#8AA4E0",
+    fill: ui?.fillColor.value || "#BFDBFE",
     stroke: ui?.strokeColor.value || "#1E3A8A",
-    strokeWidth: Math.max(0, finiteNumber(ui?.strokeWidth.value, 1.5))
+    strokeWidth: Math.max(0, finiteNumber(ui?.strokeWidth.value, 0))
   };
 }
 
@@ -580,10 +580,20 @@ function applySavedStyle() {
 }
 
 const SHAPE_PRESETS = {
+  flat: { fillOn: true, fill: "#BFDBFE", stroke: "#BFDBFE", strokeWidth: 0 },
   highlight: { fillOn: true, fill: "#FDE68A", stroke: "#FDE68A", strokeWidth: 0 },
   frame: { fillOn: false, fill: "#BFDBFE", stroke: "#DC2626", strokeWidth: 2 },
   fill: { fillOn: true, fill: "#BFDBFE", stroke: "#1E3A8A", strokeWidth: 1.5 },
   cover: { fillOn: true, fill: "#FFFFFF", stroke: "#FFFFFF", strokeWidth: 0 }
+};
+
+const PRESET_LABELS = {
+  custom: "مخصص",
+  flat: "تعبئة بدون إطار",
+  highlight: "تظليل",
+  frame: "إطار",
+  fill: "تعبئة",
+  cover: "تغطية"
 };
 
 function updateStyleChips() {
@@ -619,15 +629,14 @@ function shapePreviewSvg(kind, style) {
 }
 
 /**
- * Shapes strip extras: the preset menu shows the preset matching the current
- * controls (or "custom"), plus the live style preview and the stroke-width
- * readout. Runs on every style change, with or without a selection, so the
- * strip never shows stale state.
+ * Shapes strip extras: the preset button shows the preset matching the
+ * current controls (or "custom") with a live style preview, the menu marks
+ * the match, and the stroke-width readout follows the slider. Runs on every
+ * style change, with or without a selection, so the strip never goes stale.
  */
 function updateShapePanel() {
-  const root = session.root;
   const ui = session.ui;
-  if (!root || !ui || !ui.shapePreview) return;
+  if (!session.root || !ui || !ui.shapePreset) return;
   const style = getStyle();
   const lower = (value) => String(value || "").toLowerCase();
   let activePreset = "";
@@ -642,9 +651,53 @@ function updateShapePanel() {
       break;
     }
   }
-  if (ui.shapePreset) ui.shapePreset.value = activePreset || "custom";
+  const nameEl = ui.shapePreset.querySelector("[data-dd-name]");
+  if (nameEl) nameEl.textContent = activePreset ? PRESET_LABELS[activePreset] : PRESET_LABELS.custom;
+  const prevEl = ui.shapePreset.querySelector("[data-dd-prev]");
+  if (prevEl) prevEl.innerHTML = shapePreviewSvg(activeShapeKind(), style);
+  for (const row of ui.presetMenu?.querySelectorAll("[data-preset]") ?? []) {
+    const key = /** @type {HTMLElement} */ (row).dataset.preset || "custom";
+    row.setAttribute("aria-selected", key === (activePreset || "custom") ? "true" : "false");
+  }
   if (ui.strokeWidthVal) ui.strokeWidthVal.textContent = String(style.strokeWidth);
-  ui.shapePreview.innerHTML = shapePreviewSvg(activeShapeKind(), style);
+}
+
+/** @returns {boolean} true when an open preset menu was closed */
+function closePresetMenu() {
+  const ui = session.ui;
+  if (!ui?.presetMenu || ui.presetMenu.hidden) return false;
+  ui.presetMenu.hidden = true;
+  ui.shapePreset?.setAttribute("aria-expanded", "false");
+  return true;
+}
+
+function togglePresetMenu() {
+  const ui = session.ui;
+  if (!ui?.presetMenu || !ui.shapePreset) return;
+  const open = ui.presetMenu.hidden;
+  ui.presetMenu.hidden = !open;
+  ui.shapePreset.setAttribute("aria-expanded", open ? "true" : "false");
+  if (open) ui.presetMenu.querySelector("[aria-selected='true']")?.focus?.();
+}
+
+/** Apply a preset-menu choice to the selection (or to the next-stamp defaults). */
+function applyPresetChoice(name) {
+  const ui = session.ui;
+  const style = SHAPE_PRESETS[name];
+  if (ui && style) {
+    ui.fillOn.checked = style.fillOn;
+    ui.fillColor.value = style.fill;
+    ui.strokeColor.value = style.stroke;
+    ui.strokeWidth.value = String(style.strokeWidth);
+    ui.fillOn.dispatchEvent(new Event("change", { bubbles: true }));
+    ui.fillColor.dispatchEvent(new Event("input", { bubbles: true }));
+    ui.strokeColor.dispatchEvent(new Event("input", { bubbles: true }));
+    ui.strokeWidth.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  // With no selection the dispatched events change defaults only and skip
+  // the inspector refresh, so update the menu + preview directly.
+  updateStyleChips();
+  saveStylePrefs();
 }
 
 function setStyleInput(inputId, value, eventName) {
@@ -1140,6 +1193,11 @@ function onRootKey(event) {
   if (typing) return;
 
   if (event.key === "Escape") {
+    if (closePresetMenu()) {
+      event.preventDefault();
+      session.ui?.shapePreset?.focus?.();
+      return;
+    }
     if (session.selectedIds.length) {
       event.preventDefault();
       setSelectedIds([]);
@@ -1287,6 +1345,7 @@ export function mount(rootEl) {
     (event) => {
       const target = /** @type {HTMLElement} */ (event.target);
       if (target instanceof HTMLInputElement && (target.name === "edit-tool" || target.name === "edit-shape")) {
+        closePresetMenu();
         session.board?.syncTool();
         showPanels();
         saveStylePrefs();
@@ -1323,27 +1382,6 @@ export function mount(rootEl) {
         setFitMode(target.value === "page" ? "page" : "width");
         return;
       }
-      // Preset menu: apply the picked style to the selection (or to the
-      // defaults for the next stamp when nothing is selected).
-      if (target === session.ui?.shapePreset) {
-        const style = SHAPE_PRESETS[/** @type {HTMLSelectElement} */ (target).value];
-        const ui = session.ui;
-        if (style && ui) {
-          ui.fillOn.checked = style.fillOn;
-          ui.fillColor.value = style.fill;
-          ui.strokeColor.value = style.stroke;
-          ui.strokeWidth.value = String(style.strokeWidth);
-          ui.fillOn.dispatchEvent(new Event("change", { bubbles: true }));
-          ui.fillColor.dispatchEvent(new Event("input", { bubbles: true }));
-          ui.strokeColor.dispatchEvent(new Event("input", { bubbles: true }));
-          ui.strokeWidth.dispatchEvent(new Event("input", { bubbles: true }));
-        }
-        // With no selection the dispatched events change defaults only and
-        // skip the inspector refresh, so update the menu + preview directly.
-        updateStyleChips();
-        saveStylePrefs();
-        return;
-      }
       applyInspectorToSelection();
       saveStylePrefs();
     },
@@ -1353,6 +1391,18 @@ export function mount(rootEl) {
   rootEl.addEventListener(
     "click",
     (event) => {
+      // Preset dropdown: the button toggles, a row applies its style.
+      if (/** @type {HTMLElement} */ (event.target).closest?.("#edit-shape-style, #edit-shape-menu")) {
+        const row = /** @type {HTMLElement} */ (event.target).closest?.("[data-preset]");
+        if (row) {
+          applyPresetChoice(row.dataset.preset || "custom");
+          closePresetMenu();
+          session.ui?.shapePreset?.focus?.();
+        } else {
+          togglePresetMenu();
+        }
+        return;
+      }
       const swatch = /** @type {HTMLElement} */ (event.target).closest?.("[data-swatch]");
       if (swatch?.dataset.for && swatch.dataset.swatch) {
         setStyleInput(swatch.dataset.for, swatch.dataset.swatch, "input");
@@ -1384,6 +1434,16 @@ export function mount(rootEl) {
   );
 
   rootEl.addEventListener("keydown", onRootKey, { signal });
+
+  // Clicking anywhere outside the preset dropdown closes its menu.
+  document.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (/** @type {HTMLElement} */ (event.target).closest?.("#edit-shape-style, #edit-shape-menu")) return;
+      closePresetMenu();
+    },
+    { signal }
+  );
 
   // Clicking the armed tool again disarms it: radios stay unchecked until
   // the user deliberately picks a creation gesture.
