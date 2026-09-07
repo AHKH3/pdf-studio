@@ -317,6 +317,10 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
   check("no rect/ellipse/triangle tool radios remain", !/name="edit-tool"[^>]*value="(rect|ellipse|triangle)"/.test(uiSrc));
   check("no usage-instruction text in the edit template", !/(يظهر فوراً|اسحب الزوايا|لطيفة|💡|لطبقة فوق|الناتج PDF)/.test(uiSrc));
   check("image is a tool radio with a browse panel", /choice\("edit-tool", "image"/.test(uiSrc) && /id="edit-image-browse"/.test(uiSrc));
+  check(
+    "toolbar image opens the picker directly on click",
+    /value="image"\]'\)[\s\S]{0,200}imageInput\.click\(\)/.test(appSrc)
+  );
   check("top save button exists", /id="edit-save"/.test(uiSrc));
   check("font size is number input plus chips", /<input id="edit-text-size"[^>]*type="number"/.test(uiSrc) && /data-size-chip/.test(uiSrc));
   check("shape presets are inline buttons", /data-shape-preset="highlight"/.test(uiSrc) && !/id="edit-shape-preset"/.test(uiSrc));

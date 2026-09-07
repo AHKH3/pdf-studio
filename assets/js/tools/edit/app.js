@@ -1311,6 +1311,11 @@ export function mount(rootEl) {
   session.ui.prev.addEventListener("click", () => goTo(session.pageIndex - 1), { signal });
   session.ui.next.addEventListener("click", () => goTo(session.pageIndex + 1), { signal });
   session.ui.imageBrowse.addEventListener("click", () => session.ui.imageInput.click(), { signal });
+  // The toolbar image tool opens the picker immediately: no intermediate step.
+  // (The panel browse button stays as a fallback, e.g. for keyboard users.)
+  rootEl
+    .querySelector('input[name="edit-tool"][value="image"]')
+    ?.addEventListener("click", () => session.ui.imageInput.click(), { signal });
   session.ui.imageInput.addEventListener(
     "change",
     () => {
