@@ -1021,11 +1021,12 @@ code { font-family: var(--data); font-variant-numeric: tabular-nums; font-size:0
 [data-theme="blueprint"] .hub-tool { border-color: color-mix(in srgb, var(--tool-accent) 60%, #000); }
 
 /* ---------- التابات داخل الهيدر ---------- */
+/* الشريط كله منطقة سحب للنافذة (فراغ + تابات) — فقط × و + مستثناة */
 .tabstrip {
   display:flex; align-items:center; gap: 6px;
   flex:1 1 auto; min-width:0; min-height:0; padding:0;
   background: transparent; border:0;
-  user-select:none; -webkit-app-region: no-drag;
+  user-select:none; -webkit-app-region: drag;
 }
 .tabstrip__list {
   display:flex; align-items:center; gap: 4px;
@@ -1041,8 +1042,10 @@ code { font-family: var(--data); font-variant-numeric: tabular-nums; font-size:0
   background: transparent; color: var(--ink-3);
   border:1px solid transparent; border-radius: 8px;
   font-size: 0.76rem; white-space:nowrap; cursor:pointer;
-  -webkit-app-region: no-drag;
+  -webkit-app-region: drag;
 }
+/* زرّا × و + يبقيان قابلين للضغط: لا يبدآن سحب النافذة أبدًا */
+.tabstrip__close, .tabstrip__new { -webkit-app-region: no-drag; }
 /* شريط لوني علوي بلون الأداة */
 .tabstrip__tab::before {
   content:""; position:absolute; top:2px; inset-inline:8px; height:3px; border-radius: 999px;

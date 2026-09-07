@@ -55,6 +55,25 @@ group("shell — dirty-tool contract");
   console.log(`  info dirty tools: ${DIRTY_TOOLS.length} — ${DIRTY_TOOLS.map((f) => f.replace(/\\/g, "/")).join(", ")}`);
 }
 
+group("shell — titlebar drag from the tab strip");
+{
+  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  const css = fs
+    .readFileSync(path.join(root, "assets", "css", "app.css"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
+  const stripTag = html.match(/<div[^>]*id="tab-strip"[^>]*>/)?.[0] || "";
+  check("tab strip is not marked no-drag", !/titlebar-nodrag/.test(stripTag), stripTag.slice(0, 80));
+  const stripRule = css.match(/\.tabstrip\s*\{([^}]*)\}/)?.[1] || "";
+  check("tab strip background drags the window", /-webkit-app-region\s*:\s*drag/.test(stripRule));
+  const tabRule = css.match(/\.tabstrip__tab\s*\{([^}]*)\}/)?.[1] || "";
+  check(
+    "holding a tab drags the window too",
+    /-webkit-app-region\s*:\s*drag/.test(tabRule) && !/no-drag/.test(tabRule)
+  );
+  const ctlRule = css.match(/\.tabstrip__close\s*,\s*\.tabstrip__new\s*\{([^}]*)\}/)?.[1] || "";
+  check("tab close / new buttons stay clickable (no-drag)", /-webkit-app-region\s*:\s*no-drag/.test(ctlRule));
+}
+
 function electronBin() {
   try {
     return require("electron");
