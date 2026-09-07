@@ -292,7 +292,7 @@ async function runTestProbe(win) {
           const file = new File([bytes], "sample.pdf", { type: "application/pdf" });
           const dt = new DataTransfer();
           dt.items.add(file);
-          const drop = document.getElementById("hub-drop");
+          const drop = document.getElementById("hub-drop") || document.getElementById("hub-empty-browse");
           if (!drop) return { error: "no-drop" };
           drop.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: dt }));
           await new Promise((r) => setTimeout(r, 500));
@@ -312,7 +312,19 @@ async function runTestProbe(win) {
               leave.click();
               await new Promise((r) => setTimeout(r, 400));
             }
-            await new Promise((r) => setTimeout(r, 700));
+            // انتظر استقرار التحميل قبل قراءة dirty — التحميل البطيء يتجاوز 900ms.
+            // يخرج عند ظهور dirty، أو عند إغلاق overlay بعد فتحه، أو بعد 3s خمول بلا overlay.
+            const t0 = Date.now();
+            let seenOverlay = false;
+            while (Date.now() - t0 < 12000) {
+              if (document.querySelector(".progress.is-open")) seenOverlay = true;
+              const live = typeof __pdfStudioDirtyToolIds === "function" ? __pdfStudioDirtyToolIds() : [];
+              if (live.includes(id)) break;
+              if (seenOverlay && !document.querySelector(".progress.is-open")) break;
+              if (!seenOverlay && Date.now() - t0 > 3000) break;
+              await new Promise((r) => setTimeout(r, 250));
+            }
+            await new Promise((r) => setTimeout(r, 300));
             const idsDirty = typeof __pdfStudioDirtyToolIds === "function" ? __pdfStudioDirtyToolIds() : [];
             dirty[id] = idsDirty.includes(id);
           }

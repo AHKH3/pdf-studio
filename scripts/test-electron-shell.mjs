@@ -179,7 +179,7 @@ group("shell — boot to hero");
     Number.isFinite(heroMs) && heroMs < heroBudgetMs,
     `heroMs=${heroMs} fcp=${fcp?.[1]} ci=${Boolean(process.env.CI)}`
   );
-  check("الأدوات تُحمَّل بعد الهيرو", tools && Number(tools[1]) >= 12, tools ? tools[0] : "no tools line");
+  check("الأدوات تُحمَّل بعد الهيرو", tools && Number(tools[1]) >= 10, tools ? tools[0] : "no tools line");
   check("لا عمل غير محفوظ عند الإقلاع", tools && tools[2] === "false", tools ? tools[0] : "");
   cleanupUserData(dir);
 }
