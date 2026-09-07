@@ -336,6 +336,13 @@ const CSS = `
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+/* Grabbable under every tool: grab on hover, grabbing while a move drag runs.
+ * Resize/rotate drags never take this class, so handles keep their arrows. */
+.edit-layer.is-grabbing,
+.edit-layer.is-grabbing .edit-obj,
+.edit-layer.is-grabbing .edit-obj textarea,
+.edit-layer.is-grabbing .edit-handle,
+.edit-layer.is-grabbing .edit-rotate { cursor: grabbing; }
 .edit-obj img,
 .edit-obj svg {
   display: block;
@@ -405,7 +412,7 @@ const CSS = `
   background: #fff;
   border: 2px solid var(--accent);
   border-radius: 50%;
-  cursor: grab;
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'><path d='M18.5 11a7.5 7.5 0 1 1-2.2-5.3' fill='none' stroke='%231E3A8A' stroke-width='2.4' stroke-linecap='round'/><path d='M18.8 2.4v4.6h-4.6' fill='none' stroke='%231E3A8A' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/></svg>") 11 11, grab;
   z-index: 3;
   box-sizing: border-box;
   box-shadow: 0 1px 4px rgba(15,23,42,0.18);
@@ -573,8 +580,8 @@ export function buildUi(root) {
       <div id="edit-workspace" class="edit" hidden>
         <div class="edit-toolbar">
           <div class="edit-tools" role="radiogroup" aria-label="أداة التعديل">
-            ${choice("edit-tool", "select", "تحديد", "icon-quad")}
-            ${choice("edit-tool", "text", "نص", "icon-file", true)}
+            ${choice("edit-tool", "select", "تحديد", "icon-quad", true)}
+            ${choice("edit-tool", "text", "نص", "icon-file")}
             ${choice("edit-tool", "pen", "رسم", "icon-sign")}
             ${choice("edit-tool", "shapes", "الأشكال", "icon-crop")}
             <button id="edit-image-add" type="button" class="edit-toolbtn">${icon("icon-images")}<span>صورة</span></button>

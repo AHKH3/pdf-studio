@@ -107,7 +107,7 @@ function activeShapeKind() {
 
 function activeTool() {
   const picked = session.root?.querySelector('input[name="edit-tool"]:checked');
-  const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "text";
+  const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "select";
   if (value === "shapes") return activeShapeKind();
   if (value === "rect" || value === "ellipse" || value === "triangle") return value;
   if (value === "select" || value === "pen") return value;
@@ -116,7 +116,7 @@ function activeTool() {
 
 function activePanel() {
   const picked = session.root?.querySelector('input[name="edit-tool"]:checked');
-  const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "text";
+  const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "select";
   if (value === "rect" || value === "ellipse" || value === "triangle" || value === "shapes") return "shapes";
   if (value === "select" || value === "pen" || value === "text") return value;
   return "text";
@@ -522,7 +522,7 @@ function saveStylePrefs() {
     localStorage.setItem(
       STYLE_KEY,
       JSON.stringify({
-        tool: /** @type {HTMLInputElement | null} */ (picked)?.value || "text",
+        tool: /** @type {HTMLInputElement | null} */ (picked)?.value || "select",
         shape: activeShapeKind(),
         fit: session.fitMode,
         textSize: ui.textSize.value,

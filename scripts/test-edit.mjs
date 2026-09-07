@@ -330,6 +330,35 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
     "toolbar image button opens the picker directly",
     /imageAdd\.addEventListener\("click"[^;]*imageInput\.click\(\)/.test(appSrc)
   );
+  // Mouse-first: select is the default tool, any object is grabbable under
+  // any tool, and cursors always follow the hovered capability.
+  check(
+    "default tool is select (mouse manipulates, tools only create)",
+    /choice\("edit-tool", "select", "تحديد", "icon-quad", true\)/.test(uiSrc) &&
+      !/choice\("edit-tool", "text", "نص", "icon-file", true\)/.test(uiSrc)
+  );
+  check("objects show a grab hand under any tool", /\.edit-obj\s*\{[^}]*cursor:\s*grab/.test(uiSrc));
+  check(
+    "move drags switch to a grabbing hand and release it",
+    /\.is-grabbing[\s\S]{0,400}cursor:\s*grabbing/.test(uiSrc) &&
+      /classList\.add\("is-grabbing"\)/.test(boardSrc) &&
+      /classList\.remove\("is-grabbing"\)/.test(boardSrc) &&
+      /if \(mode === "move"\) layer\.classList\.add\("is-grabbing"\)/.test(boardSrc)
+  );
+  check(
+    "resize handles show directional arrows",
+    /\.edit-handle\[data-handle="nw"\][^}]*nwse-resize/.test(uiSrc) &&
+      /\.edit-handle\[data-handle="n"\][^}]*ns-resize/.test(uiSrc) &&
+      /\.edit-handle\[data-handle="e"\][^}]*ew-resize/.test(uiSrc)
+  );
+  check("rotate grip shows a circular arrow cursor", /\.edit-rotate\s*\{[^}]*cursor:\s*url\(/.test(uiSrc));
+  check(
+    "object hit manipulates regardless of tool (hit branch precedes creators)",
+    boardSrc.indexOf("every other tool manipulates objects directly") !== -1 &&
+      boardSrc.indexOf("every other tool manipulates objects directly") <
+        boardSrc.indexOf('onCreate({\n        type: "text",') &&
+      /tool === "pen" && !node/.test(boardSrc)
+  );
   check("top save button exists", /id="edit-save"/.test(uiSrc));
   check("font size is number input plus chips", /<input id="edit-text-size"[^>]*type="number"/.test(uiSrc) && /data-size-chip/.test(uiSrc));
   check("shape presets are inline buttons", /data-shape-preset="highlight"/.test(uiSrc) && !/id="edit-shape-preset"/.test(uiSrc));

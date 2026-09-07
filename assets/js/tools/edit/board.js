@@ -6,6 +6,14 @@
  * handles resize/rotate, text focuses for typing). The select tool never
  * activates itself — it only multi-selects (click / ctrl-click / marquee)
  * so several layers can be moved, duplicated or deleted together.
+ * The select tool is also the default: with no creation tool armed, the
+ * mouse alone selects, moves, resizes and rotates any object on the page.
+ *
+ * Cursor contract (tool-independent, follows the hovered capability):
+ * .edit-obj shows grab, move drags add .is-grabbing (grabbing) on the
+ * layer, resize handles keep their directional arrows, and the rotate
+ * grip shows a circular arrow. Resize/rotate drags never take
+ * .is-grabbing, so their cursors are never overridden mid-gesture.
  */
 import { openDocument, pdfRenderContext } from "../../pdf/core.js";
 import {
@@ -579,6 +587,7 @@ export function createBoard(options) {
       }
       layer.setPointerCapture(event.pointerId);
       onHistory();
+      layer.classList.add("is-grabbing");
       drag = {
         pointerId: event.pointerId,
         mode: "move",
@@ -645,6 +654,7 @@ export function createBoard(options) {
         if (obj.type === "text") focusSelectedText();
         layer.setPointerCapture(event.pointerId);
         onHistory();
+        layer.classList.add("is-grabbing");
         drag = startGroupDrag(event, ids);
         onChange();
         return;
@@ -692,6 +702,7 @@ export function createBoard(options) {
       if (obj.type === "text") focusSelectedText();
       layer.setPointerCapture(event.pointerId);
       const mode = handle?.dataset.handle || "move";
+      if (mode === "move") layer.classList.add("is-grabbing");
       onHistory();
       drag = {
         pointerId: event.pointerId,
@@ -885,6 +896,7 @@ export function createBoard(options) {
 
   function pointerUp(event) {
     if (!drag || event.pointerId !== drag.pointerId) return;
+    layer.classList.remove("is-grabbing");
     const mode = drag.mode;
 
     if (mode === "marquee") {
@@ -1036,6 +1048,7 @@ export function createBoard(options) {
   async function closePdf() {
     generation += 1;
     drag = null;
+    layer.classList.remove("is-grabbing");
     ghost?.remove();
     ghost = null;
     endLiveInk();
