@@ -1475,7 +1475,11 @@ export function mount(rootEl) {
       const target = toolInputFrom(event);
       if (!target || target.dataset.wasChecked !== "1") return;
       delete target.dataset.wasChecked;
-      // Re-clicking the armed tool disarms it.
+      // Re-clicking the armed tool disarms it. preventDefault() is the crux:
+      // the label's activation behavior (forward a click to the radio, which
+      // re-checks it) runs AFTER bubble handlers — without cancelling it,
+      // the browser would instantly re-arm the tool we just disarmed.
+      event.preventDefault();
       target.checked = false;
       session.board?.syncTool();
       showPanels();

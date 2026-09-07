@@ -343,7 +343,10 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
       /toolInputFrom\(event\)/.test(appSrc) &&
       // The pill span is a SIBLING of the radio: resolving must go through
       // label.choice, a bare closest(input) never matches and kills the toggle.
-      /closest\?\.\("label\.choice"\)\?\.querySelector\('input\[name="edit-tool"\]'\)/.test(appSrc)
+      /closest\?\.\("label\.choice"\)\?\.querySelector\('input\[name="edit-tool"\]'\)/.test(appSrc) &&
+      // The label forwards a click to the radio AFTER bubble handlers run:
+      // without preventDefault the browser instantly re-arms the tool.
+      /the browser would instantly re-arm/.test(appSrc)
   );
   check("escape with empty selection disarms back to mouse-only", /Nothing selected: disarm back to mouse-only\./.test(appSrc));
   check(

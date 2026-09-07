@@ -271,6 +271,33 @@ group("shell — unsaved work per tool (organize/edit)");
   cleanupUserData(dir);
 }
 
+group("shell — edit tool toggle (real UI clicks)");
+{
+  const dir = tmpUserData();
+  const { done } = spawnApp(
+    [root, `--user-data-dir=${dir}`],
+    { ...displayEnv, PDF_STUDIO_TEST: "tool-toggle" },
+    { timeoutMs: 90000 }
+  );
+  const res = await done;
+  const line = (res.out.match(/\[test\] tool-toggle (\{.*\})/) || [])[1];
+  let parsed = null;
+  try {
+    parsed = line ? JSON.parse(line) : null;
+  } catch {
+    parsed = null;
+  }
+  check("edit opens with no tool armed", parsed?.armed0 === "(none)", JSON.stringify(parsed) || res.out.slice(-400));
+  check("pill click arms the tool", parsed?.armed1 === "text", JSON.stringify(parsed));
+  check(
+    "re-clicking the armed pill disarms back to none",
+    parsed?.armed2 === "(none)",
+    JSON.stringify(parsed)
+  );
+  check("disarmed board shows the bulk panel", parsed?.selectPanelVisible === true, JSON.stringify(parsed));
+  cleanupUserData(dir);
+}
+
 group("shell — second-instance lock vs background-update");
 {
   const dir = tmpUserData();

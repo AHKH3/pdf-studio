@@ -340,6 +340,71 @@ async function runTestProbe(win) {
     return;
   }
 
+  if (mode === "tool-toggle") {
+    await waitRenderer(
+      win,
+      "Promise.resolve(globalThis.__pdfStudioToolsLoaded).then((ids) => (Array.isArray(ids) ? ids.length : 0))",
+      120
+    );
+    const result = await win.webContents
+      .executeJavaScript(
+        `(async () => {
+          const lib = window.PDFLib;
+          if (!lib) return { error: "no-pdflib" };
+          const doc = await lib.PDFDocument.create();
+          const page = doc.addPage([595, 842]);
+          const font = await doc.embedFont(lib.StandardFonts.Helvetica);
+          page.drawText("sample", { x: 72, y: 720, size: 18, font });
+          const bytes = await doc.save();
+          const file = new File([bytes], "sample.pdf", { type: "application/pdf" });
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          const drop = document.getElementById("hub-drop") || document.getElementById("hub-empty-browse");
+          if (!drop) return { error: "no-drop" };
+          drop.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: dt }));
+          await new Promise((r) => setTimeout(r, 500));
+          const btn = document.querySelector("[data-route='edit']");
+          if (!btn) return { error: "no-edit-route" };
+          btn.click();
+          const t0 = Date.now();
+          while (Date.now() - t0 < 15000) {
+            const ws = document.getElementById("edit-workspace");
+            if (ws && !ws.hidden) break;
+            await new Promise((r) => setTimeout(r, 250));
+          }
+          const armed = () => {
+            const on = document.querySelector('#view-edit input[name="edit-tool"]:checked');
+            return on ? on.value : "(none)";
+          };
+          const textInput = document.querySelector('#view-edit input[name="edit-tool"][value="text"]');
+          if (!textInput) return { error: "no-text-tool" };
+          // The visible pill: first span inside the label (the input is its sibling).
+          const pill = textInput.closest("label")?.querySelector("span");
+          if (!pill) return { error: "no-pill" };
+          const userClick = () => {
+            pill.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
+            pill.click();
+          };
+          const armed0 = armed();
+          userClick();
+          await new Promise((r) => setTimeout(r, 300));
+          const armed1 = armed();
+          userClick();
+          await new Promise((r) => setTimeout(r, 300));
+          const armed2 = armed();
+          const selPanel = document.querySelector('#view-edit [data-edit-panel="select"]');
+          return { armed0, armed1, armed2, selectPanelVisible: Boolean(selPanel && !selPanel.hidden) };
+        })()`,
+        true
+      )
+      .catch((error) => ({ error: String(error) }));
+    console.log("[test] tool-toggle " + JSON.stringify(result));
+    forceClose = true;
+    armExitWatchdog();
+    app.exit(0);
+    return;
+  }
+
   if (mode === "close-clean" || mode === "close-unsaved-stay" || mode === "close-unsaved-close") {
     await waitRenderer(win, "typeof __pdfStudioHasUnsavedWork==='function'");
     if (mode !== "close-clean") {
