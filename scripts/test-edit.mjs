@@ -339,7 +339,11 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
   check("disarmed board shows the bulk/selection bar", /if \(!value\) return "select"/.test(appSrc));
   check(
     "re-clicking the armed tool disarms it",
-    /wasChecked/.test(appSrc) && /Re-clicking the armed tool disarms it\./.test(appSrc)
+    /Re-clicking the armed tool disarms it\./.test(appSrc) &&
+      /toolInputFrom\(event\)/.test(appSrc) &&
+      // The pill span is a SIBLING of the radio: resolving must go through
+      // label.choice, a bare closest(input) never matches and kills the toggle.
+      /closest\?\.\("label\.choice"\)\?\.querySelector\('input\[name="edit-tool"\]'\)/.test(appSrc)
   );
   check("escape with empty selection disarms back to mouse-only", /Nothing selected: disarm back to mouse-only\./.test(appSrc));
   check(

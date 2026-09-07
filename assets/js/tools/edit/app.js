@@ -1371,6 +1371,11 @@ export function mount(rootEl) {
     "input",
     (event) => {
       const target = /** @type {HTMLElement} */ (event.target);
+      // Radios/checkboxes apply on `change` (above). In Chrome `input` fires
+      // first: letting them through here refreshes the inspector early, which
+      // snaps a just-picked shape figure back to the selected shape's kind —
+      // so every stamp came out a rectangle and the figure never highlighted.
+      if (target instanceof HTMLInputElement && (target.type === "radio" || target.type === "checkbox")) return;
       if (target === session.ui.text || target?.closest?.("[data-edit-panel]")) {
         applyInspectorToSelection();
       }
@@ -1382,9 +1387,18 @@ export function mount(rootEl) {
 
   // Clicking the armed tool again disarms it: radios stay unchecked until
   // the user deliberately picks a creation gesture.
+  // NOTE: the radio input is a SIBLING of the visible pill span (both live
+  // inside label.choice), so closest() from the pill never reaches it — the
+  // input must be resolved through the label.
+  const toolInputFrom = (event) => {
+    const el = /** @type {HTMLElement} */ (event.target);
+    if (el instanceof HTMLInputElement && el.name === "edit-tool") return el;
+    const input = el.closest?.("label.choice")?.querySelector('input[name="edit-tool"]');
+    return input instanceof HTMLInputElement ? input : null;
+  };
   const noteArmed = (event) => {
-    const target = /** @type {HTMLElement} */ (event.target).closest?.('input[name="edit-tool"]');
-    if (target instanceof HTMLInputElement) target.dataset.wasChecked = target.checked ? "1" : "";
+    const target = toolInputFrom(event);
+    if (target) target.dataset.wasChecked = target.checked ? "1" : "";
   };
   rootEl.addEventListener("pointerdown", noteArmed, { signal });
   rootEl.addEventListener(
@@ -1398,8 +1412,8 @@ export function mount(rootEl) {
   rootEl.addEventListener(
     "click",
     (event) => {
-      const target = /** @type {HTMLElement} */ (event.target).closest?.('input[name="edit-tool"]');
-      if (!(target instanceof HTMLInputElement) || target.dataset.wasChecked !== "1") return;
+      const target = toolInputFrom(event);
+      if (!target || target.dataset.wasChecked !== "1") return;
       delete target.dataset.wasChecked;
       // Re-clicking the armed tool disarms it.
       target.checked = false;
