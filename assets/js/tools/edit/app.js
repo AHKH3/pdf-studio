@@ -110,7 +110,7 @@ function activeTool() {
   const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "text";
   if (value === "shapes") return activeShapeKind();
   if (value === "rect" || value === "ellipse" || value === "triangle") return value;
-  if (value === "select" || value === "pen") return value;
+  if (value === "select" || value === "pen" || value === "image") return value;
   return "text";
 }
 
@@ -118,7 +118,7 @@ function activePanel() {
   const picked = session.root?.querySelector('input[name="edit-tool"]:checked');
   const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "text";
   if (value === "rect" || value === "ellipse" || value === "triangle" || value === "shapes") return "shapes";
-  if (value === "select" || value === "pen" || value === "text") return value;
+  if (value === "select" || value === "pen" || value === "image" || value === "text") return value;
   return "text";
 }
 
@@ -257,11 +257,10 @@ function refresh(overlay = true) {
   }
   if (session.ui?.prev) session.ui.prev.disabled = session.pageIndex <= 0;
   if (session.ui?.next) session.ui.next.disabled = session.pageIndex >= session.pages - 1;
+  if (session.ui?.save) session.ui.save.disabled = session.objects.length === 0;
   const hasSel = session.selectedIds.length > 0;
   if (session.ui?.remove) session.ui.remove.disabled = !hasSel;
   if (session.ui?.dup) session.ui.dup.disabled = !hasSel;
-  if (session.ui?.scaleUp) session.ui.scaleUp.disabled = !hasSel;
-  if (session.ui?.scaleDown) session.ui.scaleDown.disabled = !hasSel;
   if (session.ui?.front) session.ui.front.disabled = !hasSel;
   if (session.ui?.back) session.ui.back.disabled = !hasSel;
   if (session.ui?.clearSel) session.ui.clearSel.disabled = !hasSel;
@@ -477,10 +476,7 @@ function syncInspectorFromSelection() {
   try {
     if (obj?.type === "text") {
       ui.text.value = obj.text || "";
-      const sizes = [12, 14, 16, 18, 24, 32, 48];
-      const current = Number(obj.fontSize) || 18;
-      const nearest = sizes.reduce((best, size) => (Math.abs(size - current) < Math.abs(best - current) ? size : best), 18);
-      ui.textSize.value = String(nearest);
+      ui.textSize.value = String(obj.fontSize || 18);
       ui.textColor.value = obj.color || "#1E3A8A";
       ui.textBold.checked = Boolean(obj.bold);
       ui.textItalic.checked = Boolean(obj.italic);
@@ -595,32 +591,6 @@ const SHAPE_PRESETS = {
   cover: { fillOn: true, fill: "#FFFFFF", stroke: "#FFFFFF", strokeWidth: 0 }
 };
 
-function applyShapePreset(name) {
-  const style = name ? SHAPE_PRESETS[name] : null;
-  const ui = session.ui;
-  if (!style || !ui) return;
-  ui.fillOn.checked = style.fillOn;
-  ui.fillColor.value = style.fill;
-  ui.strokeColor.value = style.stroke;
-  ui.strokeWidth.value = String(style.strokeWidth);
-  ui.fillOn.dispatchEvent(new Event("change", { bubbles: true }));
-}
-
-function closeAllPopovers() {
-  let closed = false;
-  for (const panel of session.root?.querySelectorAll("[data-pop-panel]") ?? []) {
-    if (!/** @type {HTMLElement} */ (panel).hidden) {
-      /** @type {HTMLElement} */ (panel).hidden = true;
-      closed = true;
-    }
-  }
-  return closed;
-}
-
-function anyPopoverOpen() {
-  return Boolean(session.root?.querySelector("[data-pop-panel]:not([hidden])"));
-}
-
 function updateStyleChips() {
   const root = session.root;
   const ui = session.ui;
@@ -632,23 +602,8 @@ function updateStyleChips() {
       input instanceof HTMLInputElement && input.value.toLowerCase() === /** @type {HTMLElement} */ (swatch).dataset.swatch?.toLowerCase()
     );
   }
-  // Color wells mirror their inputs; the shape-preset select mirrors the combo.
-  for (const well of root.querySelectorAll("[data-well]")) {
-    const input = document.getElementById(/** @type {HTMLElement} */ (well).dataset.well || "");
-    if (input instanceof HTMLInputElement) {
-      /** @type {HTMLElement} */ (well).style.setProperty("--well", input.value);
-    }
-  }
-  if (ui.shapePreset) {
-    const style = getStyle();
-    const match = Object.entries(SHAPE_PRESETS).find(
-      ([, preset]) =>
-        preset.fillOn === style.fillOn &&
-        preset.fill.toLowerCase() === style.fill.toLowerCase() &&
-        preset.stroke.toLowerCase() === style.stroke.toLowerCase() &&
-        preset.strokeWidth === style.strokeWidth
-    );
-    ui.shapePreset.value = match ? match[0] : "custom";
+  for (const chip of root.querySelectorAll("[data-size-chip]")) {
+    chip.classList.toggle("is-active", ui.textSize.value === /** @type {HTMLElement} */ (chip).dataset.sizeChip);
   }
 }
 
@@ -1108,6 +1063,7 @@ async function pickImage(file) {
       url,
       label: file.name
     });
+    if (session.ui?.imageMeta) session.ui.imageMeta.textContent = file.name;
   } catch (error) {
     reportFailure(error, "تعذّر قراءة الصورة.");
   }
@@ -1145,10 +1101,6 @@ function onRootKey(event) {
   if (typing) return;
 
   if (event.key === "Escape") {
-    if (closeAllPopovers()) {
-      event.preventDefault();
-      return;
-    }
     if (session.selectedIds.length) {
       event.preventDefault();
       setSelectedIds([]);
@@ -1295,11 +1247,6 @@ export function mount(rootEl) {
         setFitMode(target.value === "page" ? "page" : "width");
         return;
       }
-      if (target instanceof HTMLSelectElement && target.id === "edit-shape-preset") {
-        applyShapePreset(target.value);
-        saveStylePrefs();
-        return;
-      }
       applyInspectorToSelection();
       saveStylePrefs();
     },
@@ -1309,29 +1256,29 @@ export function mount(rootEl) {
   rootEl.addEventListener(
     "click",
     (event) => {
-      const well = /** @type {HTMLElement} */ (event.target).closest?.("[data-well]");
-      if (well?.dataset.well) {
-        const panel = session.root?.querySelector(`[data-pop-panel="${well.dataset.well}"]`);
-        const willOpen = panel instanceof HTMLElement && panel.hidden;
-        closeAllPopovers();
-        if (panel instanceof HTMLElement && willOpen) panel.hidden = false;
-        return;
-      }
       const swatch = /** @type {HTMLElement} */ (event.target).closest?.("[data-swatch]");
       if (swatch?.dataset.for && swatch.dataset.swatch) {
         setStyleInput(swatch.dataset.for, swatch.dataset.swatch, "input");
         return;
       }
-    },
-    { signal }
-  );
-
-  document.addEventListener(
-    "pointerdown",
-    (event) => {
-      if (!anyPopoverOpen()) return;
-      if (/** @type {HTMLElement} */ (event.target).closest?.(".edit-pop")) return;
-      closeAllPopovers();
+      const chip = /** @type {HTMLElement} */ (event.target).closest?.("[data-size-chip]");
+      if (chip?.dataset.for && chip.dataset.sizeChip) {
+        setStyleInput(chip.dataset.for, chip.dataset.sizeChip, "input");
+        return;
+      }
+      const preset = /** @type {HTMLElement} */ (event.target).closest?.("[data-shape-preset]");
+      const style = preset?.dataset.shapePreset ? SHAPE_PRESETS[preset.dataset.shapePreset] : null;
+      const ui = session.ui;
+      if (!style || !ui) return;
+      ui.fillOn.checked = style.fillOn;
+      ui.fillColor.value = style.fill;
+      ui.strokeColor.value = style.stroke;
+      ui.strokeWidth.value = String(style.strokeWidth);
+      ui.fillOn.dispatchEvent(new Event("change", { bubbles: true }));
+      ui.fillColor.dispatchEvent(new Event("input", { bubbles: true }));
+      ui.strokeColor.dispatchEvent(new Event("input", { bubbles: true }));
+      ui.strokeWidth.dispatchEvent(new Event("input", { bubbles: true }));
+      saveStylePrefs();
     },
     { signal }
   );
@@ -1353,19 +1300,17 @@ export function mount(rootEl) {
   session.ui.redo?.addEventListener("click", redo, { signal });
   session.ui.remove.addEventListener("click", deleteSelected, { signal });
   session.ui.dup?.addEventListener("click", () => duplicateObjects(session.selectedIds), { signal });
-  session.ui.scaleUp?.addEventListener("click", () => scaleSelection(1.1), { signal });
-  session.ui.scaleDown?.addEventListener("click", () => scaleSelection(1 / 1.1), { signal });
   session.ui.front?.addEventListener("click", () => reorderSelected(1), { signal });
   session.ui.back?.addEventListener("click", () => reorderSelected(-1), { signal });
   session.ui.clearSel?.addEventListener("click", () => {
     setSelectedIds([]);
     refresh();
   }, { signal });
+  session.ui.save.addEventListener("click", () => run(), { signal });
   session.ui.clear.addEventListener("click", () => closeDocument(), { signal });
   session.ui.prev.addEventListener("click", () => goTo(session.pageIndex - 1), { signal });
   session.ui.next.addEventListener("click", () => goTo(session.pageIndex + 1), { signal });
-  // The image button opens the picker directly: no intermediate bar.
-  session.ui.imageAdd.addEventListener("click", () => session.ui.imageInput.click(), { signal });
+  session.ui.imageBrowse.addEventListener("click", () => session.ui.imageInput.click(), { signal });
   session.ui.imageInput.addEventListener(
     "change",
     () => {

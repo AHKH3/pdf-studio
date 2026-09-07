@@ -307,23 +307,21 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
   const dangling = [...queriedIds].filter((id) => !templateIds.has(id));
   check("every querySelector id exists in the template", dangling.length === 0, dangling.join(","));
 
-  // Four tools, four settings bars: image is an action button, not a mode.
+  // Five tools, five settings bars: the bars below are the approved layout.
   const panels = (uiSrc.match(/data-edit-panel="(\w+)"/g) || []).map((m) => m.match(/"(\w+)"/)[1]);
   check(
-    "panels are exactly select/text/pen/shapes",
-    JSON.stringify([...new Set(panels)].sort()) === JSON.stringify(["pen", "select", "shapes", "text"]),
+    "panels are exactly select/text/pen/shapes/image",
+    JSON.stringify([...new Set(panels)].sort()) === JSON.stringify(["image", "pen", "select", "shapes", "text"]),
     panels.join(",")
   );
   check("no rect/ellipse/triangle tool radios remain", !/name="edit-tool"[^>]*value="(rect|ellipse|triangle)"/.test(uiSrc));
   check("no usage-instruction text in the edit template", !/(يظهر فوراً|اسحب الزوايا|لطيفة|💡|لطبقة فوق|الناتج PDF)/.test(uiSrc));
-  check("image is a direct action button, not a radio", /id="edit-image-add"[^>]*class="edit-toolbtn"/.test(uiSrc) && !/name="edit-tool"[^>]*value="image"/.test(uiSrc));
-  check("no top save button (the bottom bar owns saving)", !/id="edit-save"/.test(uiSrc));
-  check("font size is one select, not number+chips", /<select id="edit-text-size"/.test(uiSrc) && !/data-size-chip/.test(uiSrc));
-  check("shape presets are one select", /<select id="edit-shape-preset"/.test(uiSrc) && !/data-shape-preset/.test(uiSrc));
-  check("colors live in popovers behind wells (4 colorPop wells)", (uiSrc.match(/colorPop\("/g) || []).length === 4);
-  check("bulk scale buttons exist", /id="edit-scale-up"/.test(uiSrc) && /id="edit-scale-down"/.test(uiSrc));
-  check("fit mode switch exists (width default)", /choice\("edit-fit", "width"/.test(uiSrc) && /choice\("edit-fit", "page"/.test(uiSrc));
-  check("undo/redo icons differ (redo is flipped)", /\$\{icon\("icon-rotate", true\)\}/.test(uiSrc));
+  check("image is a tool radio with a browse panel", /choice\("edit-tool", "image"/.test(uiSrc) && /id="edit-image-browse"/.test(uiSrc));
+  check("top save button exists", /id="edit-save"/.test(uiSrc));
+  check("font size is number input plus chips", /<input id="edit-text-size"[^>]*type="number"/.test(uiSrc) && /data-size-chip/.test(uiSrc));
+  check("shape presets are inline buttons", /data-shape-preset="highlight"/.test(uiSrc) && !/id="edit-shape-preset"/.test(uiSrc));
+  check("colors are inline swatches, not popovers", /class="edit-swatches"/.test(uiSrc) && !/data-pop-panel/.test(uiSrc));
+  check("fit mode switch exists in the rail (width default)", /choice\("edit-fit", "width"/.test(uiSrc) && /choice\("edit-fit", "page"/.test(uiSrc));
   const prevHtml = (uiSrc.match(/id="edit-prev"[\s\S]*?<\/button>/) || [""])[0];
   const nextHtml = (uiSrc.match(/id="edit-next"[\s\S]*?<\/button>/) || [""])[0];
   check(
