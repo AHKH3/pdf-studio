@@ -390,6 +390,16 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
     "edit pager follows RTL (prev flipped, next plain)",
     prevHtml.includes('icon("icon-arrow", true)') && nextHtml.includes('icon("icon-arrow")') && !nextHtml.includes(", true")
   );
+  // Intake hero: centered card with breathing room, never edge-stuck.
+  const dropRule = (uiSrc.match(/#edit-drop\.intake\s*\{([\s\S]*?)\}/) || [])[1] || "";
+  check(
+    "edit picker is a centered capped-width card",
+    /width\s*:\s*min\(560px/.test(dropRule) && /align-self\s*:\s*center/.test(dropRule)
+  );
+  check(
+    "edit picker breathes (auto block margins, generous min-height)",
+    /margin-block\s*:\s*auto/.test(dropRule) && /min-height\s*:\s*320px/.test(dropRule)
+  );
 
   // No big container may group a page's elements again: .view__body stays flat
   // and .view stays full-width on every tool page.

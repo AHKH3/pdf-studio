@@ -2,14 +2,27 @@ const CSS = `
 .edit-root { display: flex; flex-direction: column; min-height: 0; height: 100%; }
 .edit-root .view__body { display: flex; flex-direction: column; min-height: 0; flex: 1; }
 
-/* ——— hero drop ——— */
+/* ——— hero drop: centered card with breathing room, never edge-stuck ——— */
 #edit-drop.intake {
-  min-height: 280px;
-  border: 1.5px dashed var(--border-strong);
+  align-self: center;
+  width: min(560px, calc(100% - var(--space-8)));
+  margin-block: auto;
+  min-height: 320px;
   background: var(--surface-1);
   border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
 }
-#edit-drop .intake__title { font-size: 1.05rem; font-weight: 700; }
+#edit-drop .intake__glyph {
+  width: 36px;
+  height: 36px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--border-glow);
+  border-radius: 14px;
+  padding: var(--space-2);
+  box-sizing: content-box;
+}
+#edit-drop .intake__title { font-size: var(--t-md); font-weight: 700; }
 
 /* ——— workspace: flat, no cards ——— */
 .edit {
