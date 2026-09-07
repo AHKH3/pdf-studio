@@ -554,6 +554,29 @@ html.is-desktop[data-platform="linux"] .win-controls { display:flex; }
 #hub-drop.intake--sheet .btn--sheet:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 10px 24px var(--accent-glow); }
 #hub-drop.intake--sheet .btn--sheet:active { transform: translateY(0); }
 .intake--hero { min-height: 260px; }
+/* Tool file pickers: one centered hero-card design, never edge-stuck.
+ * Covers every tool drop zone (.view__body > .intake). The start-page hero
+ * #hub-drop lives under .start, so it keeps its own richer sheet design. */
+.view__body > .intake {
+  width: min(560px, calc(100% - var(--space-8)));
+  margin-inline: auto;
+  margin-block: clamp(var(--space-6), 7vh, 72px) var(--space-6);
+  min-height: 320px;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
+}
+.view__body > .intake:hover, .view__body > .intake.is-over, .view__body > .intake.is-dragging { box-shadow: var(--shadow-glow); }
+.view__body > .intake .intake__glyph {
+  width: 36px;
+  height: 36px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--border-glow);
+  border-radius: 14px;
+  padding: var(--space-2);
+  box-sizing: content-box;
+}
+.view__body > .intake .intake__title { font-size: var(--t-md); }
 .start__title { margin: 0; font-family: var(--display); font-size: var(--t-2xl); font-weight:800; line-height:1.2; color: var(--ink); }
 .start__title:focus { outline:none; }
 

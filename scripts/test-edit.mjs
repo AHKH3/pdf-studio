@@ -390,21 +390,27 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
     "edit pager follows RTL (prev flipped, next plain)",
     prevHtml.includes('icon("icon-arrow", true)') && nextHtml.includes('icon("icon-arrow")') && !nextHtml.includes(", true")
   );
-  // Intake hero: centered card with breathing room, never edge-stuck.
-  const dropRule = (uiSrc.match(/#edit-drop\.intake\s*\{([\s\S]*?)\}/) || [])[1] || "";
-  check(
-    "edit picker is a centered capped-width card",
-    /width\s*:\s*min\(560px/.test(dropRule) && /align-self\s*:\s*center/.test(dropRule)
-  );
-  check(
-    "edit picker breathes (auto block margins, generous min-height)",
-    /margin-block\s*:\s*auto/.test(dropRule) && /min-height\s*:\s*320px/.test(dropRule)
-  );
+  // Tool pickers share one global hero-card design — asserted below on app.css.
 
   // No big container may group a page's elements again: .view__body stays flat
   // and .view stays full-width on every tool page.
   const cssSrc = await readFile(path.join(ROOT, "assets/css/app.css"), "utf8");
   const flat = cssSrc.replace(/\/\*[\s\S]*?\*\//g, "");
+  // Tool pickers share one centered hero-card design (edit + every tool).
+  const pickerRule = flat.match(/\.view__body\s*>\s*\.intake\s*\{([^}]*)\}/)?.[1] || "";
+  check(
+    "tool pickers are centered capped-width cards",
+    /width\s*:\s*min\(560px/.test(pickerRule) && /margin-inline\s*:\s*auto/.test(pickerRule)
+  );
+  check(
+    "tool pickers sit above center with breathing room (never edge-stuck)",
+    /margin-block\s*:\s*clamp\(/.test(pickerRule) && /min-height\s*:\s*320px/.test(pickerRule)
+  );
+  check(
+    "tool picker glyphs share the accent bubble",
+    /\.view__body\s*>\s*\.intake \.intake__glyph\s*\{[^}]*background\s*:\s*var\(--accent-soft\)/.test(flat)
+  );
+  check("edit carries no divergent picker override", !/#edit-drop\.intake\s*\{/.test(uiSrc));
   const bodyRule = flat.match(/\.view__body\s*\{([^}]*)\}/)?.[1] || "";
   check("view__body has no card background", !/background\s*:\s*var\(--surface/.test(bodyRule), bodyRule.slice(0, 100));
   check("view__body has no border", /(^|;)\s*border\s*:\s*0/.test(bodyRule), bodyRule.slice(0, 100));
