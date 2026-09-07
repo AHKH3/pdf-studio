@@ -38,6 +38,8 @@ const session = {
   historyBatch: false,
   syncing: false,
   zoom: 1,
+  /** @type {"width" | "page"} */
+  fitMode: "width",
   /** @type {IntersectionObserver | null} */
   pagesObserver: null,
   /** @type {Map<number, HTMLCanvasElement>} */
@@ -108,7 +110,7 @@ function activeTool() {
   const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "text";
   if (value === "shapes") return activeShapeKind();
   if (value === "rect" || value === "ellipse" || value === "triangle") return value;
-  if (value === "select" || value === "pen" || value === "image") return value;
+  if (value === "select" || value === "pen") return value;
   return "text";
 }
 
@@ -116,7 +118,7 @@ function activePanel() {
   const picked = session.root?.querySelector('input[name="edit-tool"]:checked');
   const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "text";
   if (value === "rect" || value === "ellipse" || value === "triangle" || value === "shapes") return "shapes";
-  if (value === "select" || value === "pen" || value === "image" || value === "text") return value;
+  if (value === "select" || value === "pen" || value === "text") return value;
   return "text";
 }
 
@@ -255,10 +257,11 @@ function refresh(overlay = true) {
   }
   if (session.ui?.prev) session.ui.prev.disabled = session.pageIndex <= 0;
   if (session.ui?.next) session.ui.next.disabled = session.pageIndex >= session.pages - 1;
-  if (session.ui?.save) session.ui.save.disabled = session.objects.length === 0;
   const hasSel = session.selectedIds.length > 0;
   if (session.ui?.remove) session.ui.remove.disabled = !hasSel;
   if (session.ui?.dup) session.ui.dup.disabled = !hasSel;
+  if (session.ui?.scaleUp) session.ui.scaleUp.disabled = !hasSel;
+  if (session.ui?.scaleDown) session.ui.scaleDown.disabled = !hasSel;
   if (session.ui?.front) session.ui.front.disabled = !hasSel;
   if (session.ui?.back) session.ui.back.disabled = !hasSel;
   if (session.ui?.clearSel) session.ui.clearSel.disabled = !hasSel;
@@ -455,6 +458,17 @@ function setZoom(value) {
   updateZoomLabel();
 }
 
+/** @param {"width" | "page"} mode */
+function setFitMode(mode) {
+  if (mode !== "width" && mode !== "page") return;
+  session.fitMode = mode;
+  session.board?.setFitMode?.(mode);
+  for (const input of session.root?.querySelectorAll('input[name="edit-fit"]') ?? []) {
+    /** @type {HTMLInputElement} */ (input).checked = input.value === mode;
+  }
+  saveStylePrefs();
+}
+
 function syncInspectorFromSelection() {
   const obj = singleSelectedObject();
   const ui = session.ui;
@@ -463,7 +477,10 @@ function syncInspectorFromSelection() {
   try {
     if (obj?.type === "text") {
       ui.text.value = obj.text || "";
-      ui.textSize.value = String(obj.fontSize || 18);
+      const sizes = [12, 14, 16, 18, 24, 32, 48];
+      const current = Number(obj.fontSize) || 18;
+      const nearest = sizes.reduce((best, size) => (Math.abs(size - current) < Math.abs(best - current) ? size : best), 18);
+      ui.textSize.value = String(nearest);
       ui.textColor.value = obj.color || "#1E3A8A";
       ui.textBold.checked = Boolean(obj.bold);
       ui.textItalic.checked = Boolean(obj.italic);
@@ -511,6 +528,7 @@ function saveStylePrefs() {
       JSON.stringify({
         tool: /** @type {HTMLInputElement | null} */ (picked)?.value || "text",
         shape: activeShapeKind(),
+        fit: session.fitMode,
         textSize: ui.textSize.value,
         textColor: ui.textColor.value,
         bold: ui.textBold.checked,
@@ -547,6 +565,11 @@ function applySavedStyle() {
     const radio = session.root?.querySelector(`input[name="edit-shape"][value="${shape}"]`);
     if (radio instanceof HTMLInputElement) radio.checked = true;
   }
+  const fit = saved.fit === "page" ? "page" : "width";
+  session.fitMode = fit;
+  for (const input of session.root?.querySelectorAll('input[name="edit-fit"]') ?? []) {
+    /** @type {HTMLInputElement} */ (input).checked = input.value === fit;
+  }
   if (saved.textSize) ui.textSize.value = String(saved.textSize);
   if (saved.textColor) ui.textColor.value = saved.textColor;
   if (typeof saved.bold === "boolean") ui.textBold.checked = saved.bold;
@@ -572,6 +595,32 @@ const SHAPE_PRESETS = {
   cover: { fillOn: true, fill: "#FFFFFF", stroke: "#FFFFFF", strokeWidth: 0 }
 };
 
+function applyShapePreset(name) {
+  const style = name ? SHAPE_PRESETS[name] : null;
+  const ui = session.ui;
+  if (!style || !ui) return;
+  ui.fillOn.checked = style.fillOn;
+  ui.fillColor.value = style.fill;
+  ui.strokeColor.value = style.stroke;
+  ui.strokeWidth.value = String(style.strokeWidth);
+  ui.fillOn.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function closeAllPopovers() {
+  let closed = false;
+  for (const panel of session.root?.querySelectorAll("[data-pop-panel]") ?? []) {
+    if (!/** @type {HTMLElement} */ (panel).hidden) {
+      /** @type {HTMLElement} */ (panel).hidden = true;
+      closed = true;
+    }
+  }
+  return closed;
+}
+
+function anyPopoverOpen() {
+  return Boolean(session.root?.querySelector("[data-pop-panel]:not([hidden])"));
+}
+
 function updateStyleChips() {
   const root = session.root;
   const ui = session.ui;
@@ -583,8 +632,23 @@ function updateStyleChips() {
       input instanceof HTMLInputElement && input.value.toLowerCase() === /** @type {HTMLElement} */ (swatch).dataset.swatch?.toLowerCase()
     );
   }
-  for (const chip of root.querySelectorAll("[data-size-chip]")) {
-    chip.classList.toggle("is-active", ui.textSize.value === /** @type {HTMLElement} */ (chip).dataset.sizeChip);
+  // Color wells mirror their inputs; the shape-preset select mirrors the combo.
+  for (const well of root.querySelectorAll("[data-well]")) {
+    const input = document.getElementById(/** @type {HTMLElement} */ (well).dataset.well || "");
+    if (input instanceof HTMLInputElement) {
+      /** @type {HTMLElement} */ (well).style.setProperty("--well", input.value);
+    }
+  }
+  if (ui.shapePreset) {
+    const style = getStyle();
+    const match = Object.entries(SHAPE_PRESETS).find(
+      ([, preset]) =>
+        preset.fillOn === style.fillOn &&
+        preset.fill.toLowerCase() === style.fill.toLowerCase() &&
+        preset.stroke.toLowerCase() === style.stroke.toLowerCase() &&
+        preset.strokeWidth === style.strokeWidth
+    );
+    ui.shapePreset.value = match ? match[0] : "custom";
   }
 }
 
@@ -611,6 +675,12 @@ function applyInspectorToSelection() {
     obj.underline = style.underline;
     obj.align = style.align;
     session.board?.syncSelectedText?.(obj.text);
+    session.saved = false;
+    refresh();
+    // The box grows to fit: style changes can never clip (look "deleted").
+    session.board?.fitSelectedBox?.();
+    refresh(false);
+    return;
   } else if (obj.type === "ink") {
     obj.color = style.penColor;
     obj.strokeWidth = style.penWeight;
@@ -712,8 +782,7 @@ function duplicateObjects(ids) {
  * Move the selection one step through the paint order of its page.
  * @param {1 | -1} dir +1 paints later (on top), -1 paints earlier.
  */
-function reorderSelected(dir) {
-  const set = new Set(session.selectedIds);
+function reorderSelected(dir) {  const set = new Set(session.selectedIds);
   const targets = session.objects.filter((obj) => set.has(obj.id) && obj.pageIndex === session.pageIndex);
   if (!targets.length) return;
   breakChange();
@@ -734,6 +803,14 @@ function reorderSelected(dir) {
   }
   session.saved = false;
   refresh();
+}
+
+/** @param {number} factor >1 grows, <1 shrinks the whole selection */
+function scaleSelection(factor) {
+  if (!(factor > 0) || factor === 1 || !session.selectedIds.length) return;
+  pushHistory();
+  if (!session.board?.scaleSelected?.(factor)) discardLastHistory();
+  else session.saved = false;
 }
 
 function deleteSelected() {
@@ -855,7 +932,8 @@ function captureEditState() {
     saved: session.saved,
     history: session.history.map((step) => step.slice()),
     redoStack: session.redoStack.map((step) => step.slice()),
-    zoom: session.zoom
+    zoom: session.zoom,
+    fitMode: session.fitMode
   };
 }
 
@@ -870,11 +948,12 @@ async function restoreEditState(state) {
     session.pageIndex = 0;
     session.objects = [];
     session.selectedIds = [];
-    session.saved = true;
+  session.saved = true;
     session.history = [];
     session.redoStack = [];
     session.historyBatch = false;
     session.zoom = 1;
+    session.fitMode = "width";
     boardBytes = null;
     if (session.ui) {
       session.ui.drop.hidden = false;
@@ -899,12 +978,17 @@ async function restoreEditState(state) {
   session.redoStack = state.redoStack.map((step) => step.slice());
   session.historyBatch = false;
   session.zoom = state.zoom;
+  session.fitMode = state.fitMode === "page" ? "page" : "width";
   if (session.board) {
     if (boardBytes !== session.bytes) {
       boardBytes = session.bytes;
       await session.board.load(session.bytes);
     }
     session.board.setZoom?.(session.zoom);
+    session.board.setFitMode?.(session.fitMode);
+    for (const input of session.root?.querySelectorAll('input[name="edit-fit"]') ?? []) {
+      /** @type {HTMLInputElement} */ (input).checked = input.value === session.fitMode;
+    }
     updateZoomLabel();
     if (session.ui) {
       session.ui.drop.hidden = true;
@@ -985,6 +1069,27 @@ async function pickImage(file) {
   }
   try {
     const image = await rasterizeImageFile(file);
+    const pageIndex = session.board?.getPageIndex?.() ?? session.pageIndex;
+    // A single selected image is replaced in place; otherwise a new layer.
+    const current = singleSelectedObject();
+    if (current?.type === "image" && current.pageIndex === pageIndex) {
+      breakChange();
+      pushHistory();
+      const url = URL.createObjectURL(new Blob([image.bytes], { type: "image/png" }));
+      const oldUrl = current.url;
+      current.png = image.bytes;
+      current.url = url;
+      current.label = file.name;
+      current.aspect = image.width / Math.max(1, image.height);
+      current.height = current.width / current.aspect;
+      if (session.board?.visualWidth && session.board?.visualHeight) {
+        clampBox(current, session.board.visualWidth, session.board.visualHeight);
+      }
+      if (oldUrl && !session.objects.some((obj) => obj.url === oldUrl)) URL.revokeObjectURL(oldUrl);
+      session.saved = false;
+      refresh();
+      return;
+    }
     const pageW = session.board?.visualWidth || 400;
     const targetWidth = Math.min(180, pageW * 0.45);
     const aspect = image.width / Math.max(1, image.height);
@@ -993,7 +1098,7 @@ async function pickImage(file) {
     pushHistory();
     createObject({
       type: "image",
-      pageIndex: session.board?.getPageIndex?.() ?? session.pageIndex,
+      pageIndex,
       x: (pageW - targetWidth) / 2,
       y: 80,
       width: targetWidth,
@@ -1003,7 +1108,6 @@ async function pickImage(file) {
       url,
       label: file.name
     });
-    if (session.ui?.imageMeta) session.ui.imageMeta.textContent = file.name;
   } catch (error) {
     reportFailure(error, "تعذّر قراءة الصورة.");
   }
@@ -1041,6 +1145,10 @@ function onRootKey(event) {
   if (typing) return;
 
   if (event.key === "Escape") {
+    if (closeAllPopovers()) {
+      event.preventDefault();
+      return;
+    }
     if (session.selectedIds.length) {
       event.preventDefault();
       setSelectedIds([]);
@@ -1051,6 +1159,33 @@ function onRootKey(event) {
   if ((event.key === "Delete" || event.key === "Backspace") && session.selectedIds.length) {
     event.preventDefault();
     deleteSelected();
+    return;
+  }
+  if ((event.key === "+" || event.key === "=") && session.selectedIds.length) {
+    event.preventDefault();
+    scaleSelection(1.1);
+    return;
+  }
+  if ((event.key === "-" || event.key === "_") && session.selectedIds.length) {
+    event.preventDefault();
+    scaleSelection(1 / 1.1);
+    return;
+  }
+  if (event.key === "0" && !session.selectedIds.length) {
+    event.preventDefault();
+    setFitMode("width");
+    setZoom(1);
+    session.board?.fit?.();
+    return;
+  }
+  if (event.altKey && event.key === "ArrowUp" && session.selectedIds.length) {
+    event.preventDefault();
+    reorderSelected(1);
+    return;
+  }
+  if (event.altKey && event.key === "ArrowDown" && session.selectedIds.length) {
+    event.preventDefault();
+    reorderSelected(-1);
     return;
   }
   const step = event.shiftKey ? 8 : 1;
@@ -1142,6 +1277,7 @@ export function mount(rootEl) {
 
   wireIntake(signal);
   applySavedStyle();
+  session.board?.setFitMode?.(session.fitMode);
   showPanels();
   refresh();
 
@@ -1155,6 +1291,15 @@ export function mount(rootEl) {
         saveStylePrefs();
         return;
       }
+      if (target instanceof HTMLInputElement && target.name === "edit-fit") {
+        setFitMode(target.value === "page" ? "page" : "width");
+        return;
+      }
+      if (target instanceof HTMLSelectElement && target.id === "edit-shape-preset") {
+        applyShapePreset(target.value);
+        saveStylePrefs();
+        return;
+      }
       applyInspectorToSelection();
       saveStylePrefs();
     },
@@ -1164,29 +1309,29 @@ export function mount(rootEl) {
   rootEl.addEventListener(
     "click",
     (event) => {
+      const well = /** @type {HTMLElement} */ (event.target).closest?.("[data-well]");
+      if (well?.dataset.well) {
+        const panel = session.root?.querySelector(`[data-pop-panel="${well.dataset.well}"]`);
+        const willOpen = panel instanceof HTMLElement && panel.hidden;
+        closeAllPopovers();
+        if (panel instanceof HTMLElement && willOpen) panel.hidden = false;
+        return;
+      }
       const swatch = /** @type {HTMLElement} */ (event.target).closest?.("[data-swatch]");
       if (swatch?.dataset.for && swatch.dataset.swatch) {
         setStyleInput(swatch.dataset.for, swatch.dataset.swatch, "input");
         return;
       }
-      const chip = /** @type {HTMLElement} */ (event.target).closest?.("[data-size-chip]");
-      if (chip?.dataset.for && chip.dataset.sizeChip) {
-        setStyleInput(chip.dataset.for, chip.dataset.sizeChip, "input");
-        return;
-      }
-      const preset = /** @type {HTMLElement} */ (event.target).closest?.("[data-shape-preset]");
-      const style = preset?.dataset.shapePreset ? SHAPE_PRESETS[preset.dataset.shapePreset] : null;
-      const ui = session.ui;
-      if (!style || !ui) return;
-      ui.fillOn.checked = style.fillOn;
-      ui.fillColor.value = style.fill;
-      ui.strokeColor.value = style.stroke;
-      ui.strokeWidth.value = String(style.strokeWidth);
-      ui.fillOn.dispatchEvent(new Event("change", { bubbles: true }));
-      ui.fillColor.dispatchEvent(new Event("input", { bubbles: true }));
-      ui.strokeColor.dispatchEvent(new Event("input", { bubbles: true }));
-      ui.strokeWidth.dispatchEvent(new Event("input", { bubbles: true }));
-      saveStylePrefs();
+    },
+    { signal }
+  );
+
+  document.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (!anyPopoverOpen()) return;
+      if (/** @type {HTMLElement} */ (event.target).closest?.(".edit-pop")) return;
+      closeAllPopovers();
     },
     { signal }
   );
@@ -1208,17 +1353,19 @@ export function mount(rootEl) {
   session.ui.redo?.addEventListener("click", redo, { signal });
   session.ui.remove.addEventListener("click", deleteSelected, { signal });
   session.ui.dup?.addEventListener("click", () => duplicateObjects(session.selectedIds), { signal });
+  session.ui.scaleUp?.addEventListener("click", () => scaleSelection(1.1), { signal });
+  session.ui.scaleDown?.addEventListener("click", () => scaleSelection(1 / 1.1), { signal });
   session.ui.front?.addEventListener("click", () => reorderSelected(1), { signal });
   session.ui.back?.addEventListener("click", () => reorderSelected(-1), { signal });
   session.ui.clearSel?.addEventListener("click", () => {
     setSelectedIds([]);
     refresh();
   }, { signal });
-  session.ui.save.addEventListener("click", () => run(), { signal });
   session.ui.clear.addEventListener("click", () => closeDocument(), { signal });
   session.ui.prev.addEventListener("click", () => goTo(session.pageIndex - 1), { signal });
   session.ui.next.addEventListener("click", () => goTo(session.pageIndex + 1), { signal });
-  session.ui.imageBrowse.addEventListener("click", () => session.ui.imageInput.click(), { signal });
+  // The image button opens the picker directly: no intermediate bar.
+  session.ui.imageAdd.addEventListener("click", () => session.ui.imageInput.click(), { signal });
   session.ui.imageInput.addEventListener(
     "change",
     () => {
@@ -1231,10 +1378,6 @@ export function mount(rootEl) {
 
   session.ui.zoomIn?.addEventListener("click", () => setZoom(session.zoom + 0.15), { signal });
   session.ui.zoomOut?.addEventListener("click", () => setZoom(session.zoom - 0.15), { signal });
-  session.ui.zoomFit?.addEventListener("click", () => {
-    setZoom(1);
-    session.board?.fit?.();
-  }, { signal });
   setZoom(1);
 }
 
@@ -1257,6 +1400,8 @@ export function unmount() {
   session.size = 0;
   session.pageIndex = 0;
   session.saved = true;
+  session.zoom = 1;
+  session.fitMode = "width";
   const board = session.board;
   const root = session.root;
   session.board = null;

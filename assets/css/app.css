@@ -433,6 +433,8 @@ html.is-desktop[data-platform="linux"] .win-controls { display:flex; }
 /* edit is a full-height workspace: no page scroll, columns fill the viewport */
 .work:has(#view-edit.view--active) { display:grid; grid-template-rows: minmax(0,1fr); min-height:0; padding: 0; overflow:hidden; }
 #view-edit.view--active { display:flex; flex-direction:column; min-height:0; height:100%; }
+/* breathing room around the edit workspace so nothing sticks to the edges */
+#view-edit.view--active .edit { margin: var(--space-3); }
 
 /* view header */
 .view__head { max-width:none; margin-bottom: var(--space-5); text-align:start; }

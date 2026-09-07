@@ -1,5 +1,8 @@
 /**
- * Fit a PDF page into the edit pane so it FILLS the available area by default.
+ * Fit a PDF page into the edit pane. Two modes:
+ * - width (default): the page fills the content width, big and legible; the
+ *   user scrolls vertically. Whole-page visibility is NOT the priority.
+ * - page: the whole page is contained in the pane (classic fit).
  *
  * The board used to treat a hidden wrap (clientWidth/Height = 0) as an 80×80
  * box and then floor the CSS width at 120px. Un-hiding the workspace then
@@ -38,6 +41,18 @@ export function fitPageCssWidth(pageWidthPt, pageHeightPt, boxWidthPx, boxHeight
   if (!(fitted > 0)) return 0;
   if (boxWidthPx >= minPx && byHeight >= minPx) return Math.max(minPx, fitted);
   return fitted;
+}
+
+/**
+ * @param {number} pageWidthPt
+ * @param {number} boxWidthPx
+ * @param {{ maxScale?: number }} [options]
+ */
+export function fitWidthFillPx(pageWidthPt, boxWidthPx, options = {}) {
+  const maxScale = options.maxScale ?? MAX_FIT_SCALE;
+  if (!(pageWidthPt > 0)) return 0;
+  if (!(boxWidthPx >= MIN_BOX_PX)) return 0;
+  return Math.min(boxWidthPx, pageWidthPt * maxScale);
 }
 
 /**

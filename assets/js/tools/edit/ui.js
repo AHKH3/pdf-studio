@@ -19,10 +19,11 @@ const CSS = `
   flex: 1;
 }
 
-/* toolbar under the header */
+/* toolbar under the header: tools only, centered */
 .edit-toolbar {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-2);
   flex-wrap: wrap;
   padding: var(--space-2) var(--space-3);
@@ -33,16 +34,21 @@ const CSS = `
   align-items: center;
   gap: 4px;
   flex-wrap: wrap;
+  background: var(--surface-1);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-pill);
+  padding: 3px;
 }
 .edit-tools .choice span {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 12px;
+  padding: 7px 14px;
   font-size: 0.8rem;
   font-weight: 600;
   line-height: 1;
   border-radius: var(--radius-pill);
+  border-color: transparent;
 }
 .edit-tools .choice span .icon { width: 15px; height: 15px; }
 .edit-tools .choice input:checked + span {
@@ -50,9 +56,24 @@ const CSS = `
   color: #fff;
   border-color: var(--accent);
 }
-.edit-toolbar__sep { width: 1px; align-self: stretch; background: var(--border-soft); margin: 2px 4px; }
-.edit-toolbar__spacer { flex: 1; }
-.edit-toolbar .btn--compact { height: 32px; }
+.edit-tools .choice input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 1px; }
+.edit-toolbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+}
+.edit-toolbtn:hover { color: var(--accent); }
+.edit-toolbtn .icon { width: 15px; height: 15px; }
 
 /* contextual options bar under the toolbar */
 .edit-optbar {
@@ -65,7 +86,6 @@ const CSS = `
   background: var(--surface-1);
   min-height: 52px;
 }
-.edit-optbar:empty { display: none; }
 .edit-optbar [data-edit-panel] {
   display: flex;
   align-items: center;
@@ -76,9 +96,8 @@ const CSS = `
 }
 .edit-optbar [data-edit-panel][hidden] { display: none; }
 .edit-optbar .field { min-width: 0; }
-.edit-optbar .field label { font-size: 0.72rem; }
-.edit-optbar input[type="number"] { width: 64px; }
-.edit-optbar input[type="color"] { width: 34px; height: 30px; padding: 2px; }
+.edit-optbar select { height: 32px; max-width: 130px; }
+.edit-optbar input[type="number"] { width: 60px; height: 32px; }
 .edit-optbar textarea {
   flex: 1;
   min-width: 140px;
@@ -93,7 +112,6 @@ const CSS = `
   padding: 6px 10px;
   line-height: 1.5;
 }
-.edit-optbar select { height: 32px; }
 .edit-selcount { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
 .edit-kind {
   display: inline-flex;
@@ -112,11 +130,53 @@ const CSS = `
 }
 .edit-kind .choice input:checked + span { background: var(--accent); color: #fff; border-color: var(--accent); }
 
+/* color well + popover */
+.edit-pop { position: relative; display: inline-flex; }
+.edit-well {
+  width: 32px; height: 32px; padding: 3px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  cursor: pointer;
+  display: inline-flex;
+}
+.edit-well i { flex: 1; border-radius: 7px; background: var(--well, #1E3A8A); border: 1px solid rgba(15,23,42,0.18); }
+.edit-well:hover { border-color: var(--accent); }
+.edit-pop__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  inset-inline-start: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--surface-0, #fff);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  box-shadow: var(--shadow-soft);
+  min-width: 172px;
+}
+.edit-pop__panel[hidden] { display: none; }
+.edit-swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.edit-swatch {
+  width: 24px; height: 24px; padding: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(15,23,42,0.14);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.edit-swatch:hover { transform: scale(1.15); }
+.edit-swatch.is-active { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px var(--accent-soft); }
+.edit-custom { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.74rem; color: var(--text-muted); }
+.edit-custom input[type="color"] { width: 40px; height: 28px; padding: 2px; }
+
 /* ——— main: layers | preview | pages ——— */
 .edit-main {
   direction: ltr;
   display: grid;
   grid-template-columns: 248px minmax(0, 1fr) 196px;
+  gap: var(--space-3);
   flex: 1;
   min-height: 0;
 }
@@ -128,20 +188,29 @@ const CSS = `
   overflow: hidden;
   background: var(--surface-1);
 }
-.edit-side--layers { border-right: 1px solid var(--border-soft); }
-.edit-side--pages { border-left: 1px solid var(--border-soft); }
 .edit-side__head {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  gap: 4px;
+  padding: var(--space-2) var(--space-2);
   border-bottom: 1px solid var(--border-soft);
   flex: none;
 }
-.edit-side__title { font-size: 0.8rem; font-weight: 700; margin: 0; }
-.edit-side__count { font-size: 0.74rem; color: var(--text-muted); margin-inline-start: auto; }
+.edit-side__title { font-size: 0.8rem; font-weight: 700; margin: 0; padding-inline-start: 6px; }
+.edit-side__count { font-size: 0.74rem; color: var(--text-muted); }
+.edit-side__spacer { flex: 1; }
+.edit-iconbtn {
+  width: 28px; height: 28px;
+  display: inline-grid; place-items: center;
+  border: 0; border-radius: 8px;
+  background: transparent; color: var(--text-muted);
+  cursor: pointer;
+}
+.edit-iconbtn:hover:not(:disabled) { background: var(--surface-2); color: var(--ink); }
+.edit-iconbtn:disabled { opacity: 0.35; cursor: default; }
+.edit-iconbtn .icon { width: 15px; height: 15px; }
 .edit-side__pager { display: flex; align-items: center; gap: 6px; width: 100%; }
-.edit-side__pager .btn { flex: none; }
+.edit-side__pager .btn { flex: none; min-width: 0; padding: 0 8px; }
 .edit-side__pager .scan__count { flex: 1; text-align: center; }
 
 /* layers */
@@ -160,43 +229,6 @@ const CSS = `
   padding: 6px 4px 2px;
 }
 .edit-layers__page.is-current { color: var(--accent); }
-.edit-swatches { display: inline-flex; flex-wrap: wrap; gap: 6px; }
-.edit-swatch {
-  width: 22px; height: 22px; padding: 0;
-  border-radius: 50%;
-  border: 2px solid rgba(15,23,42,0.14);
-  cursor: pointer;
-  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
-}
-.edit-swatch:hover { transform: scale(1.15); }
-.edit-swatch.is-active { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px var(--accent-soft); }
-.edit-chips { display: inline-flex; flex-wrap: wrap; gap: 6px; }
-.edit-chip {
-  min-width: 32px; height: 26px; padding: 0 8px;
-  font-family: var(--data); font-size: 0.72rem; font-weight: 700;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border-strong);
-  background: var(--surface-2);
-  color: var(--ink-2);
-  cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
-}
-.edit-chip:hover { border-color: var(--accent); color: var(--accent); }
-.edit-chip.is-active { background: var(--accent); border-color: var(--accent-deep); color: #fff; }
-.edit-presets { display: inline-flex; flex-wrap: wrap; gap: 6px; }
-.edit-preset {
-  height: 30px; padding: 0 10px;
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  font-size: 0.74rem; font-weight: 600;
-  border-radius: 10px;
-  border: 1px solid var(--border-strong);
-  background: var(--surface-2);
-  color: var(--ink-2);
-  cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
-}
-.edit-preset:hover { border-color: var(--accent); color: var(--ink); }
-.edit-preset i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; border: 1px solid rgba(15,23,42,0.15); flex: none; }
 .edit-layer-row {
   display: grid;
   grid-template-columns: auto auto minmax(0,1fr) auto auto;
@@ -231,6 +263,8 @@ const CSS = `
   min-height: 0;
   min-width: 0;
   background: var(--surface-2);
+  border-radius: 12px;
+  overflow: hidden;
 }
 .edit-board-wrap {
   position: relative;
@@ -242,7 +276,7 @@ const CSS = `
   overflow: auto;
   overflow-anchor: none;
   scrollbar-gutter: stable;
-  padding: var(--space-5);
+  padding: var(--space-4);
 }
 .edit-board {
   position: relative;
@@ -314,6 +348,7 @@ const CSS = `
   white-space: pre-wrap;
   overflow: hidden;
   border-radius: 2px;
+  touch-action: none;
 }
 .edit-obj__text {
   display: flex;
@@ -399,31 +434,12 @@ const CSS = `
 }
 .edit-layer[data-tool="pen"] { cursor: crosshair; }
 .edit-layer[data-tool="text"] { cursor: text; }
-.edit-layer[data-tool="image"] { cursor: copy; }
 .edit-layer[data-tool="rect"],
 .edit-layer[data-tool="ellipse"],
 .edit-layer[data-tool="triangle"] { cursor: crosshair; }
-.edit-zoom {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--surface-1);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-pill);
-  padding: 4px 8px;
-  box-shadow: var(--shadow-soft);
-  z-index: 4;
-  direction: rtl;
-}
-.edit-zoom .btn { min-width: 30px; height: 28px; padding: 0 8px; }
-.edit-zoom-label { font-size: 0.74rem; min-width: 44px; text-align: center; }
 
 /* pages rail */
-.edit-pages { overflow-y: auto; padding: var(--space-2); display: flex; flex-direction: column; gap: var(--space-2); }
+.edit-pages { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-2); display: flex; flex-direction: column; gap: var(--space-2); }
 .edit-page {
   display: flex;
   flex-direction: column;
@@ -450,12 +466,42 @@ const CSS = `
 .edit-page__img canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
 .edit-page__num { font-size: 0.72rem; color: var(--text-muted); }
 .edit-page.is-active .edit-page__num { color: var(--accent); font-weight: 700; }
+.edit-pages__foot {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-2);
+  border-top: 1px solid var(--border-soft);
+}
+.edit-zoomrow { display: flex; align-items: center; gap: 4px; }
+.edit-zoomrow .btn { flex: 1; min-width: 0; padding: 0 4px; }
+.edit-zoom-label { font-size: 0.74rem; min-width: 44px; text-align: center; }
+.edit-fit {
+  display: flex;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-pill);
+  padding: 2px;
+  gap: 2px;
+}
+.edit-fit .choice { flex: 1; }
+.edit-fit .choice span {
+  display: block;
+  text-align: center;
+  padding: 4px 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+}
+.edit-fit .choice input:checked + span { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 @media (max-width: 1080px) {
-  .edit-main { grid-template-columns: 1fr; grid-template-rows: minmax(320px, 1fr) auto auto; }
+  .edit-main { grid-template-columns: 1fr; grid-template-rows: minmax(320px, 1fr) auto auto; overflow-y: auto; }
   .edit-side { max-height: 190px; border: 0; border-top: 1px solid var(--border-soft); }
   .edit-pages { flex-direction: row; overflow-x: auto; }
   .edit-page { flex: 0 0 108px; }
+  .edit-center { min-height: 340px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .edit-obj { transition: none; }
@@ -476,18 +522,24 @@ export function removeStyles() {
   document.getElementById(STYLE_ID)?.remove();
 }
 
-function icon(href) {
-  return `<svg class="icon" aria-hidden="true"><use href="#${href}"></use></svg>`;
+function icon(href, flip = false) {
+  return `<svg class="icon${flip ? " flip" : ""}" aria-hidden="true"><use href="#${href}"></use></svg>`;
 }
 
-export const INK_COLORS = ["#111827", "#1E3A8A", "#DC2626", "#059669", "#D97706", "#7C3AED", "#DB2777"];
-export const FILL_COLORS = ["#FDE68A", "#BBF7D0", "#BFDBFE", "#FBCFE8", "#FECACA", "#E5E7EB", "#FFFFFF"];
+export const INK_COLORS = ["#111827", "#1E3A8A", "#DC2626", "#059669", "#D97706", "#7C3AED"];
+export const FILL_COLORS = ["#FDE68A", "#BBF7D0", "#BFDBFE", "#FBCFE8", "#FECACA", "#FFFFFF"];
 export const TEXT_SIZES = [12, 14, 16, 18, 24, 32, 48];
 
-function swatches(forId, colors) {
-  return `<span class="edit-swatches">${colors
-    .map((c) => `<button type="button" class="edit-swatch" data-swatch="${c}" data-for="${forId}" style="background:${c}" aria-label="لون ${c}"></button>`)
-    .join("")}</span>`;
+function colorPop(id, value, colors, label) {
+  return `<span class="edit-pop" data-pop="${id}">
+    <button type="button" class="edit-well" data-well="${id}" aria-label="${label}" aria-haspopup="true"><i></i></button>
+    <span class="edit-pop__panel" data-pop-panel="${id}" hidden>
+      <span class="edit-swatches">${colors
+        .map((c) => `<button type="button" class="edit-swatch" data-swatch="${c}" data-for="${id}" style="background:${c}" aria-label="لون ${c}"></button>`)
+        .join("")}</span>
+      <label class="edit-custom">مخصص<input id="${id}" type="color" value="${value}" /></label>
+    </span>
+  </span>`;
 }
 
 function choice(name, value, label, iconHref, checked = false) {
@@ -517,20 +569,16 @@ export function buildUi(root) {
             ${choice("edit-tool", "text", "نص", "icon-file", true)}
             ${choice("edit-tool", "pen", "رسم", "icon-sign")}
             ${choice("edit-tool", "shapes", "الأشكال", "icon-crop")}
-            ${choice("edit-tool", "image", "صورة", "icon-images")}
+            <button id="edit-image-add" type="button" class="edit-toolbtn">${icon("icon-images")}<span>صورة</span></button>
           </div>
-          <span class="edit-toolbar__sep" aria-hidden="true"></span>
-          <button id="edit-undo" type="button" class="btn btn--compact" aria-label="تراجع">${icon("icon-rotate")} تراجع</button>
-          <button id="edit-redo" type="button" class="btn btn--compact" aria-label="إعادة">${icon("icon-rotate")} إعادة</button>
-          <span class="edit-toolbar__spacer"></span>
-          <button id="edit-clear" type="button" class="btn btn--compact btn--ghost">${icon("icon-close")} إغلاق</button>
-          <button id="edit-save" type="button" class="btn btn--compact btn--act">حفظ</button>
         </div>
 
         <div class="edit-optbar" id="edit-optbar">
           <div data-edit-panel="select">
             <span class="edit-selcount num" id="edit-sel-count"></span>
             <button id="edit-dup" type="button" class="btn btn--compact">${icon("icon-plus")} مضاعفة</button>
+            <button id="edit-scale-down" type="button" class="btn btn--compact" aria-label="تصغير المحدد">−</button>
+            <button id="edit-scale-up" type="button" class="btn btn--compact" aria-label="تكبير المحدد">+</button>
             <button id="edit-front" type="button" class="btn btn--compact">للأمام</button>
             <button id="edit-back" type="button" class="btn btn--compact">للخلف</button>
             <button id="edit-delete" type="button" class="btn btn--compact">${icon("icon-trash")} حذف</button>
@@ -539,12 +587,9 @@ export function buildUi(root) {
 
           <div data-edit-panel="text" hidden>
             <textarea id="edit-text" rows="2" maxlength="2000" aria-label="نص العنصر"></textarea>
-            <span class="field"><input id="edit-text-size" type="number" min="10" max="96" value="18" aria-label="حجم الخط" /></span>
-            <span class="edit-chips" role="group" aria-label="مقاسات">
-              ${TEXT_SIZES.map((s) => `<button type="button" class="edit-chip" data-size-chip="${s}" data-for="edit-text-size">${s}</button>`).join("")}
-            </span>
-            <span class="field"><input id="edit-text-color" type="color" value="#1E3A8A" aria-label="لون النص" /></span>
-            ${swatches("edit-text-color", INK_COLORS)}
+            <select id="edit-text-size" aria-label="حجم الخط">
+              ${TEXT_SIZES.map((s) => `<option value="${s}"${s === 18 ? " selected" : ""}>${s}</option>`).join("")}
+            </select>
             <label class="check"><input id="edit-text-bold" type="checkbox" />عريض</label>
             <label class="check"><input id="edit-text-italic" type="checkbox" />مائل</label>
             <label class="check"><input id="edit-text-underline" type="checkbox" />تسطير</label>
@@ -553,19 +598,17 @@ export function buildUi(root) {
               ${choice("edit-align", "center", "وسط", null, false)}
               ${choice("edit-align", "left", "يسار", null, false)}
             </span>
+            ${colorPop("edit-text-color", "#1E3A8A", INK_COLORS, "لون النص")}
           </div>
 
           <div data-edit-panel="pen" hidden>
-            <span class="field"><input id="edit-pen-color" type="color" value="#1E3A8A" aria-label="لون القلم" /></span>
-            ${swatches("edit-pen-color", INK_COLORS)}
-            <span class="field">
-              <select id="edit-pen-weight" aria-label="سمك القلم">
-                <option value="1.2">رفيع</option>
-                <option value="2.2" selected>متوسط</option>
-                <option value="4">سميك</option>
-                <option value="7">عريض</option>
-              </select>
-            </span>
+            ${colorPop("edit-pen-color", "#1E3A8A", INK_COLORS, "لون القلم")}
+            <select id="edit-pen-weight" aria-label="سمك القلم">
+              <option value="1.2">رفيع</option>
+              <option value="2.2" selected>متوسط</option>
+              <option value="4">سميك</option>
+              <option value="7">عريض</option>
+            </select>
           </div>
 
           <div data-edit-panel="shapes" hidden>
@@ -574,25 +617,17 @@ export function buildUi(root) {
               ${choice("edit-shape", "ellipse", "دائرة", null, false)}
               ${choice("edit-shape", "triangle", "مثلث", null, false)}
             </span>
-            <span class="edit-presets" role="group" aria-label="أنماط">
-              <button type="button" class="edit-preset" data-shape-preset="highlight"><i style="background:#FDE68A"></i>تظليل</button>
-              <button type="button" class="edit-preset" data-shape-preset="frame"><i style="background:#fff;border-color:#DC2626"></i>إطار</button>
-              <button type="button" class="edit-preset" data-shape-preset="fill"><i style="background:#BFDBFE"></i>تعبئة</button>
-              <button type="button" class="edit-preset" data-shape-preset="cover"><i style="background:#fff"></i>تغطية</button>
-            </span>
+            <select id="edit-shape-preset" aria-label="نمط الشكل">
+              <option value="custom" selected>مخصص</option>
+              <option value="highlight">تظليل</option>
+              <option value="frame">إطار</option>
+              <option value="fill">تعبئة</option>
+              <option value="cover">تغطية</option>
+            </select>
             <label class="check"><input id="edit-fill-on" type="checkbox" checked />تعبئة</label>
-            <span class="field"><input id="edit-fill-color" type="color" value="#8AA4E0" aria-label="لون التعبئة" /></span>
-            ${swatches("edit-fill-color", FILL_COLORS)}
-            <span class="field"><input id="edit-stroke-color" type="color" value="#1E3A8A" aria-label="لون الحد" /></span>
-            ${swatches("edit-stroke-color", INK_COLORS)}
-            <span class="field"><input id="edit-stroke-width" type="number" min="0" max="24" step="0.5" value="1.5" aria-label="سمك الحد" /></span>
-          </div>
-
-          <div data-edit-panel="image" hidden>
-            <button id="edit-image-browse" type="button" class="btn btn--compact">
-              ${icon("icon-upload")} اختيار صورة
-            </button>
-            <span class="edit-selcount" id="edit-image-meta"></span>
+            ${colorPop("edit-fill-color", "#8AA4E0", FILL_COLORS, "لون التعبئة")}
+            ${colorPop("edit-stroke-color", "#1E3A8A", INK_COLORS, "لون الحد")}
+            <input id="edit-stroke-width" type="number" min="0" max="24" step="0.5" value="1.5" aria-label="سمك الحد" />
           </div>
         </div>
 
@@ -601,6 +636,10 @@ export function buildUi(root) {
             <div class="edit-side__head">
               <h3 class="edit-side__title">الطبقات</h3>
               <span class="edit-side__count num" id="edit-layers-count"></span>
+              <span class="edit-side__spacer"></span>
+              <button id="edit-undo" type="button" class="edit-iconbtn" aria-label="تراجع" title="تراجع">${icon("icon-rotate")}</button>
+              <button id="edit-redo" type="button" class="edit-iconbtn" aria-label="إعادة" title="إعادة">${icon("icon-rotate", true)}</button>
+              <button id="edit-clear" type="button" class="edit-iconbtn" aria-label="إغلاق المستند" title="إغلاق">${icon("icon-close")}</button>
             </div>
             <div id="edit-layers" class="edit-layers" aria-label="قائمة الطبقات"></div>
           </aside>
@@ -612,23 +651,28 @@ export function buildUi(root) {
                 <div id="edit-layer" class="edit-layer" data-tool="text"></div>
               </div>
             </div>
-            <div class="edit-zoom">
-              <button id="edit-zoom-out" type="button" class="btn btn--compact" aria-label="تصغير">−</button>
-              <span class="num edit-zoom-label" id="edit-zoom-label">100%</span>
-              <button id="edit-zoom-in" type="button" class="btn btn--compact" aria-label="تكبير">+</button>
-              <button id="edit-zoom-fit" type="button" class="btn btn--compact" aria-label="ملء">ملء</button>
-            </div>
           </div>
 
           <aside class="edit-side edit-side--pages" aria-label="الصفحات">
             <div class="edit-side__head">
               <div class="edit-side__pager">
-                <button id="edit-prev" type="button" class="btn btn--compact" aria-label="السابقة">${icon("icon-arrow")}</button>
+                <button id="edit-prev" type="button" class="btn btn--compact" aria-label="السابقة">${icon("icon-arrow", true)}</button>
                 <span class="scan__count num" id="edit-count">1 / 1</span>
-                <button id="edit-next" type="button" class="btn btn--compact" aria-label="التالية"><svg class="icon flip" aria-hidden="true"><use href="#icon-arrow"></use></svg></button>
+                <button id="edit-next" type="button" class="btn btn--compact" aria-label="التالية">${icon("icon-arrow")}</button>
               </div>
             </div>
             <div id="edit-pages" class="edit-pages" role="list" aria-label="صفحات المستند"></div>
+            <div class="edit-pages__foot">
+              <div class="edit-zoomrow">
+                <button id="edit-zoom-out" type="button" class="btn btn--compact" aria-label="تصغير">−</button>
+                <span class="num edit-zoom-label" id="edit-zoom-label">100%</span>
+                <button id="edit-zoom-in" type="button" class="btn btn--compact" aria-label="تكبير">+</button>
+              </div>
+              <div class="edit-fit" role="radiogroup" aria-label="ملاءمة الصفحة">
+                ${choice("edit-fit", "width", "العرض", null, true)}
+                ${choice("edit-fit", "page", "صفحة", null, false)}
+              </div>
+            </div>
           </aside>
         </div>
       </div>
@@ -643,8 +687,7 @@ export function buildUi(root) {
     browse: root.querySelector("#edit-browse"),
     input: root.querySelector("#edit-input"),
     imageInput: root.querySelector("#edit-image-input"),
-    imageBrowse: root.querySelector("#edit-image-browse"),
-    imageMeta: root.querySelector("#edit-image-meta"),
+    imageAdd: root.querySelector("#edit-image-add"),
     workspace: root.querySelector("#edit-workspace"),
     optbar: root.querySelector("#edit-optbar"),
     canvas: root.querySelector("#edit-page"),
@@ -656,7 +699,6 @@ export function buildUi(root) {
     pages: root.querySelector("#edit-pages"),
     zoomIn: root.querySelector("#edit-zoom-in"),
     zoomOut: root.querySelector("#edit-zoom-out"),
-    zoomFit: root.querySelector("#edit-zoom-fit"),
     zoomLabel: root.querySelector("#edit-zoom-label"),
     layers: root.querySelector("#edit-layers"),
     layersCount: root.querySelector("#edit-layers-count"),
@@ -669,6 +711,7 @@ export function buildUi(root) {
     textUnderline: root.querySelector("#edit-text-underline"),
     penColor: root.querySelector("#edit-pen-color"),
     penWeight: root.querySelector("#edit-pen-weight"),
+    shapePreset: root.querySelector("#edit-shape-preset"),
     fillOn: root.querySelector("#edit-fill-on"),
     fillColor: root.querySelector("#edit-fill-color"),
     strokeColor: root.querySelector("#edit-stroke-color"),
@@ -676,11 +719,12 @@ export function buildUi(root) {
     undo: root.querySelector("#edit-undo"),
     redo: root.querySelector("#edit-redo"),
     dup: root.querySelector("#edit-dup"),
+    scaleDown: root.querySelector("#edit-scale-down"),
+    scaleUp: root.querySelector("#edit-scale-up"),
     front: root.querySelector("#edit-front"),
     back: root.querySelector("#edit-back"),
     clearSel: root.querySelector("#edit-clear-sel"),
     remove: root.querySelector("#edit-delete"),
-    save: root.querySelector("#edit-save"),
     clear: root.querySelector("#edit-clear")
   };
 }

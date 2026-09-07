@@ -19,7 +19,7 @@ import {
   worldToLocal
 } from "./coords.js";
 import { FONT } from "./text-png.js";
-import { MIN_BOX_PX, fitPageCssWidth, stabilizeFitPx } from "./fit.js";
+import { MIN_BOX_PX, fitPageCssWidth, fitWidthFillPx, stabilizeFitPx } from "./fit.js";
 
 const CORNER_HANDLES = ["nw", "ne", "sw", "se"];
 const FREE_HANDLES = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
@@ -75,6 +75,8 @@ export function createBoard(options) {
   let marquee = null;
   let zoom = 1;
   let fitPx = 0;
+  /** "width": page fills the content width (default). "page": whole page contained. */
+  let fitMode = "width";
   let hiResTimer = 0;
   const MIN_ZOOM = 0.5;
   const MAX_ZOOM = 2.5;
@@ -109,11 +111,12 @@ export function createBoard(options) {
     };
   }
 
-  /** CSS px per pt at zoom 1 — fit the page into the visible wrap (fills it). */
+  /** CSS px per pt at zoom 1 — width-fill by default, whole-page on demand. */
   function computeFitPx() {
     if (!visualWidth || !visualHeight) return 0;
     const { w, h } = availableBox();
-    return fitPageCssWidth(visualWidth, visualHeight, w, h);
+    if (fitMode === "page") return fitPageCssWidth(visualWidth, visualHeight, w, h);
+    return fitWidthFillPx(visualWidth, w);
   }
 
   /**
@@ -342,7 +345,6 @@ export function createBoard(options) {
           area.value = obj.text || "";
           area.dir = "rtl";
           area.maxLength = 2000;
-          area.addEventListener("pointerdown", (event) => event.stopPropagation());
           area.addEventListener("keydown", (event) => {
             if (event.key === "Escape") {
               event.preventDefault();
@@ -564,7 +566,37 @@ export function createBoard(options) {
   }
 
   function pointerDown(event) {
-    if (event.target instanceof HTMLTextAreaElement) return;
+    // Text editing vs text moving is decided by a movement threshold: a press
+    // that stays put becomes a caret click, a press that travels moves the box.
+    if (event.target instanceof HTMLTextAreaElement) {
+      const node = event.target.closest?.(".edit-obj");
+      const obj = node && getObjects().find((item) => item.id === node.dataset.id);
+      if (!obj) return;
+      event.preventDefault();
+      if (!getSelectedIds().includes(obj.id)) {
+        setSelectedIds([obj.id]);
+        paintOverlay();
+      }
+      layer.setPointerCapture(event.pointerId);
+      onHistory();
+      drag = {
+        pointerId: event.pointerId,
+        mode: "move",
+        textPending: true,
+        caretX: event.clientX,
+        caretY: event.clientY,
+        origin: {
+          ...obj,
+          points: obj.points ? obj.points.map((point) => ({ ...point })) : undefined
+        },
+        startX: event.clientX,
+        startY: event.clientY,
+        dirty: false,
+        historyPushed: true
+      };
+      onChange();
+      return;
+    }
     const tool = getTool();
     const visual = clientToVisual(event.clientX, event.clientY);
     const handle = event.target.closest?.("[data-handle]");
@@ -753,6 +785,11 @@ export function createBoard(options) {
     event.preventDefault();
     const visual = clientToVisual(event.clientX, event.clientY);
 
+    if (drag.textPending) {
+      if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) <= 6) return;
+      drag.textPending = false;
+    }
+
     if (drag.mode === "marquee") {
       drag.box = updateMarquee(drag.start, visual);
       return;
@@ -926,6 +963,32 @@ export function createBoard(options) {
     }
 
     if (mode === "move-group" || mode === "move" || mode === "rotate" || FREE_HANDLES.includes(mode)) {
+      if (drag.textPending) {
+        // A press that never travelled: plain caret click, no history, no move.
+        const { caretX, caretY, origin } = drag;
+        drag = null;
+        onDiscardHistory?.();
+        paintOverlay();
+        const node = layer.querySelector(`[data-id="${origin.id}"]`);
+        const area = node?.querySelector("textarea");
+        if (area instanceof HTMLTextAreaElement) {
+          area.focus({ preventScroll: true });
+          try {
+            const range = document.caretRangeFromPoint?.(caretX, caretY);
+            if (range) {
+              const sel = getSelection();
+              sel?.removeAllRanges();
+              sel?.addRange(range);
+            } else {
+              area.selectionStart = area.value.length;
+            }
+          } catch {
+            area.selectionStart = area.value.length;
+          }
+        }
+        onChange();
+        return;
+      }
       if (!drag.dirty && drag.historyPushed) onDiscardHistory?.();
       drag = null;
       paintOverlay();
@@ -1063,6 +1126,20 @@ export function createBoard(options) {
     getZoom() {
       return zoom;
     },
+    getFitMode() {
+      return fitMode;
+    },
+    /** Switch width-fill / whole-page and recompute the fit base. */
+    setFitMode(mode) {
+      if (mode !== "width" && mode !== "page") return fitMode;
+      if (mode === fitMode) return fitMode;
+      fitMode = mode;
+      fitPx = 0;
+      applySize();
+      paintOverlay();
+      scheduleHiRes();
+      return fitMode;
+    },
     /** Re-fit the page into the wrap at zoom 1 (recomputes the fit base). */
     fit() {
       fitPx = 0;
@@ -1097,6 +1174,62 @@ export function createBoard(options) {
     focusSelectedText() {
       const area = layer.querySelector(".edit-obj.is-selected textarea");
       if (area instanceof HTMLTextAreaElement) area.focus();
+    },
+    /**
+     * Grow the single selected text box so its content fits after a style
+     * change (size/bold/italic). Without this the text clips and looks deleted.
+     */
+    fitSelectedBox() {
+      const ids = getSelectedIds();
+      if (ids.length !== 1) return;
+      const obj = getObjects().find((item) => item.id === ids[0]);
+      if (!obj || obj.type !== "text") return;
+      const node = layer.querySelector(`[data-id="${obj.id}"]`);
+      const area = node?.querySelector("textarea");
+      if (area instanceof HTMLTextAreaElement) growTextArea(area, obj);
+    },
+    /**
+     * Scale every selected layer on the current page around their union
+     * center. Points of ink strokes scale too. Returns false when nothing
+     * could move (caller keeps/discards its history entry).
+     * @param {number} factor
+     */
+    scaleSelected(factor) {
+      if (!(factor > 0) || factor === 1) return false;
+      const targets = getObjects().filter(
+        (item) => getSelectedIds().includes(item.id) && item.pageIndex === pageIndex
+      );
+      if (!targets.length) return false;
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+      for (const obj of targets) {
+        minX = Math.min(minX, obj.x);
+        minY = Math.min(minY, obj.y);
+        maxX = Math.max(maxX, obj.x + obj.width);
+        maxY = Math.max(maxY, obj.y + obj.height);
+      }
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      for (const obj of targets) {
+        const width = Math.max(MIN_PT, obj.width * factor);
+        const height = Math.max(MIN_PT, obj.height * factor);
+        const ncx = cx + (obj.x + obj.width / 2 - cx) * factor;
+        const ncy = cy + (obj.y + obj.height / 2 - cy) * factor;
+        const next = { x: ncx - width / 2, y: ncy - height / 2, width, height };
+        clampBox(next, visualWidth, visualHeight);
+        if (obj.points) {
+          obj.points = obj.points.map((point) => ({
+            x: cx + (point.x - cx) * factor,
+            y: cy + (point.y - cy) * factor
+          }));
+        }
+        Object.assign(obj, next);
+      }
+      paintOverlay();
+      onChange();
+      return true;
     },
     /** Mirror side-panel text into the on-canvas textarea (when not focused). */
     syncSelectedText(value) {

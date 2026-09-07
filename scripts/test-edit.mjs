@@ -11,7 +11,7 @@ import {
   visualPointToMedia,
   visualRectToMedia
 } from "../assets/js/tools/edit/coords.js";
-import { MAX_FIT_SCALE, fitPageCssWidth, stabilizeFitPx } from "../assets/js/tools/edit/fit.js";
+import { MAX_FIT_SCALE, fitPageCssWidth, fitWidthFillPx, stabilizeFitPx } from "../assets/js/tools/edit/fit.js";
 
 let failures = 0;
 let checks = 0;
@@ -165,12 +165,22 @@ console.log("\nedit fit (page fills the pane by default, no first-open jump)");
     "roomy pane upscales past 1:1 so the page fills its area",
     fitPageCssWidth(A4W, A4H, 1600, 1200) > A4W,
     String(fitPageCssWidth(A4W, A4H, 1600, 1200))
-  );
-  check(
+  );  check(
     "upscale is capped so absurd panes cannot explode memory",
     fitPageCssWidth(A4W, A4H, 9000, 9000) <= A4W * MAX_FIT_SCALE + 1,
     String(fitPageCssWidth(A4W, A4H, 9000, 9000))
   );
+
+  // Default view: width-fill — big and legible, not whole-page-first.
+  check("width-fill matches a narrow pane exactly", fitWidthFillPx(A4W, 660) === 660);
+  check("width-fill of a small pane is exact, never forced up", fitWidthFillPx(A4W, 300) === 300);
+  check("width-fill of a wide pane upscales past 1:1", fitWidthFillPx(A4W, 1200) === 1200);
+  check(
+    "width-fill is capped",
+    fitWidthFillPx(A4W, 9000) <= A4W * MAX_FIT_SCALE + 1,
+    String(fitWidthFillPx(A4W, 9000))
+  );
+  check("width-fill of a hidden wrap is 0", fitWidthFillPx(A4W, 0) === 0);
 
   check(
     "stabilize ignores 1px jitter that used to retrigger ResizeObserver",
@@ -291,19 +301,35 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
   );
 
   const templateIds = new Set((uiSrc.match(/id="([\w-]+)"/g) || []).map((m) => m.slice(4, -1)));
+  // colorPop(id, …) stamps its input id via interpolation — count those too.
+  for (const m of uiSrc.matchAll(/colorPop\("([\w-]+)"/g)) templateIds.add(m[1]);
   const queriedIds = new Set((uiSrc.match(/querySelector\("#([\w-]+)"\)/g) || []).map((m) => m.match(/#([\w-]+)/)[1]));
   const dangling = [...queriedIds].filter((id) => !templateIds.has(id));
   check("every querySelector id exists in the template", dangling.length === 0, dangling.join(","));
 
-  // One tool, one settings bar: shapes (all kinds) share a single panel.
+  // Four tools, four settings bars: image is an action button, not a mode.
   const panels = (uiSrc.match(/data-edit-panel="(\w+)"/g) || []).map((m) => m.match(/"(\w+)"/)[1]);
   check(
-    "panels are exactly select/text/pen/shapes/image",
-    JSON.stringify([...new Set(panels)].sort()) === JSON.stringify(["image", "pen", "select", "shapes", "text"]),
+    "panels are exactly select/text/pen/shapes",
+    JSON.stringify([...new Set(panels)].sort()) === JSON.stringify(["pen", "select", "shapes", "text"]),
     panels.join(",")
   );
   check("no rect/ellipse/triangle tool radios remain", !/name="edit-tool"[^>]*value="(rect|ellipse|triangle)"/.test(uiSrc));
   check("no usage-instruction text in the edit template", !/(يظهر فوراً|اسحب الزوايا|لطيفة|💡|لطبقة فوق|الناتج PDF)/.test(uiSrc));
+  check("image is a direct action button, not a radio", /id="edit-image-add"[^>]*class="edit-toolbtn"/.test(uiSrc) && !/name="edit-tool"[^>]*value="image"/.test(uiSrc));
+  check("no top save button (the bottom bar owns saving)", !/id="edit-save"/.test(uiSrc));
+  check("font size is one select, not number+chips", /<select id="edit-text-size"/.test(uiSrc) && !/data-size-chip/.test(uiSrc));
+  check("shape presets are one select", /<select id="edit-shape-preset"/.test(uiSrc) && !/data-shape-preset/.test(uiSrc));
+  check("colors live in popovers behind wells (4 colorPop wells)", (uiSrc.match(/colorPop\("/g) || []).length === 4);
+  check("bulk scale buttons exist", /id="edit-scale-up"/.test(uiSrc) && /id="edit-scale-down"/.test(uiSrc));
+  check("fit mode switch exists (width default)", /choice\("edit-fit", "width"/.test(uiSrc) && /choice\("edit-fit", "page"/.test(uiSrc));
+  check("undo/redo icons differ (redo is flipped)", /\$\{icon\("icon-rotate", true\)\}/.test(uiSrc));
+  const prevHtml = (uiSrc.match(/id="edit-prev"[\s\S]*?<\/button>/) || [""])[0];
+  const nextHtml = (uiSrc.match(/id="edit-next"[\s\S]*?<\/button>/) || [""])[0];
+  check(
+    "edit pager follows RTL (prev flipped, next plain)",
+    prevHtml.includes('icon("icon-arrow", true)') && nextHtml.includes('icon("icon-arrow")') && !nextHtml.includes(", true")
+  );
 
   // No big container may group a page's elements again: .view__body stays flat
   // and .view stays full-width on every tool page.

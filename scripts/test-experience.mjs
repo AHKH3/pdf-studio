@@ -2,6 +2,9 @@
  * Behaviour checks for experience polish: ranges, ZIP (Arabic names),
  * error mapping. No DOM. Run via npm test.
  */
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { friendlyMessage, isEncryptedError, isPasswordError } from "../assets/js/lib/errors.js";
 import { humanSize } from "../assets/js/lib/files.js";
 import { pad, parseRanges, rangesToIndexes, uniqueIndexes } from "../assets/js/lib/ranges.js";
@@ -102,6 +105,26 @@ group("humanSize", () => {
   check("kilobytes", humanSize(2048) === "2 KB");
   check("megabytes", humanSize(2.5 * 1024 * 1024) === "2.5 MB");
   check("empty", humanSize(0) === "—");
+});
+
+group("pager arrows (RTL)", () => {
+  // icon-arrow points left natively (ArrowLeft01Icon): prev must flip (→), next stays (←).
+  const root = dirname(dirname(fileURLToPath(import.meta.url)));
+  const html = readFileSync(join(root, "index.html"), "utf8");
+  const arrowFlipped = (id) => {
+    const btn = html.match(new RegExp(`<button[^>]*id="${id}"[^>]*>([\\s\\S]*?)</button>`));
+    if (!btn) return null;
+    const svg = btn[1].match(/<svg[^>]*class="([^"]*)"[^>]*>\s*<use href="#icon-arrow"/);
+    return svg ? svg[1].split(/\s+/).includes("flip") : null;
+  };
+  check("scan-prev points right (flip)", arrowFlipped("scan-prev") === true);
+  check("scan-next points left (no flip)", arrowFlipped("scan-next") === false);
+  check("file-preview-prev points right (flip)", arrowFlipped("file-preview-prev") === true);
+  check("file-preview-next points left (no flip)", arrowFlipped("file-preview-next") === false);
+  check(
+    "crop pager has no arrow icons to flip",
+    arrowFlipped("crop-prev") === null && arrowFlipped("crop-next") === null
+  );
 });
 
 console.log(`\n${checks - failures}/${checks} checks passed`);
