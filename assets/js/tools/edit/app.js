@@ -110,7 +110,7 @@ function activeTool() {
   const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "text";
   if (value === "shapes") return activeShapeKind();
   if (value === "rect" || value === "ellipse" || value === "triangle") return value;
-  if (value === "select" || value === "pen" || value === "image") return value;
+  if (value === "select" || value === "pen") return value;
   return "text";
 }
 
@@ -118,7 +118,7 @@ function activePanel() {
   const picked = session.root?.querySelector('input[name="edit-tool"]:checked');
   const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "text";
   if (value === "rect" || value === "ellipse" || value === "triangle" || value === "shapes") return "shapes";
-  if (value === "select" || value === "pen" || value === "image" || value === "text") return value;
+  if (value === "select" || value === "pen" || value === "text") return value;
   return "text";
 }
 
@@ -1063,7 +1063,6 @@ async function pickImage(file) {
       url,
       label: file.name
     });
-    if (session.ui?.imageMeta) session.ui.imageMeta.textContent = file.name;
   } catch (error) {
     reportFailure(error, "تعذّر قراءة الصورة.");
   }
@@ -1310,12 +1309,7 @@ export function mount(rootEl) {
   session.ui.clear.addEventListener("click", () => closeDocument(), { signal });
   session.ui.prev.addEventListener("click", () => goTo(session.pageIndex - 1), { signal });
   session.ui.next.addEventListener("click", () => goTo(session.pageIndex + 1), { signal });
-  session.ui.imageBrowse.addEventListener("click", () => session.ui.imageInput.click(), { signal });
-  // The toolbar image tool opens the picker immediately: no intermediate step.
-  // (The panel browse button stays as a fallback, e.g. for keyboard users.)
-  rootEl
-    .querySelector('input[name="edit-tool"][value="image"]')
-    ?.addEventListener("click", () => session.ui.imageInput.click(), { signal });
+  session.ui.imageAdd.addEventListener("click", () => session.ui.imageInput.click(), { signal });
   session.ui.imageInput.addEventListener(
     "change",
     () => {

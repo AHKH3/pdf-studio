@@ -307,19 +307,21 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
   const dangling = [...queriedIds].filter((id) => !templateIds.has(id));
   check("every querySelector id exists in the template", dangling.length === 0, dangling.join(","));
 
-  // Five tools, five settings bars: the bars below are the approved layout.
+  // Four tools, four settings bars. Image is a direct action: no tool radio,
+  // no panel, no extra button — its toolbar button opens the picker at once.
   const panels = (uiSrc.match(/data-edit-panel="(\w+)"/g) || []).map((m) => m.match(/"(\w+)"/)[1]);
   check(
-    "panels are exactly select/text/pen/shapes/image",
-    JSON.stringify([...new Set(panels)].sort()) === JSON.stringify(["image", "pen", "select", "shapes", "text"]),
+    "panels are exactly select/text/pen/shapes",
+    JSON.stringify([...new Set(panels)].sort()) === JSON.stringify(["pen", "select", "shapes", "text"]),
     panels.join(",")
   );
   check("no rect/ellipse/triangle tool radios remain", !/name="edit-tool"[^>]*value="(rect|ellipse|triangle)"/.test(uiSrc));
   check("no usage-instruction text in the edit template", !/(يظهر فوراً|اسحب الزوايا|لطيفة|💡|لطبقة فوق|الناتج PDF)/.test(uiSrc));
-  check("image is a tool radio with a browse panel", /choice\("edit-tool", "image"/.test(uiSrc) && /id="edit-image-browse"/.test(uiSrc));
+  check("image is a direct action button, not a radio", /id="edit-image-add"[^>]*class="edit-toolbtn"/.test(uiSrc) && !/name="edit-tool"[^>]*value="image"/.test(uiSrc));
+  check("no extra image browse button anywhere", !/edit-image-browse/.test(uiSrc));
   check(
-    "toolbar image opens the picker directly on click",
-    /value="image"\]'\)[\s\S]{0,200}imageInput\.click\(\)/.test(appSrc)
+    "toolbar image button opens the picker directly",
+    /imageAdd\.addEventListener\("click"[^;]*imageInput\.click\(\)/.test(appSrc)
   );
   check("top save button exists", /id="edit-save"/.test(uiSrc));
   check("font size is number input plus chips", /<input id="edit-text-size"[^>]*type="number"/.test(uiSrc) && /data-size-chip/.test(uiSrc));

@@ -50,6 +50,23 @@ const CSS = `
   color: #fff;
   border-color: var(--accent);
 }
+.edit-toolbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+}
+.edit-toolbtn:hover { color: var(--accent); }
+.edit-toolbtn .icon { width: 15px; height: 15px; }
 .edit-toolbar__sep { width: 1px; align-self: stretch; background: var(--border-soft); margin: 2px 4px; }
 .edit-toolbar__spacer { flex: 1; }
 .edit-toolbar .btn--compact { height: 32px; }
@@ -530,7 +547,7 @@ export function buildUi(root) {
             ${choice("edit-tool", "text", "نص", "icon-file", true)}
             ${choice("edit-tool", "pen", "رسم", "icon-sign")}
             ${choice("edit-tool", "shapes", "الأشكال", "icon-crop")}
-            ${choice("edit-tool", "image", "صورة", "icon-images")}
+            <button id="edit-image-add" type="button" class="edit-toolbtn">${icon("icon-images")}<span>صورة</span></button>
           </div>
           <span class="edit-toolbar__sep" aria-hidden="true"></span>
           <button id="edit-undo" type="button" class="btn btn--compact" aria-label="تراجع">${icon("icon-rotate")} تراجع</button>
@@ -600,13 +617,6 @@ export function buildUi(root) {
             ${swatches("edit-stroke-color", INK_COLORS)}
             <span class="field"><input id="edit-stroke-width" type="number" min="0" max="24" step="0.5" value="1.5" aria-label="سمك الحد" /></span>
           </div>
-
-          <div data-edit-panel="image" hidden>
-            <button id="edit-image-browse" type="button" class="btn btn--compact">
-              ${icon("icon-upload")} اختيار صورة
-            </button>
-            <span class="edit-selcount" id="edit-image-meta"></span>
-          </div>
         </div>
 
         <div class="edit-main">
@@ -661,8 +671,7 @@ export function buildUi(root) {
     browse: root.querySelector("#edit-browse"),
     input: root.querySelector("#edit-input"),
     imageInput: root.querySelector("#edit-image-input"),
-    imageBrowse: root.querySelector("#edit-image-browse"),
-    imageMeta: root.querySelector("#edit-image-meta"),
+    imageAdd: root.querySelector("#edit-image-add"),
     workspace: root.querySelector("#edit-workspace"),
     optbar: root.querySelector("#edit-optbar"),
     canvas: root.querySelector("#edit-page"),
