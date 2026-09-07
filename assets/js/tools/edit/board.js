@@ -2,12 +2,11 @@
  * Interactive page board for the edit overlay.
  * Object rectangles live in visual PDF space (origin bottom-left, upright).
  *
- * Selection model: every tool manipulates objects directly (click moves,
- * handles resize/rotate, text focuses for typing). The select tool never
- * activates itself — it only multi-selects (click / ctrl-click / marquee)
- * so several layers can be moved, duplicated or deleted together.
- * The select tool is also the default: with no creation tool armed, the
- * mouse alone selects, moves, resizes and rotates any object on the page.
+ * Selection model: no tool is armed by default — the mouse alone selects,
+ * moves, resizes and rotates any object on the page. Creation tools
+ * (text/pen/shapes) only add new objects on empty space; the select tool
+ * adds multi-select gestures (ctrl-click / marquee) so several layers can
+ * be bulk-moved, duplicated or deleted together.
  *
  * Cursor contract (tool-independent, follows the hovered capability):
  * .edit-obj shows grab, move drags add .is-grabbing (grabbing) on the

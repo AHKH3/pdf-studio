@@ -330,12 +330,21 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
     "toolbar image button opens the picker directly",
     /imageAdd\.addEventListener\("click"[^;]*imageInput\.click\(\)/.test(appSrc)
   );
-  // Mouse-first: select is the default tool, any object is grabbable under
-  // any tool, and cursors always follow the hovered capability.
+  // Mouse-first: NO tool armed by default — the mouse alone manipulates,
+  // tools are picked only to create, and re-clicking disarms back to none.
   check(
-    "default tool is select (mouse manipulates, tools only create)",
-    /choice\("edit-tool", "select", "تحديد", "icon-quad", true\)/.test(uiSrc) &&
-      !/choice\("edit-tool", "text", "نص", "icon-file", true\)/.test(uiSrc)
+    "no tool armed by default (mouse-only until a tool is picked)",
+    !/choice\("edit-tool"[^)]*, true\)/.test(uiSrc) && /if \(!value\) return ""/.test(appSrc)
+  );
+  check("disarmed board shows the bulk/selection bar", /if \(!value\) return "select"/.test(appSrc));
+  check(
+    "re-clicking the armed tool disarms it",
+    /wasChecked/.test(appSrc) && /Re-clicking the armed tool disarms it\./.test(appSrc)
+  );
+  check("escape with empty selection disarms back to mouse-only", /Nothing selected: disarm back to mouse-only\./.test(appSrc));
+  check(
+    "last tool is never armed on load (legacy prefs may only feed shape kind)",
+    !/edit-tool"\]\[value=/.test(appSrc) && !/name="edit-tool"[^)]*checked\s*=\s*true/.test(appSrc)
   );
   check("objects show a grab hand under any tool", /\.edit-obj\s*\{[^}]*cursor:\s*grab/.test(uiSrc));
   check(

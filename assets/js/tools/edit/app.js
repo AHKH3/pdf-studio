@@ -107,7 +107,9 @@ function activeShapeKind() {
 
 function activeTool() {
   const picked = session.root?.querySelector('input[name="edit-tool"]:checked');
-  const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "select";
+  const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "";
+  // Disarmed (the default): mouse-only, no creation gesture armed.
+  if (!value) return "";
   if (value === "shapes") return activeShapeKind();
   if (value === "rect" || value === "ellipse" || value === "triangle") return value;
   if (value === "select" || value === "pen") return value;
@@ -116,10 +118,12 @@ function activeTool() {
 
 function activePanel() {
   const picked = session.root?.querySelector('input[name="edit-tool"]:checked');
-  const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "select";
+  const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "";
+  // Disarmed: the bulk/selection bar stays up (disabled while empty).
+  if (!value) return "select";
   if (value === "rect" || value === "ellipse" || value === "triangle" || value === "shapes") return "shapes";
   if (value === "select" || value === "pen" || value === "text") return value;
-  return "text";
+  return "select";
 }
 
 function activeAlign() {
@@ -518,11 +522,9 @@ function saveStylePrefs() {
   const ui = session.ui;
   if (!ui) return;
   try {
-    const picked = session.root?.querySelector('input[name="edit-tool"]:checked');
     localStorage.setItem(
       STYLE_KEY,
       JSON.stringify({
-        tool: /** @type {HTMLInputElement | null} */ (picked)?.value || "select",
         shape: activeShapeKind(),
         fit: session.fitMode,
         textSize: ui.textSize.value,
@@ -548,14 +550,7 @@ function applySavedStyle() {
   const ui = session.ui;
   const saved = loadStylePrefs();
   if (!ui || !saved) return;
-  if (saved.tool) {
-    const radio = session.root?.querySelector(`input[name="edit-tool"][value="${saved.tool}"]`);
-    if (radio instanceof HTMLInputElement) radio.checked = true;
-    else if (saved.tool === "rect" || saved.tool === "ellipse" || saved.tool === "triangle") {
-      const shapes = session.root?.querySelector('input[name="edit-tool"][value="shapes"]');
-      if (shapes instanceof HTMLInputElement) shapes.checked = true;
-    }
-  }
+  // The armed tool is never restored: every open starts mouse-only.
   const shape = saved.shape === "ellipse" || saved.shape === "triangle" ? saved.shape : saved.tool;
   if (shape === "rect" || shape === "ellipse" || shape === "triangle") {
     const radio = session.root?.querySelector(`input[name="edit-shape"][value="${shape}"]`);
@@ -605,6 +600,51 @@ function updateStyleChips() {
   for (const chip of root.querySelectorAll("[data-size-chip]")) {
     chip.classList.toggle("is-active", ui.textSize.value === /** @type {HTMLElement} */ (chip).dataset.sizeChip);
   }
+  updateShapePanel();
+}
+
+/** Mini schematic of the current shape style (kind + fill + stroke). */
+function shapePreviewSvg(kind, style) {
+  const fill = style.fillOn ? style.fill : "none";
+  const stroke = style.strokeWidth > 0 ? style.stroke : "none";
+  const sw = style.strokeWidth > 0 ? Math.min(5, Math.max(1.25, style.strokeWidth)) : 0;
+  const attrs = `fill="${fill}" stroke="${stroke}" stroke-width="${sw}"`;
+  const body =
+    kind === "ellipse"
+      ? `<ellipse cx="23" cy="17" rx="18" ry="12" ${attrs}/>`
+      : kind === "triangle"
+        ? `<polygon points="23,4 5,30 41,30" ${attrs}/>`
+        : `<rect x="6" y="5" width="34" height="24" rx="2" ${attrs}/>`;
+  return `<svg viewBox="0 0 46 34" aria-hidden="true">${body}</svg>`;
+}
+
+/**
+ * Shapes strip extras: the preset menu shows the preset matching the current
+ * controls (or "custom"), plus the live style preview and the stroke-width
+ * readout. Runs on every style change, with or without a selection, so the
+ * strip never shows stale state.
+ */
+function updateShapePanel() {
+  const root = session.root;
+  const ui = session.ui;
+  if (!root || !ui || !ui.shapePreview) return;
+  const style = getStyle();
+  const lower = (value) => String(value || "").toLowerCase();
+  let activePreset = "";
+  for (const [name, preset] of Object.entries(SHAPE_PRESETS)) {
+    if (
+      preset.fillOn === style.fillOn &&
+      lower(preset.fill) === lower(style.fill) &&
+      lower(preset.stroke) === lower(style.stroke) &&
+      Number(preset.strokeWidth) === Number(style.strokeWidth)
+    ) {
+      activePreset = name;
+      break;
+    }
+  }
+  if (ui.shapePreset) ui.shapePreset.value = activePreset || "custom";
+  if (ui.strokeWidthVal) ui.strokeWidthVal.textContent = String(style.strokeWidth);
+  ui.shapePreview.innerHTML = shapePreviewSvg(activeShapeKind(), style);
 }
 
 function setStyleInput(inputId, value, eventName) {
@@ -1104,6 +1144,16 @@ function onRootKey(event) {
       event.preventDefault();
       setSelectedIds([]);
       refresh();
+      return;
+    }
+    // Nothing selected: disarm back to mouse-only.
+    const armed = session.root?.querySelector('input[name="edit-tool"]:checked');
+    if (armed instanceof HTMLInputElement) {
+      event.preventDefault();
+      armed.checked = false;
+      session.board?.syncTool();
+      showPanels();
+      saveStylePrefs();
     }
     return;
   }
@@ -1240,10 +1290,58 @@ export function mount(rootEl) {
         session.board?.syncTool();
         showPanels();
         saveStylePrefs();
+        // Picking a figure stamps it immediately at the page center — already
+        // selected and ready to move/resize, no separate drag needed.
+        if (target.name === "edit-shape") {
+          const board = session.board;
+          if (!board || !board.visualWidth || !board.visualHeight) {
+            toast("افتح ملف PDF أولاً.", "info");
+          } else {
+            const kind = activeShapeKind();
+            const style = getStyle();
+            const width = Math.min(160, board.visualWidth * 0.3);
+            const height = kind === "ellipse" ? width * 0.64 : kind === "triangle" ? width * 0.75 : width * 0.6;
+            pushHistory();
+            createObject({
+              type: "shape",
+              kind,
+              x: board.visualWidth / 2 - width / 2,
+              y: board.visualHeight / 2 - height / 2,
+              width,
+              height,
+              rotation: 0,
+              fill: style.fill,
+              fillOn: style.fillOn,
+              stroke: style.stroke,
+              strokeWidth: style.strokeWidth
+            });
+          }
+        }
         return;
       }
       if (target instanceof HTMLInputElement && target.name === "edit-fit") {
         setFitMode(target.value === "page" ? "page" : "width");
+        return;
+      }
+      // Preset menu: apply the picked style to the selection (or to the
+      // defaults for the next stamp when nothing is selected).
+      if (target === session.ui?.shapePreset) {
+        const style = SHAPE_PRESETS[/** @type {HTMLSelectElement} */ (target).value];
+        const ui = session.ui;
+        if (style && ui) {
+          ui.fillOn.checked = style.fillOn;
+          ui.fillColor.value = style.fill;
+          ui.strokeColor.value = style.stroke;
+          ui.strokeWidth.value = String(style.strokeWidth);
+          ui.fillOn.dispatchEvent(new Event("change", { bubbles: true }));
+          ui.fillColor.dispatchEvent(new Event("input", { bubbles: true }));
+          ui.strokeColor.dispatchEvent(new Event("input", { bubbles: true }));
+          ui.strokeWidth.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        // With no selection the dispatched events change defaults only and
+        // skip the inspector refresh, so update the menu + preview directly.
+        updateStyleChips();
+        saveStylePrefs();
         return;
       }
       applyInspectorToSelection();
@@ -1265,19 +1363,6 @@ export function mount(rootEl) {
         setStyleInput(chip.dataset.for, chip.dataset.sizeChip, "input");
         return;
       }
-      const preset = /** @type {HTMLElement} */ (event.target).closest?.("[data-shape-preset]");
-      const style = preset?.dataset.shapePreset ? SHAPE_PRESETS[preset.dataset.shapePreset] : null;
-      const ui = session.ui;
-      if (!style || !ui) return;
-      ui.fillOn.checked = style.fillOn;
-      ui.fillColor.value = style.fill;
-      ui.strokeColor.value = style.stroke;
-      ui.strokeWidth.value = String(style.strokeWidth);
-      ui.fillOn.dispatchEvent(new Event("change", { bubbles: true }));
-      ui.fillColor.dispatchEvent(new Event("input", { bubbles: true }));
-      ui.strokeColor.dispatchEvent(new Event("input", { bubbles: true }));
-      ui.strokeWidth.dispatchEvent(new Event("input", { bubbles: true }));
-      saveStylePrefs();
     },
     { signal }
   );
@@ -1294,6 +1379,36 @@ export function mount(rootEl) {
   );
 
   rootEl.addEventListener("keydown", onRootKey, { signal });
+
+  // Clicking the armed tool again disarms it: radios stay unchecked until
+  // the user deliberately picks a creation gesture.
+  const noteArmed = (event) => {
+    const target = /** @type {HTMLElement} */ (event.target).closest?.('input[name="edit-tool"]');
+    if (target instanceof HTMLInputElement) target.dataset.wasChecked = target.checked ? "1" : "";
+  };
+  rootEl.addEventListener("pointerdown", noteArmed, { signal });
+  rootEl.addEventListener(
+    "keydown",
+    (event) => {
+      if (event.key !== " " && event.key !== "Enter") return;
+      noteArmed(event);
+    },
+    { signal }
+  );
+  rootEl.addEventListener(
+    "click",
+    (event) => {
+      const target = /** @type {HTMLElement} */ (event.target).closest?.('input[name="edit-tool"]');
+      if (!(target instanceof HTMLInputElement) || target.dataset.wasChecked !== "1") return;
+      delete target.dataset.wasChecked;
+      // Re-clicking the armed tool disarms it.
+      target.checked = false;
+      session.board?.syncTool();
+      showPanels();
+      saveStylePrefs();
+    },
+    { signal }
+  );
 
   session.ui.undo.addEventListener("click", undo, { signal });
   session.ui.redo?.addEventListener("click", redo, { signal });

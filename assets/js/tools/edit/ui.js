@@ -144,19 +144,28 @@ const CSS = `
 .edit-kind {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background: var(--surface-2);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-pill);
-  padding: 3px;
+  gap: 2px;
+  background: transparent;
+  border: 0;
+  padding: 0;
 }
-.edit-kind .choice span {
-  padding: 5px 12px;
-  font-size: 0.76rem;
-  font-weight: 600;
-  border-radius: var(--radius-pill);
+.edit-kind label { position: relative; display: inline-flex; }
+.edit-kind input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.edit-shapefig {
+  width: 40px; height: 32px;
+  display: inline-grid; place-items: center;
+  color: var(--ink-2);
+  border-radius: 8px;
+  cursor: pointer;
 }
-.edit-kind .choice input:checked + span { background: var(--accent); color: #fff; border-color: var(--accent); }
+.edit-shapefig svg { width: 32px; height: 26px; display: block; }
+.edit-shapefig:hover { background: var(--surface-2); }
+.edit-kind input:checked + .edit-shapefig {
+  color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.edit-kind input:focus-visible + .edit-shapefig { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 /* ——— main: layers | preview | pages ——— */
 .edit-main {
@@ -230,20 +239,20 @@ const CSS = `
 }
 .edit-chip:hover { border-color: var(--accent); color: var(--accent); }
 .edit-chip.is-active { background: var(--accent); border-color: var(--accent-deep); color: #fff; }
-.edit-presets { display: inline-flex; flex-wrap: wrap; gap: 6px; }
-.edit-preset {
-  height: 30px; padding: 0 10px;
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  font-size: 0.74rem; font-weight: 600;
-  border-radius: 10px;
-  border: 1px solid var(--border-strong);
-  background: var(--surface-2);
-  color: var(--ink-2);
-  cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+/* shapes panel lives in one strip: figures + preset menu + two pickers */
+.edit-optbar .edit-sep { width: 1px; align-self: stretch; background: var(--border-soft); margin: 2px 0; flex: none; }
+.edit-preview {
+  width: 46px; height: 34px; flex: none;
+  display: inline-grid; place-items: center;
+  border: 1px dashed var(--border-strong);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
 }
-.edit-preset:hover { border-color: var(--accent); color: var(--ink); }
-.edit-preset i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; border: 1px solid rgba(15,23,42,0.15); flex: none; }
+.edit-preview svg { width: 100%; height: 100%; display: block; }
+.edit-optbar .field { display: inline-flex; align-items: center; gap: 5px; }
+.edit-optbar input[type="range"] { width: 96px; accent-color: var(--accent); }
+.edit-width-val { font-size: 0.74rem; min-width: 26px; text-align: center; color: var(--ink-2); }
 .edit-layer-row {
   display: grid;
   grid-template-columns: auto auto minmax(0,1fr) auto auto;
@@ -580,7 +589,7 @@ export function buildUi(root) {
       <div id="edit-workspace" class="edit" hidden>
         <div class="edit-toolbar">
           <div class="edit-tools" role="radiogroup" aria-label="أداة التعديل">
-            ${choice("edit-tool", "select", "تحديد", "icon-quad", true)}
+            ${choice("edit-tool", "select", "تحديد", "icon-quad")}
             ${choice("edit-tool", "text", "نص", "icon-file")}
             ${choice("edit-tool", "pen", "رسم", "icon-sign")}
             ${choice("edit-tool", "shapes", "الأشكال", "icon-crop")}
@@ -637,22 +646,26 @@ export function buildUi(root) {
 
           <div data-edit-panel="shapes" hidden>
             <span class="edit-kind" role="radiogroup" aria-label="نوع الشكل">
-              ${choice("edit-shape", "rect", "مستطيل", null, true)}
-              ${choice("edit-shape", "ellipse", "دائرة", null, false)}
-              ${choice("edit-shape", "triangle", "مثلث", null, false)}
+              <label><input type="radio" name="edit-shape" value="rect" checked /><span class="edit-shapefig"><svg viewBox="0 0 32 26" aria-hidden="true"><rect x="4" y="5" width="24" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/></svg><span class="sr-only">مستطيل</span></span></label>
+              <label><input type="radio" name="edit-shape" value="ellipse" /><span class="edit-shapefig"><svg viewBox="0 0 32 26" aria-hidden="true"><ellipse cx="16" cy="13" rx="13" ry="9" fill="none" stroke="currentColor" stroke-width="2.5"/></svg><span class="sr-only">دائرة</span></span></label>
+              <label><input type="radio" name="edit-shape" value="triangle" /><span class="edit-shapefig"><svg viewBox="0 0 32 26" aria-hidden="true"><polygon points="16,4 4,23 28,23" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/></svg><span class="sr-only">مثلث</span></span></label>
             </span>
-            <span class="edit-presets" role="group" aria-label="أنماط">
-              <button type="button" class="edit-preset" data-shape-preset="highlight"><i style="background:#FDE68A"></i>تظليل</button>
-              <button type="button" class="edit-preset" data-shape-preset="frame"><i style="background:#fff;border-color:#DC2626"></i>إطار</button>
-              <button type="button" class="edit-preset" data-shape-preset="fill"><i style="background:#BFDBFE"></i>تعبئة</button>
-              <button type="button" class="edit-preset" data-shape-preset="cover"><i style="background:#fff"></i>تغطية</button>
-            </span>
+            <span class="edit-sep" aria-hidden="true"></span>
+            <span class="field"><label for="edit-shape-style">النمط</label><select id="edit-shape-style" aria-label="نمط الشكل">
+              <option value="custom" selected>مخصص</option>
+              <option value="highlight" data-shape-preset="highlight">تظليل</option>
+              <option value="frame" data-shape-preset="frame">إطار</option>
+              <option value="fill" data-shape-preset="fill">تعبئة</option>
+              <option value="cover" data-shape-preset="cover">تغطية</option>
+            </select></span>
+            <span class="edit-sep" aria-hidden="true"></span>
             <label class="check"><input id="edit-fill-on" type="checkbox" checked />تعبئة</label>
-            <span class="field"><input id="edit-fill-color" type="color" value="#8AA4E0" aria-label="لون التعبئة" /></span>
-            ${swatches("edit-fill-color", FILL_COLORS)}
-            <span class="field"><input id="edit-stroke-color" type="color" value="#1E3A8A" aria-label="لون الحد" /></span>
-            ${swatches("edit-stroke-color", INK_COLORS)}
-            <span class="field"><input id="edit-stroke-width" type="number" min="0" max="24" step="0.5" value="1.5" aria-label="سمك الحد" /></span>
+            <span class="field"><label for="edit-fill-color">لون التعبئة</label><input id="edit-fill-color" type="color" value="#8AA4E0" aria-label="لون التعبئة — اضغط لاختيار اللون" title="اضغط لاختيار لون التعبئة" /></span>
+            <span class="edit-sep" aria-hidden="true"></span>
+            <span class="field"><label for="edit-stroke-color">لون الإطار</label><input id="edit-stroke-color" type="color" value="#1E3A8A" aria-label="لون الإطار — اضغط لاختيار اللون" title="اضغط لاختيار لون الإطار" /></span>
+            <span class="field"><label for="edit-stroke-width">السمك</label><input id="edit-stroke-width" type="range" min="0" max="24" step="0.5" value="1.5" aria-label="سمك الإطار" /></span>
+            <span class="num edit-width-val" id="edit-stroke-width-val">1.5</span>
+            <span class="edit-preview" id="edit-shape-preview" aria-hidden="true"></span>
           </div>
         </div>
 
@@ -736,6 +749,9 @@ export function buildUi(root) {
     fillColor: root.querySelector("#edit-fill-color"),
     strokeColor: root.querySelector("#edit-stroke-color"),
     strokeWidth: root.querySelector("#edit-stroke-width"),
+    strokeWidthVal: root.querySelector("#edit-stroke-width-val"),
+    shapePreview: root.querySelector("#edit-shape-preview"),
+    shapePreset: root.querySelector("#edit-shape-style"),
     undo: root.querySelector("#edit-undo"),
     redo: root.querySelector("#edit-redo"),
     dup: root.querySelector("#edit-dup"),
