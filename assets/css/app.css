@@ -426,10 +426,13 @@ html.is-desktop[data-platform="linux"] .win-controls { display:flex; }
 .sheet__body { display:grid; grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(0,1fr); min-height:0; height:100%; margin: 0; }
 .work { position:relative; min-width:0; overflow-y:auto; overflow-x:hidden; padding: var(--space-7) var(--space-5) var(--space-6); background: transparent; display:block; }
 .work:has(#view-start.view--active) { display:grid; grid-template-rows: minmax(0,1fr); min-height: calc(100vh - var(--header-h) - var(--footer-h) - var(--space-7)); padding: 0; overflow:hidden; }
-.view { display:none; max-width: var(--work-max); width:100%; margin: 0 auto; animation: fadeIn 280ms var(--ease) both; }
+.view { display:none; width:100%; margin: 0; animation: fadeIn 280ms var(--ease) both; }
 .view--active { display:block; }
 #view-start.view--active { display:flex; flex:1; min-height:0; height:100%; width:100%; max-width:none; margin: 0; }
 #view-start.view--active .start { flex:1; }
+/* edit is a full-height workspace: no page scroll, columns fill the viewport */
+.work:has(#view-edit.view--active) { display:grid; grid-template-rows: minmax(0,1fr); min-height:0; padding: 0; overflow:hidden; }
+#view-edit.view--active { display:flex; flex-direction:column; min-height:0; height:100%; }
 
 /* view header */
 .view__head { max-width:none; margin-bottom: var(--space-5); text-align:start; }
@@ -563,10 +566,9 @@ html.is-desktop[data-platform="linux"] .win-controls { display:flex; }
 .start__chips .docrow__thumb { width:40px; height:52px; border-radius: 8px; flex:none; }
 .start__chips .docrow__meta { margin-top: 2px; }
 
-/* generic work views glass */
-.view__body { display:grid; align-content:start; background: var(--surface-1); border:1px solid var(--border-soft); border-radius: var(--radius-lg); padding: var(--space-5); backdrop-filter: blur(16px) saturate(140%); box-shadow: var(--shadow-soft); }
-.view:has(.scan) .view__body, #view-scan .view__body { background: transparent; border:0; padding: 0; box-shadow:none; backdrop-filter:none; }
-.view:has(.scan) .scan { background: transparent; }
+/* views sit directly on the background: no big container groups a page's
+   elements, so every tool takes its own space and breathes. */
+.view__body { display:grid; align-content:start; gap: var(--space-4); background: transparent; border:0; border-radius:0; padding: 0; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; }
 
 /* flow */
 .flow { display:flex; align-items:center; justify-content:center; gap: var(--space-3); margin: 0; padding: 0; list-style:none; }

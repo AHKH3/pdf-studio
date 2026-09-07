@@ -304,6 +304,21 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
   );
   check("no rect/ellipse/triangle tool radios remain", !/name="edit-tool"[^>]*value="(rect|ellipse|triangle)"/.test(uiSrc));
   check("no usage-instruction text in the edit template", !/(يظهر فوراً|اسحب الزوايا|لطيفة|💡|لطبقة فوق|الناتج PDF)/.test(uiSrc));
+
+  // No big container may group a page's elements again: .view__body stays flat
+  // and .view stays full-width on every tool page.
+  const cssSrc = await readFile(path.join(ROOT, "assets/css/app.css"), "utf8");
+  const flat = cssSrc.replace(/\/\*[\s\S]*?\*\//g, "");
+  const bodyRule = flat.match(/\.view__body\s*\{([^}]*)\}/)?.[1] || "";
+  check("view__body has no card background", !/background\s*:\s*var\(--surface/.test(bodyRule), bodyRule.slice(0, 100));
+  check("view__body has no border", /(^|;)\s*border\s*:\s*0/.test(bodyRule), bodyRule.slice(0, 100));
+  check("view__body has no shadow", /box-shadow\s*:\s*none/.test(bodyRule));
+  const viewRule = flat.match(/\.view\s*\{([^}]*)\}/)?.[1] || "";
+  check("view is not width-capped", !/max-width/.test(viewRule), viewRule.slice(0, 100));
+  check(
+    "edit workspace fills the viewport height",
+    /\.work:has\(#view-edit\.view--active\)/.test(flat) && /#view-edit\.view--active\s*\{[^}]*height\s*:\s*100%/.test(flat)
+  );
 }
 
 console.log(`\n${checks - failures}/${checks} checks passed`);
