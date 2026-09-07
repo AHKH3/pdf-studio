@@ -53,19 +53,49 @@ const CSS = `
 .edit-toolbtn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  min-height: 36px;
   padding: 7px 12px;
+  font-family: var(--ui);
   font-size: 0.8rem;
   font-weight: 600;
   line-height: 1;
+  white-space: nowrap;
+  color: var(--ink);
+  background: var(--surface-1);
+  border: 1px solid var(--border-soft);
+  border-bottom-color: var(--border-strong);
   border-radius: var(--radius-pill);
-  border: 1px solid transparent;
-  background: transparent;
-  color: inherit;
   cursor: pointer;
-  font-family: inherit;
+  user-select: none;
+  box-shadow:
+    0 1px 0 var(--border-strong),
+    0 2px 6px rgba(15,23,42,0.05),
+    0 4px 10px rgba(15,23,42,0.03);
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
 }
-.edit-toolbtn:hover { color: var(--accent); }
+.edit-toolbtn:hover {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+  color: var(--ink);
+  box-shadow:
+    0 2px 0 var(--border-strong),
+    0 4px 10px rgba(15,23,42,0.07),
+    0 8px 16px rgba(15,23,42,0.05);
+  transform: translateY(-1px);
+}
+.edit-toolbtn:active {
+  transform: translateY(1px);
+  box-shadow:
+    0 0 0 var(--border-strong),
+    0 1px 3px rgba(15,23,42,0.06);
+}
+.edit-toolbtn:focus-visible {
+  box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 5px transparent;
+  outline: none;
+  border-color: var(--accent);
+}
 .edit-toolbtn .icon { width: 15px; height: 15px; }
 .edit-toolbar__sep { width: 1px; align-self: stretch; background: var(--border-soft); margin: 2px 4px; }
 .edit-toolbar__spacer { flex: 1; }

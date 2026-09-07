@@ -318,6 +318,13 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
   check("no rect/ellipse/triangle tool radios remain", !/name="edit-tool"[^>]*value="(rect|ellipse|triangle)"/.test(uiSrc));
   check("no usage-instruction text in the edit template", !/(يظهر فوراً|اسحب الزوايا|لطيفة|💡|لطبقة فوق|الناتج PDF)/.test(uiSrc));
   check("image is a direct action button, not a radio", /id="edit-image-add"[^>]*class="edit-toolbtn"/.test(uiSrc) && !/name="edit-tool"[^>]*value="image"/.test(uiSrc));
+  const toolbtnCss = (uiSrc.match(/\.edit-toolbtn\s*\{([\s\S]*?)\}/) || [])[1] || "";
+  check(
+    "image button matches the radio pills (bg + border + shadow)",
+    /background\s*:\s*var\(--surface-1\)/.test(toolbtnCss) &&
+      /border\s*:\s*1px solid var\(--border-soft\)/.test(toolbtnCss) &&
+      /box-shadow\s*:/.test(toolbtnCss)
+  );
   check("no extra image browse button anywhere", !/edit-image-browse/.test(uiSrc));
   check(
     "toolbar image button opens the picker directly",
