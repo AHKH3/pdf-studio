@@ -605,9 +605,7 @@ function updateStyleChips() {
       input instanceof HTMLInputElement && input.value.toLowerCase() === /** @type {HTMLElement} */ (swatch).dataset.swatch?.toLowerCase()
     );
   }
-  for (const chip of root.querySelectorAll("[data-size-chip]")) {
-    chip.classList.toggle("is-active", ui.textSize.value === /** @type {HTMLElement} */ (chip).dataset.sizeChip);
-  }
+  if (ui.textSizeVal) ui.textSizeVal.textContent = String(Math.min(96, Math.max(10, finiteNumber(ui.textSize.value, 18))));
   updateShapePanel();
 }
 
@@ -1404,11 +1402,6 @@ export function mount(rootEl) {
       const swatch = /** @type {HTMLElement} */ (event.target).closest?.("[data-swatch]");
       if (swatch?.dataset.for && swatch.dataset.swatch) {
         setStyleInput(swatch.dataset.for, swatch.dataset.swatch, "input");
-        return;
-      }
-      const chip = /** @type {HTMLElement} */ (event.target).closest?.("[data-size-chip]");
-      if (chip?.dataset.for && chip.dataset.sizeChip) {
-        setStyleInput(chip.dataset.for, chip.dataset.sizeChip, "input");
         return;
       }
     },

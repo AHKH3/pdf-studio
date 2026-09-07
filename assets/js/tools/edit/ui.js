@@ -240,6 +240,50 @@ const CSS = `
 }
 .edit-chip:hover { border-color: var(--accent); color: var(--accent); }
 .edit-chip.is-active { background: var(--accent); border-color: var(--accent-deep); color: #fff; }
+/* text strip: style toggles + alignment figures */
+.edit-toggles {
+  display: inline-flex;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-pill);
+  padding: 2px;
+  gap: 2px;
+}
+.edit-toggle { position: relative; display: inline-flex; }
+.edit-toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.edit-toggle__glyph {
+  min-width: 30px; height: 26px;
+  display: inline-grid; place-items: center;
+  padding: 0 6px;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+.edit-toggle__glyph:hover { color: var(--ink); }
+.edit-toggle input:checked + .edit-toggle__glyph { background: var(--accent); color: #fff; }
+.edit-toggle input:focus-visible + .edit-toggle__glyph { outline: 2px solid var(--accent); outline-offset: 1px; }
+.edit-align {
+  display: inline-flex;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-pill);
+  padding: 2px;
+  gap: 2px;
+}
+.edit-align label { position: relative; display: inline-flex; }
+.edit-align input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.edit-align__fig {
+  width: 32px; height: 26px;
+  display: inline-grid; place-items: center;
+  color: var(--ink-2);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+.edit-align__fig svg { width: 18px; height: 14px; display: block; }
+.edit-align__fig:hover { color: var(--ink); }
+.edit-align input:checked + .edit-align__fig { background: var(--accent); color: #fff; }
+.edit-align input:focus-visible + .edit-align__fig { outline: 2px solid var(--accent); outline-offset: 1px; }
 /* shapes panel lives in one strip: figures + preset menu + two pickers */
 .edit-optbar .edit-sep { width: 1px; align-self: stretch; background: var(--border-soft); margin: 2px 0; flex: none; }
 /* preset dropdown: button carries the live preview + name, menu rows carry
@@ -596,7 +640,6 @@ function icon(href, flip = false) {
 
 export const INK_COLORS = ["#111827", "#1E3A8A", "#DC2626", "#059669", "#D97706", "#7C3AED", "#DB2777"];
 export const FILL_COLORS = ["#FDE68A", "#BBF7D0", "#BFDBFE", "#FBCFE8", "#FECACA", "#E5E7EB", "#FFFFFF"];
-export const TEXT_SIZES = [12, 14, 16, 18, 24, 32, 48];
 
 function swatches(forId, colors) {
   return `<span class="edit-swatches">${colors
@@ -652,20 +695,23 @@ export function buildUi(root) {
           </div>
 
           <div data-edit-panel="text" hidden>
-            <textarea id="edit-text" rows="2" maxlength="2000" aria-label="نص العنصر"></textarea>
-            <span class="field"><input id="edit-text-size" type="number" min="10" max="96" value="18" aria-label="حجم الخط" /></span>
-            <span class="edit-chips" role="group" aria-label="مقاسات">
-              ${TEXT_SIZES.map((s) => `<button type="button" class="edit-chip" data-size-chip="${s}" data-for="edit-text-size">${s}</button>`).join("")}
+            <textarea id="edit-text" rows="1" maxlength="2000" aria-label="نص العنصر" placeholder="نص"></textarea>
+            <span class="edit-sep" aria-hidden="true"></span>
+            <span class="field"><label for="edit-text-size">الحجم</label><input id="edit-text-size" type="range" min="10" max="96" step="1" value="18" aria-label="حجم الخط" /></span>
+            <span class="num edit-width-val" id="edit-text-size-val">18</span>
+            <span class="edit-sep" aria-hidden="true"></span>
+            <span class="field"><label for="edit-text-color">لون النص</label><input id="edit-text-color" type="color" value="#1E3A8A" aria-label="لون النص — اضغط لاختيار اللون" title="اضغط لاختيار لون النص" /></span>
+            <span class="edit-sep" aria-hidden="true"></span>
+            <span class="edit-toggles" role="group" aria-label="تنسيق الخط">
+              <label class="edit-toggle"><input id="edit-text-bold" type="checkbox" /><span class="edit-toggle__glyph" aria-hidden="true" style="font-weight:700">B</span><span class="sr-only">عريض</span></label>
+              <label class="edit-toggle"><input id="edit-text-italic" type="checkbox" /><span class="edit-toggle__glyph" aria-hidden="true" style="font-style:italic">I</span><span class="sr-only">مائل</span></label>
+              <label class="edit-toggle"><input id="edit-text-underline" type="checkbox" /><span class="edit-toggle__glyph" aria-hidden="true" style="text-decoration:underline">U</span><span class="sr-only">تسطير</span></label>
             </span>
-            <span class="field"><input id="edit-text-color" type="color" value="#1E3A8A" aria-label="لون النص" /></span>
-            ${swatches("edit-text-color", INK_COLORS)}
-            <label class="check"><input id="edit-text-bold" type="checkbox" />عريض</label>
-            <label class="check"><input id="edit-text-italic" type="checkbox" />مائل</label>
-            <label class="check"><input id="edit-text-underline" type="checkbox" />تسطير</label>
-            <span class="choice-grid" role="radiogroup" aria-label="المحاذاة">
-              ${choice("edit-align", "right", "يمين", null, true)}
-              ${choice("edit-align", "center", "وسط", null, false)}
-              ${choice("edit-align", "left", "يسار", null, false)}
+            <span class="edit-sep" aria-hidden="true"></span>
+            <span class="edit-align" role="radiogroup" aria-label="المحاذاة">
+              <label><input type="radio" name="edit-align" value="right" checked /><span class="edit-align__fig"><svg viewBox="0 0 20 16" aria-hidden="true"><path d="M2 3h16M8 8h10M2 13h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="sr-only">يمين</span></span></label>
+              <label><input type="radio" name="edit-align" value="center" /><span class="edit-align__fig"><svg viewBox="0 0 20 16" aria-hidden="true"><path d="M2 3h16M5 8h10M2 13h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="sr-only">وسط</span></span></label>
+              <label><input type="radio" name="edit-align" value="left" /><span class="edit-align__fig"><svg viewBox="0 0 20 16" aria-hidden="true"><path d="M2 3h16M2 8h10M2 13h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="sr-only">يسار</span></span></label>
             </span>
           </div>
 
@@ -785,6 +831,7 @@ export function buildUi(root) {
     selCount: root.querySelector("#edit-sel-count"),
     text: root.querySelector("#edit-text"),
     textSize: root.querySelector("#edit-text-size"),
+    textSizeVal: root.querySelector("#edit-text-size-val"),
     textColor: root.querySelector("#edit-text-color"),
     textBold: root.querySelector("#edit-text-bold"),
     textItalic: root.querySelector("#edit-text-italic"),

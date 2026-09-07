@@ -376,7 +376,11 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
       /tool === "pen" && !node/.test(boardSrc)
   );
   check("top save button exists", /id="edit-save"/.test(uiSrc));
-  check("font size is number input plus chips", /<input id="edit-text-size"[^>]*type="number"/.test(uiSrc) && /data-size-chip/.test(uiSrc));
+  check("font size is a slider with a readout", /<input id="edit-text-size"[^>]*type="range"/.test(uiSrc) && /id="edit-text-size-val"/.test(uiSrc));
+  check("no size chips remain in the text strip", !/data-size-chip/.test(uiSrc));
+  check("text style is B/I/U toggle buttons", /class="edit-toggle"/.test(uiSrc) && /id="edit-text-bold"/.test(uiSrc));
+  check("alignment is icons, not words", /edit-align__fig/.test(uiSrc) && /name="edit-align"[^>]*value="right"/.test(uiSrc));
+  check("text color is one labelled picker", /for="edit-text-color">لون النص/.test(uiSrc));
   check("shape presets are inline buttons", /data-shape-preset="highlight"/.test(uiSrc) && !/id="edit-shape-preset"/.test(uiSrc));
   check("colors are inline swatches, not popovers", /class="edit-swatches"/.test(uiSrc) && !/data-pop-panel/.test(uiSrc));
   check("fit mode switch exists in the rail (width default)", /choice\("edit-fit", "width"/.test(uiSrc) && /choice\("edit-fit", "page"/.test(uiSrc));
