@@ -7,7 +7,7 @@ import { confirmAction, confirmDiscard, confirmReplace } from "../ui/dialog.js";
 import { endProgress, startProgress, throwIfCancelled, toast, updateProgress } from "../ui/feedback.js";
 import { wireIntake } from "../ui/intake.js";
 import { setName, setRunEnabled, setSource, setState } from "../ui/titleblock.js";
-import { confirmLarge, pad, readPdfFile, reportFailure, reportSave, tabTitle } from "./shared.js";
+import { confirmLarge, pad, readInputValues, readPdfFile, reportFailure, reportSave, tabTitle, writeInputValues } from "./shared.js";
 import { createZipWriter } from "../lib/zip.js";
 
 /** @type {{ name: string; bytes: Uint8Array; pages: number; size: number; password: string } | null} */
@@ -17,6 +17,8 @@ let thumbs = null;
 /** @type {DocList | null} */
 let list = null;
 let saved = true;
+/** قيم المدخلات الافتراضية (لتاب جديدة لا ترث إعدادات تاب أخرى). */
+let defaultInputs = null;
 
 const format = () => /** @type {HTMLSelectElement} */ (el("rasterize-format")).value;
 const scaleFactor = () => Number(/** @type {HTMLSelectElement} */ (el("rasterize-scale")).value) || 2;
@@ -220,6 +222,7 @@ export const rasterizeTool = {
   tabTitle: () => tabTitle(rasterizeTool.name, doc?.name),
 
   setup() {
+    defaultInputs = readInputValues(["rasterize-format", "rasterize-scale", "rasterize-target"]);
     list = new DocList("rasterize-list", {
       emptyText: "لا صفحات.",
       onAction(action, id) {
@@ -254,6 +257,29 @@ export const rasterizeTool = {
     }
   },
   isDirty: () => Boolean(doc) && !saved,
+  captureState() {
+    return doc ? { doc, thumbs, saved, inputs: readInputValues(["rasterize-format", "rasterize-scale", "rasterize-target"]) } : null;
+  },
+  restoreState(state) {
+    doc = state ? state.doc : null;
+    // اللقطة تشارك كاش المصغّرات — إعادة إسناد فقط بلا dispose.
+    thumbs = state ? state.thumbs : null;
+    writeInputValues(state?.inputs);
+    saved = state ? state.saved : true;
+    if (doc) {
+      showDoc();
+      refresh();
+    } else {
+      writeInputValues(defaultInputs);
+      list?.render([]);
+      el("rasterize-panel").hidden = true;
+      el("rasterize-drop").hidden = false;
+      setSource({});
+      setRunEnabled(false);
+      setState("waiting");
+      saved = true;
+    }
+  },
   acceptFiles,
   run
 };

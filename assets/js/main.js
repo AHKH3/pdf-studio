@@ -23,6 +23,8 @@ function wiredManifest(manifest) {
     actionLabel: manifest.actionLabel,
     outputName: manifest.outputName,
     tabTitle: () => manifest.tabTitle?.() ?? manifest.name ?? manifest.title,
+    captureState: () => manifest.captureState?.(),
+    restoreState: (state) => manifest.restoreState?.(state),
     setup: () => manifest.mount(),
     enter: () => manifest.enter(),
     leave: () => manifest.leave?.(),
@@ -49,7 +51,6 @@ const startTool = {
  */
 const TOOL_LOADERS = [
   ["scan", () => import("./tools/scan.js").then((m) => m.scanTool)],
-  ["images", () => import("./tools/images.js").then((m) => m.imagesTool)],
   ["merge", () => import("./tools/merge.js").then((m) => m.mergeTool)],
   ["organize", () => import("./tools/organize.js").then((m) => m.organizeTool)],
   ["split", () => import("./tools/split.js").then((m) => m.splitTool)],

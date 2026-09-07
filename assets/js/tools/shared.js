@@ -62,6 +62,47 @@ export function tabTitle(toolName, firstName) {
 }
 
 /**
+ * يقرأ قيم مدخلات الإعدادات (value للنص/الرقم/القوائم، checked للاختيار).
+ * @param {string[]} ids
+ * @returns {Record<string, string | boolean>}
+ */
+export function readInputValues(ids) {
+  const out = {};
+  for (const id of ids || []) {
+    const node = document.getElementById(id);
+    if (!node) continue;
+    if (node instanceof HTMLInputElement && node.type === "checkbox") out[id] = node.checked;
+    else if ("value" in node) out[id] = /** @type {HTMLInputElement} */ (node).value;
+  }
+  return out;
+}
+
+/**
+ * يكتب قيم الإعدادات المحفوظة ويطلق change/input لتلحق الواجهات التابعة (مثل حقول التقسيم).
+ * @param {Record<string, string | boolean>} map
+ */
+export function writeInputValues(map) {
+  for (const [id, stored] of Object.entries(map || {})) {
+    const node = document.getElementById(id);
+    if (!node) continue;
+    if (node instanceof HTMLInputElement && node.type === "checkbox" && typeof stored === "boolean") {
+      if (node.checked !== stored) {
+        node.checked = stored;
+        node.dispatchEvent(new Event("input", { bubbles: true }));
+        node.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    } else if ("value" in node && typeof stored === "string") {
+      const input = /** @type {HTMLInputElement} */ (node);
+      if (input.value !== stored) {
+        input.value = stored;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }
+  }
+}
+
+/**
  * Yield to the UI every `every` steps so long PDF walks stay responsive.
  * @param {number} [index]
  * @param {number} [every]

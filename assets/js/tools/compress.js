@@ -6,11 +6,13 @@ import { confirmDiscard, confirmReplace } from "../ui/dialog.js";
 import { endProgress, startProgress, throwIfCancelled, updateProgress } from "../ui/feedback.js";
 import { wireIntake } from "../ui/intake.js";
 import { setName, setRunEnabled, setSource, setState } from "../ui/titleblock.js";
-import { confirmLarge, readPdfFile, reportFailure, reportSave, tabTitle } from "./shared.js";
+import { confirmLarge, readInputValues, readPdfFile, reportFailure, reportSave, tabTitle, writeInputValues } from "./shared.js";
 
 /** @type {{ name: string; bytes: Uint8Array; pages: number; size: number; password: string } | null} */
 let doc = null;
 let saved = true;
+/** قيم المدخلات الافتراضية (لتاب جديدة لا ترث إعدادات تاب أخرى). */
+let defaultInputs = null;
 
 function renderReadout(resultSize) {
   const host = el("compress-readout");
@@ -156,6 +158,7 @@ export const compressTool = {
   tabTitle: () => tabTitle(compressTool.name, doc?.name),
 
   setup() {
+    defaultInputs = readInputValues(["compress-level", "compress-gray"]);
     wireIntake({
       dropId: "compress-drop",
       inputId: "compress-input",
@@ -181,6 +184,30 @@ export const compressTool = {
     }
   },
   isDirty: () => Boolean(doc) && !saved,
+  captureState() {
+    return doc ? { doc, saved, inputs: readInputValues(["compress-level", "compress-gray"]) } : null;
+  },
+  restoreState(state) {
+    doc = state ? state.doc : null;
+    writeInputValues(state?.inputs);
+    saved = state ? state.saved : true;
+    if (doc) {
+      el("compress-panel").hidden = false;
+      el("compress-drop").hidden = true;
+      setSource({ label: doc.name, pages: String(doc.pages), size: humanSize(doc.size) });
+      setRunEnabled(true);
+      setState("idle");
+      renderReadout(0);
+    } else {
+      writeInputValues(defaultInputs);
+      el("compress-panel").hidden = true;
+      el("compress-drop").hidden = false;
+      setSource({});
+      setRunEnabled(false);
+      setState("waiting");
+      saved = true;
+    }
+  },
   acceptFiles,
   run
 };

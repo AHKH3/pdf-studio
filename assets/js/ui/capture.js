@@ -81,7 +81,7 @@ export function actionIds() {
 /** Files to hand a tool when launching from capture. */
 export function filesForAction(id) {
   const { images, pdfs } = captureMix();
-  if (id === "scan" || id === "images") return images;
+  if (id === "scan") return images;
   if (id === "merge") return pdfs;
   if (id === "organize") return pdfs.concat(images);
   if (SINGLE_PDF.includes(id)) return pdfs.slice(0, 1);

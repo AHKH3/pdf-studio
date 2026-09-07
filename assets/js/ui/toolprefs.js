@@ -9,10 +9,10 @@ import { toast } from "./feedback.js";
 const KEY = "pdfstudio.toolprefs.v1";
 
 /** أدوات حُذفت من التطبيق — تُرشَّح من أي تفضيلات محفوظة قد تشير لها. */
-const REMOVED_TOOL_IDS = new Set(["sign", "protect", "watermark", "ocr"]);
+const REMOVED_TOOL_IDS = new Set(["sign", "protect", "watermark", "ocr", "images"]);
 
 /** مثبّتة افتراضيًا: الأكثر استخدامًا يوميًا — تُزرع مرة واحدة لكل نسخة. */
-const DEFAULT_PINNED = ["edit", "rasterize", "images", "scan"];
+const DEFAULT_PINNED = ["edit", "rasterize", "scan"];
 /** ارفع الرقم عند تغيير الافتراضيات ليصل من زرع نسخة أقدم. */
 const PREFS_SEED_VERSION = 2;
 

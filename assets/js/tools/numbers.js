@@ -6,7 +6,7 @@ import { endProgress, startProgress, throwIfCancelled, updateProgress } from "..
 import { wireIntake } from "../ui/intake.js";
 import { setName, setRunEnabled, setSource, setState } from "../ui/titleblock.js";
 import { PagePreview } from "./preview.js";
-import { confirmLarge, readPdfFile, reportFailure, reportSave, tabTitle } from "./shared.js";
+import { confirmLarge, readInputValues, readPdfFile, reportFailure, reportSave, tabTitle, writeInputValues } from "./shared.js";
 
 /** @type {{ name: string; bytes: Uint8Array; pages: number; size: number; password: string } | null} */
 let doc = null;
@@ -14,6 +14,8 @@ let doc = null;
 let preview = null;
 let redrawTimer = 0;
 let saved = true;
+/** قيم المدخلات الافتراضية (لتاب جديدة لا ترث إعدادات تاب أخرى). */
+let defaultInputs = null;
 
 const INPUTS = [
   "numbers-template",
@@ -226,6 +228,7 @@ export const numbersTool = {
   tabTitle: () => tabTitle(numbersTool.name, doc?.name),
 
   setup() {
+    defaultInputs = readInputValues(INPUTS);
     preview = new PagePreview("numbers-canvas");
     wireIntake({
       dropId: "numbers-drop",
@@ -254,6 +257,30 @@ export const numbersTool = {
     syncNote();
   },
   isDirty: () => Boolean(doc) && !saved,
+  captureState() {
+    return doc ? { doc, saved, inputs: readInputValues(INPUTS) } : null;
+  },
+  async restoreState(state) {
+    doc = state ? state.doc : null;
+    writeInputValues(state?.inputs);
+    saved = state ? state.saved : true;
+    if (doc && preview) {
+      showDoc();
+      await preview.load(doc.bytes, doc.password);
+      drawPreview();
+      syncNote();
+    } else {
+      writeInputValues(defaultInputs);
+      preview?.reset();
+      el("numbers-panel").hidden = true;
+      el("numbers-drop").hidden = false;
+      setSource({});
+      setRunEnabled(false);
+      setState("waiting");
+      syncNote();
+      saved = true;
+    }
+  },
   acceptFiles,
   run
 };

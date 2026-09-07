@@ -272,6 +272,21 @@ export const organizeTool = {
 
   enter: refresh,
   isDirty: () => pages.length > 0 && !saved,
+  captureState() {
+    if (!pages.length) return null;
+    return { pages: pages.slice(), sources: new Map(sources), anchorId, primaryName, saved, acceptedKey };
+  },
+  restoreState(state) {
+    // المصادر (بايتات + كاش مصغّرات) مشاركة بالمراجع — clear للخريطة فقط بلا dispose.
+    sources.clear();
+    for (const [key, source] of state ? state.sources : []) sources.set(key, source);
+    pages = state ? state.pages.slice() : [];
+    anchorId = state ? state.anchorId : "";
+    primaryName = state ? state.primaryName : "مستند";
+    saved = state ? state.saved : true;
+    acceptedKey = state ? state.acceptedKey : "";
+    refresh();
+  },
   acceptFiles,
   run
 };

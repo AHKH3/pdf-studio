@@ -1097,6 +1097,16 @@ code { font-family: var(--data); font-variant-numeric: tabular-nums; font-size:0
 .hub-tools__hidden-count { background: var(--surface-0); border:1px solid var(--border-soft); border-radius:999px; padding: 1px var(--space-2); font-size:0.66rem; }
 .hub-tools__hidden-count:empty { display:none; }
 .hub-tools__hidden .hub-tools__grid { margin-top: var(--space-3); }
+
+/* إعدادات صفحة المسح المطوية — تظهر مع مخرج PDF فقط */
+.scan-pages { margin-top: var(--space-3); }
+.scan-pages__summary {
+  cursor: pointer; user-select: none;
+  font-size: 0.82rem; font-weight: 700; color: var(--ink-2);
+  padding: var(--space-1) 2px; border-radius: 8px;
+}
+.scan-pages__summary:hover { color: var(--ink); }
+.scan-pages .field { margin-top: var(--space-2); }
 .hub-tools__hidden-hint { margin-top: var(--space-2); font-size:0.70rem; color: var(--ink-3); line-height:1.5; }
 
 /* حالات */

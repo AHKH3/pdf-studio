@@ -606,6 +606,82 @@ async function resetObjects() {
   session.saved = true;
 }
 
+/** البايتات المحمّلة حاليًا في اللوحة (لتفادي إعادة التحميل عند العودة لنفس الملف). */
+/** @type {Uint8Array | null} */
+let boardBytes = null;
+
+/** لقطة عمل التحرير (مراجع + كائنات) أو null. */
+function captureEditState() {
+  if (!session.bytes) return null;
+  return {
+    fileName: session.fileName,
+    bytes: session.bytes,
+    pages: session.pages,
+    size: session.size,
+    pageIndex: session.pageIndex,
+    objects: session.objects.slice(),
+    selectedId: session.selectedId,
+    saved: session.saved,
+    history: session.history.map((step) => step.slice()),
+    redoStack: session.redoStack.map((step) => step.slice()),
+    zoom: session.zoom
+  };
+}
+
+/** @param {any} state */
+async function restoreEditState(state) {
+  // تفريغ لطيف بلا revoke — لقطات التابات الأخرى تشارك المراجع.
+  if (!state) {
+    session.fileName = "";
+    session.bytes = null;
+    session.pages = 0;
+    session.size = 0;
+    session.pageIndex = 0;
+    session.objects = [];
+    session.selectedId = "";
+    session.saved = true;
+    session.history = [];
+    session.redoStack = [];
+    session.historyBatch = false;
+    session.zoom = 1;
+    boardBytes = null;
+    if (session.ui) {
+      session.ui.drop.hidden = false;
+      session.ui.workspace.hidden = true;
+    }
+    syncChrome();
+    return;
+  }
+  session.fileName = state.fileName;
+  session.bytes = state.bytes;
+  session.pages = state.pages;
+  session.size = state.size;
+  session.pageIndex = state.pageIndex;
+  session.objects = state.objects.slice();
+  session.selectedId = state.selectedId;
+  session.saved = state.saved;
+  session.history = state.history.map((step) => step.slice());
+  session.redoStack = state.redoStack.map((step) => step.slice());
+  session.historyBatch = false;
+  session.zoom = state.zoom;
+  if (session.board) {
+    if (boardBytes !== session.bytes) {
+      boardBytes = session.bytes;
+      await session.board.load(session.bytes);
+    }
+    session.board.setZoom?.(session.zoom);
+    updateZoomLabel();
+    if (session.ui) {
+      session.ui.drop.hidden = true;
+      session.ui.workspace.hidden = false;
+    }
+    await session.board.whenLaidOut?.();
+    await session.board.showPage(session.pageIndex);
+    renderLayers();
+  }
+  syncChrome();
+}
+
 async function loadFile(file) {
   if (session.bytes && session.objects.length && !session.saved) {
     const ok = await confirmReplace(session.fileName);
@@ -955,6 +1031,8 @@ export function asTool() {
     },
     leave() {},
     isDirty: () => Boolean(session.bytes) && session.objects.length > 0 && !session.saved,
+    captureState: () => captureEditState(),
+    restoreState: (state) => restoreEditState(state),
     run,
     acceptFiles,
     outputName: suggestedName

@@ -259,6 +259,12 @@
                     <button id="scan-rotate" type="button" class="btn">
                       <svg class="icon" aria-hidden="true"><use href="#icon-rotate"></use></svg> تدوير
                     </button>
+                    <button id="scan-move-back" type="button" class="btn" title="انقل الصفحة الحالية لتظهر قبل سابقتها في الملف">
+                      قدّم
+                    </button>
+                    <button id="scan-move-fwd" type="button" class="btn" title="انقل الصفحة الحالية لتظهر بعد التالية في الملف">
+                      أخّر
+                    </button>
                     <button id="scan-remove" type="button" class="btn">
                       <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> إزالة
                     </button>
@@ -275,6 +281,29 @@
                       <option value="png">صور PNG</option>
                     </select>
                   </div>
+                  <details class="scan-pages" id="scan-pages-details">
+                    <summary class="scan-pages__summary">إعدادات الصفحة</summary>
+                    <div class="field">
+                      <label for="scan-page">مقاس الصفحة</label>
+                      <select id="scan-page">
+                        <option value="a4">A4</option>
+                        <option value="letter">Letter</option>
+                        <option value="fit">بمقاس كل صورة</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="scan-orient">الاتجاه</label>
+                      <select id="scan-orient">
+                        <option value="auto">تلقائي حسب الصورة</option>
+                        <option value="portrait">طولي</option>
+                        <option value="landscape">عرضي</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="scan-margin">الهامش (مم)</label>
+                      <input id="scan-margin" type="number" min="0" max="40" step="1" value="0" />
+                    </div>
+                  </details>
                   <div class="btn-row">
                     <button id="scan-add" type="button" class="btn">
                       <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> إضافة
@@ -285,63 +314,6 @@
                   </div>
                 </div>
               </aside>
-            </div>
-          </section>
-
-          <section id="view-images" class="view" aria-labelledby="images-title" role="region" hidden>
-            <h2 class="view__title sr-only" id="images-title" tabindex="-1">صور ← PDF</h2>
-
-            <div class="view__body">
-              <div id="images-drop" class="intake" data-kind="image">
-                <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-images"></use></svg>
-                <span class="intake__title">أسقط الصور هنا</span>
-                <span class="intake__hint">PNG · JPG · WEBP · GIF · BMP</span>
-                <button id="images-browse" type="button" class="btn">
-                  تصفّح
-                </button>
-              </div>
-              <input id="images-input" type="file" accept="image/*,.heic,.heif" multiple hidden />
-
-              <div id="images-panel" hidden>
-                <div class="fieldset">
-                  <div class="field">
-                    <label for="images-page">مقاس الصفحة</label>
-                    <select id="images-page">
-                      <option value="a4">A4</option>
-                      <option value="letter">Letter</option>
-                      <option value="fit">بمقاس كل صورة</option>
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label for="images-orient">الاتجاه</label>
-                    <select id="images-orient">
-                      <option value="auto">تلقائي حسب الصورة</option>
-                      <option value="portrait">طولي</option>
-                      <option value="landscape">عرضي</option>
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label for="images-margin">الهامش (مم)</label>
-                    <input id="images-margin" type="number" min="0" max="40" step="1" value="8" />
-                  </div>
-                </div>
-
-                <div class="doclist__head">
-                  <h3 class="doclist__title">ترتيب الصفحات</h3>
-                  <div class="btn-row">
-                    <button id="images-add" type="button" class="btn">
-                      <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> إضافة
-                    </button>
-                    <button id="images-sort" type="button" class="btn" hidden>
-                      <svg class="icon" aria-hidden="true"><use href="#icon-organize"></use></svg> ترتيب
-                    </button>
-                    <button id="images-clear" type="button" class="btn">
-                      <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> تفريغ
-                    </button>
-                  </div>
-                </div>
-                <div id="images-list" class="doclist"></div>
-              </div>
             </div>
           </section>
 

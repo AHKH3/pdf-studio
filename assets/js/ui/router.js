@@ -19,6 +19,8 @@ import { setOperation } from "./titleblock.js";
  * @property {() => void} [leave]
  * @property {() => boolean} [isDirty]
  * @property {() => string} [tabTitle] عنوان التاب: اسم الأداة + أول ملف
+ * @property {() => any} [captureState] لقطة بيانات العمل الحالي (مراجع + مدخلات) أو null إن فارغ
+ * @property {(state: any) => void | Promise<void>} [restoreState] يستبدل العمل باللقطة (null = تفريغ لطيف بلا revoke/dispose)
  * @property {() => void | Promise<void>} [run]
  * @property {() => string} [outputName]
  * @property {(files: File[]) => void | Promise<void>} [acceptFiles]
@@ -30,13 +32,19 @@ let activeId = "";
 let sweepTimer = 0;
 let routing = false;
 let routerStarted = false;
+/** يزيد مع كل showRoute — لإلغاء نوايا تنقّل متقادمة (settle قديم بعد تنقّل أحدث). */
+let navSeq = 0;
+
+/** @returns {number} */
+export function navEpoch() {
+  return navSeq;
+}
 
 /** @type {Set<(id: string) => void>} */
 const routeListeners = new Set();
 
 const ACTION_FLOW = {
   scan: ["صور", "PDF"],
-  images: ["صور", "PDF"],
   merge: ["PDF+", "PDF"],
   split: ["PDF", "ملفات"],
   rasterize: ["PDF", "صور"],
@@ -45,7 +53,6 @@ const ACTION_FLOW = {
 
 const HUB_TONE = {
   scan: "scan",
-  images: "images",
   rasterize: "rasterize",
   "extract-images": "extract",
   merge: "merge",
@@ -66,6 +73,16 @@ export function toneFor(id) {
 export function onRouteChange(fn) {
   routeListeners.add(fn);
   return () => routeListeners.delete(fn);
+}
+
+/** مستمعو ما قبل المغادرة — لالتقاط عمل التاب قبل استبداله (كل مسارات التنقل). */
+/** @type {Set<(leavingId: string, targetId: string) => void>} */
+const leavingListeners = new Set();
+
+/** @param {(leavingId: string, targetId: string) => void} fn */
+export function onRouteLeaving(fn) {
+  leavingListeners.add(fn);
+  return () => leavingListeners.delete(fn);
 }
 
 /**
@@ -353,11 +370,13 @@ function showRoute(id) {
   }
 }
 
-async function deliverAndEnter(id) {
+async function deliverAndEnter(id, skipFiles = false) {
   const tool = tools.get(id);
   if (!tool) return;
-  const files = filesForAction(id);
-  if (files.length) await tool.acceptFiles?.(files);
+  if (!skipFiles) {
+    const files = filesForAction(id);
+    if (files.length) await tool.acceptFiles?.(files);
+  }
   tool.enter?.();
 
   const heading = el(`view-${id}`)?.querySelector(".view__title, .start__title");
@@ -367,7 +386,9 @@ async function deliverAndEnter(id) {
 
 /**
  * @param {string} id
- * @param {{ skipConfirm?: boolean }} [options] تتجاوز تأكيد المغادرة (تنقّل التابات — العمل محفوظ في التاب)
+ * @param {{ skipConfirm?: boolean; skipDeliver?: boolean }} [options]
+ * تتجاوز تأكيد المغادرة (تنقّل التابات — العمل محفوظ في التاب)،
+ * وتتجاوز تسليم ملفات الـ hub (التاب العائدة لعمل محفوظ لا تُلوَّث بملفات جديدة)
  */
 export async function route(id, options = {}) {
   const tool = tools.get(id);
@@ -383,8 +404,18 @@ export async function route(id, options = {}) {
     if (!ok) return;
   }
 
+  // تنقّل حقيقي قادم — المهتمون (التابات) يلتقطون العمل الحالي أولًا.
+  for (const fn of leavingListeners) {
+    try {
+      fn(activeId, id);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  navSeq += 1;
   showRoute(id);
-  await deliverAndEnter(id);
+  await deliverAndEnter(id, options.skipDeliver === true);
   // بعد تسليم الملفات قد تتغيّر حالة الأداة (عنوان التاب) فنُشعر مجددًا.
   emitRoute(id, true);
 }

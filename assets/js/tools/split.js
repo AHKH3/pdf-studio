@@ -6,11 +6,13 @@ import { confirmDiscard, confirmReplace } from "../ui/dialog.js";
 import { endProgress, startProgress, throwIfCancelled, updateProgress } from "../ui/feedback.js";
 import { wireIntake } from "../ui/intake.js";
 import { setName, setRunEnabled, setSource, setState } from "../ui/titleblock.js";
-import { confirmLarge, pad, parseRanges, rangesToIndexes, readPdfFile, reportFailure, reportSave, tabTitle } from "./shared.js";
+import { confirmLarge, pad, parseRanges, rangesToIndexes, readInputValues, readPdfFile, reportFailure, reportSave, tabTitle, writeInputValues } from "./shared.js";
 
 /** @type {{ name: string; bytes: Uint8Array; pages: number; size: number; password: string } | null} */
 let doc = null;
 let saved = true;
+/** قيم المدخلات الافتراضية (لتاب جديدة لا ترث إعدادات تاب أخرى). */
+let defaultInputs = null;
 
 const mode = () => /** @type {HTMLSelectElement} */ (el("split-mode")).value;
 
@@ -207,6 +209,7 @@ export const splitTool = {
   tabTitle: () => tabTitle(splitTool.name, doc?.name),
 
   setup() {
+    defaultInputs = readInputValues(["split-mode", "split-every", "split-ranges"]);
     wireIntake({ dropId: "split-drop", inputId: "split-input", browseId: "split-browse", accept: "pdf", onFiles: load });
     el("split-mode")?.addEventListener("change", syncFields);
     el("split-ranges")?.addEventListener("input", renderPlan);
@@ -219,6 +222,28 @@ export const splitTool = {
     else clear();
   },
   isDirty: () => Boolean(doc) && !saved,
+  captureState() {
+    return doc ? { doc, saved, inputs: readInputValues(["split-mode", "split-every", "split-ranges"]) } : null;
+  },
+  restoreState(state) {
+    doc = state ? state.doc : null;
+    writeInputValues(state?.inputs);
+    saved = state ? state.saved : true;
+    if (doc) {
+      el("split-panel").hidden = false;
+      el("split-drop").hidden = true;
+      setSource({ label: doc.name, pages: String(doc.pages), size: humanSize(doc.size) });
+      setState("idle");
+      syncFields();
+    } else {
+      writeInputValues(defaultInputs);
+      el("split-panel").hidden = true;
+      el("split-drop").hidden = false;
+      setSource({});
+      setRunEnabled(false);
+      setState("waiting");
+    }
+  },
   acceptFiles,
   run
 };

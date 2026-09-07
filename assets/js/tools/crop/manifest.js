@@ -1,4 +1,4 @@
-import { currentFileName, enter, leave, mount, outputName, run, unmount, acceptFiles } from "./crop.js";
+import { captureCropState, currentFileName, enter, leave, mount, outputName, restoreCropState, run, unmount, acceptFiles } from "./crop.js";
 import { tabTitle } from "../shared.js";
 
 /**
@@ -13,6 +13,8 @@ export const cropManifest = {
   input: "PDF",
   actionLabel: "قص",
   tabTitle: () => tabTitle(cropManifest.name, currentFileName()),
+  captureState: () => captureCropState(),
+  restoreState: (state) => restoreCropState(state),
   mount,
   unmount,
   enter,

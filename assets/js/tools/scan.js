@@ -1,5 +1,5 @@
 import { el, qsa } from "../dom.js";
-import { PAGE_SIZES } from "../config.js";
+import { MM_TO_PT, PAGE_SIZES } from "../config.js";
 import { baseName, filesKey, saveFile, saveFolder, withExtension } from "../lib/files.js";
 import { ensureDecodableImage } from "../lib/heic.js";
 import { bitmapToBytes } from "../lib/bitmap.js";
@@ -9,7 +9,7 @@ import { autoUpscaleIfSmall } from "../enhance/quality.js";
 import { endProgress, startProgress, throwIfCancelled, updateProgress } from "../ui/feedback.js";
 import { wireIntake } from "../ui/intake.js";
 import { setName, setRunEnabled, setSource, setState } from "../ui/titleblock.js";
-import { pad, reportFailure, reportSave, tabTitle, uid } from "./shared.js";
+import { pad, readInputValues, reportFailure, reportSave, tabTitle, uid, writeInputValues } from "./shared.js";
 
 /**
  * @typedef {object} ScanPage
@@ -63,6 +63,9 @@ let lastPointer = null;
 let canvas = null;
 let renderQueued = false;
 let showingResult = false;
+/** قيم المدخلات الافتراضية (لتاب جديدة لا ترث إعدادات تاب أخرى). */
+let defaultInputs = null;
+let defaultMode = "color";
 
 const current = () => pages[index] ?? null;
 
@@ -396,6 +399,8 @@ function refresh() {
 function syncOutputLabel() {
   const format = /** @type {HTMLSelectElement} */ (el("scan-output")).value;
   el("tb-run-label").textContent = format === "pdf" ? "إنشاء PDF" : "حفظ الصور";
+  const pages = el("scan-pages-details");
+  if (pages) pages.hidden = format !== "pdf";
   const name = el("tb-name");
   if (name instanceof HTMLInputElement && format !== "pdf" && /\.pdf$/i.test(name.value)) {
     name.value = baseName(name.value);
@@ -463,6 +468,17 @@ async function add(files) {
     syncPreviewButton();
     refresh();
   }
+}
+
+/** انقل الصفحة الحالية delta مواضع في ترتيب التصدير (سالب = تقديم، موجب = تأخير). */
+function moveCurrent(delta) {
+  if (pages.length < 2) return;
+  const to = index + delta;
+  if (to < 0 || to >= pages.length) return;
+  const [page] = pages.splice(index, 1);
+  pages.splice(to, 0, page);
+  index = to;
+  refresh();
 }
 
 async function removeCurrent() {
@@ -611,11 +627,14 @@ async function run() {
   const format = /** @type {HTMLSelectElement} */ (el("scan-output")).value;
 
   setState("busy");
-  startProgress({ title: "معالجة المستند", desc: "تسوية المنظور، ثم رفع الجودة إلى دقة A4." });
+  startProgress({ title: "معالجة المستند", desc: "تسوية المنظور، ثم رفع الجودة." });
   try {
     if (format === "pdf") {
       const { PDFDocument } = lib();
       const doc = await PDFDocument.create();
+      const preset = /** @type {HTMLSelectElement} */ (el("scan-page")).value;
+      const orientation = /** @type {HTMLSelectElement} */ (el("scan-orient")).value;
+      const margin = Math.max(0, Number(/** @type {HTMLInputElement} */ (el("scan-margin")).value) || 0) * MM_TO_PT;
 
       for (const [order, page] of pages.entries()) {
         throwIfCancelled();
@@ -624,12 +643,22 @@ async function run() {
         const bytes = await bitmapToBytes(bitmap, "image/jpeg", 0.9);
         const embedded = await doc.embedJpg(bytes);
 
-        const landscape = embedded.width > embedded.height;
-        const sheet = PAGE_SIZES.a4;
-        const pageWidth = landscape ? sheet.height : sheet.width;
-        const pageHeight = landscape ? sheet.width : sheet.height;
+        let pageWidth;
+        let pageHeight;
+        if (preset === "fit") {
+          pageWidth = embedded.width * 0.75 + margin * 2;
+          pageHeight = embedded.height * 0.75 + margin * 2;
+        } else {
+          const base = PAGE_SIZES[preset] ?? PAGE_SIZES.a4;
+          const landscape =
+            orientation === "landscape" || (orientation === "auto" && embedded.width > embedded.height);
+          pageWidth = landscape ? base.height : base.width;
+          pageHeight = landscape ? base.width : base.height;
+        }
         const created = doc.addPage([pageWidth, pageHeight]);
-        const scale = Math.min(pageWidth / embedded.width, pageHeight / embedded.height);
+        const boxWidth = Math.max(1, pageWidth - margin * 2);
+        const boxHeight = Math.max(1, pageHeight - margin * 2);
+        const scale = Math.min(boxWidth / embedded.width, boxHeight / embedded.height);
         const drawWidth = embedded.width * scale;
         const drawHeight = embedded.height * scale;
         created.drawImage(embedded, {
@@ -694,8 +723,35 @@ export const scanTool = {
   actionLabel: "أنشئ",
   outputName: () => "مستند-ممسوح.pdf",
   tabTitle: () => tabTitle(scanTool.name, pages[0]?.name),
+  captureState() {
+    if (!pages.length) return null;
+    return {
+      pages: pages.slice(), index, selected, showingResult, acceptedKey,
+      inputs: readInputValues(["scan-output", "scan-page"])
+    };
+  },
+  restoreState(state) {
+    // الصور (bitmaps) ومقابض المحرك مشاركة بالمراجع — بلا close/release هنا.
+    pages = state ? state.pages.slice() : [];
+    index = state ? state.index : 0;
+    selected = state ? state.selected : 0;
+    showingResult = state ? state.showingResult : false;
+    acceptedKey = state ? state.acceptedKey : "";
+    dragging = -1;
+    draggingEdge = -1;
+    lastPointer = null;
+    writeInputValues(state?.inputs ?? defaultInputs);
+    for (const input of qsa('input[name="scan-mode"]')) {
+      /** @type {HTMLInputElement} */ (input).checked =
+        input.value === (state && current() ? current().mode : defaultMode);
+    }
+    syncPreviewButton();
+    refresh();
+  },
 
   setup() {
+    defaultInputs = readInputValues(["scan-output", "scan-page"]);
+    defaultMode = document.querySelector('input[name="scan-mode"]:checked')?.value ?? "color";
     canvas = /** @type {HTMLCanvasElement} */ (el("scan-canvas"));
     wireCanvas();
     wireIntake({ dropId: "scan-drop", inputId: "scan-input", browseId: "scan-browse", accept: "image", onFiles: add });
@@ -719,6 +775,8 @@ export const scanTool = {
         refresh();
       }
     });
+    el("scan-move-back")?.addEventListener("click", () => moveCurrent(-1));
+    el("scan-move-fwd")?.addEventListener("click", () => moveCurrent(1));
 
     el("scan-rotate")?.addEventListener("click", () => {
       const page = current();

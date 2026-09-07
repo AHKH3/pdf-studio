@@ -30,6 +30,54 @@ export function currentFileName() {
   return doc?.name ?? "";
 }
 
+/** نطاق القص المختار. */
+function scopeValue() {
+  return scope();
+}
+
+/** @param {"current" | "all"} value */
+function setScopeValue(value) {
+  const all = /** @type {HTMLInputElement | null} */ (node("crop-scope-all"));
+  const current = /** @type {HTMLInputElement | null} */ (node("crop-scope-current"));
+  if (all) all.checked = value === "all";
+  if (current) current.checked = value !== "all";
+}
+
+/** النطاق الافتراضي (لتاب جديدة لا ترث نطاق تاب أخرى). */
+let defaultScope = "current";
+
+/** لقطة عمل القص (مراجع + صندوق + نطاق) أو null. */
+export function captureCropState() {
+  if (!doc) return null;
+  return { doc, pdfjsDoc, pageNumber, box: overlay ? { ...overlay.box } : { ...DEFAULT_BOX }, scope: scopeValue() };
+}
+
+/** @param {any} state */
+export async function restoreCropState(state) {
+  // تفريغ لطيف: إسقاط مراجع فقط بلا destroy — اللقطات الأخرى تشاركها.
+  doc = state ? state.doc : null;
+  pdfjsDoc = state ? state.pdfjsDoc : null;
+  pageNumber = state ? state.pageNumber : 1;
+  setScopeValue(state?.scope ?? defaultScope);
+  overlay?.setBox(state?.box ? { ...state.box } : { ...DEFAULT_BOX });
+  if (doc) {
+    const drop = node("crop-drop");
+    const panel = node("crop-panel");
+    if (drop) drop.hidden = true;
+    if (panel) panel.hidden = false;
+    syncChrome();
+    renderReadout();
+    if (pdfjsDoc) await showPage(pageNumber);
+  } else {
+    viewport = null;
+    const drop = node("crop-drop");
+    const panel = node("crop-panel");
+    if (drop) drop.hidden = false;
+    if (panel) panel.hidden = true;
+    syncChrome();
+  }
+}
+
 function rootEl() {
   return document.getElementById("view-crop") || document;
 }
@@ -339,6 +387,8 @@ export function mount(root) {
   }
 
   if (!intakeWired) {
+    // النطاق الافتراضي من DOM البكر (لتاب جديدة لا ترث نطاق تاب أخرى).
+    defaultScope = node("crop-scope-all")?.checked ? "all" : "current";
     wireIntake({
       dropId: "crop-drop",
       inputId: "crop-input",

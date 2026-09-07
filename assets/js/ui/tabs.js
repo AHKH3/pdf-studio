@@ -1,19 +1,17 @@
 import { el } from "../dom.js";
 import { confirmDiscard, isDialogOpen } from "./dialog.js";
-import { activeTool, getTool, onRouteChange, route, toneFor } from "./router.js";
-import { onChromeChange } from "./titleblock.js";
+import { activeTool, getTool, navEpoch, onRouteChange, onRouteLeaving, route, toneFor } from "./router.js";
+import { getName, onChromeChange, setName } from "./titleblock.js";
 
 /**
- * شريط التابات — المرحلة 1.
- * التاب يتذكّر الأداة فقط (`toolId`)؛ حالة الأداة singleton مشتركة،
- * فتابان لنفس الأداة يعرضان نفس الملفات حتى عزل الحالة (المرحلة 2).
- * - تاب جديدة (`+` أو Ctrl+T) تفتح دائمًا على الشاشة الرئيسية.
- * - الضغط على أداة ينقّل التاب الحالية إليها (لا يفتح تابًا تلقائيًا).
- * - إغلاق آخر تاب يفتح تاب بداية واحدة.
+ * شريط التابات — عزل كامل لكل تاب (المرحلة 2).
+ * كل تاب تحمل مخزن لقطات `stores` (أداة → {state, name})؛ عند مغادرة أداة
+ * تُلتقط حالتها، وعند العودة تُستعاد (أو تُفرَّغ لتاب جديدة). تسليم ملفات
+ * الـ hub يُتخطّى للتاب العائدة حتى لا يلوّث عملها المحفوظ.
  */
 
 let seq = 0;
-/** @type {Array<{ key: number; toolId: string; title: string }>} */
+/** @type {Array<{ key: number; toolId: string; title: string; dirty: boolean; stores: Map<string, { state: any; name: string }> }>} */
 let tabs = [];
 let activeKey = 0;
 let lastSnapshot = "";
@@ -28,19 +26,61 @@ function glyph(useId) {
   return svg;
 }
 
-/** @param {{ key: number; toolId: string; title: string }} tab */
+/** @param {{ key: number; toolId: string; title: string; dirty: boolean; stores: Map<string, any> }} tab */
 function resolveTitle(tab) {
   const tool = getTool(tab.toolId);
   return tool?.tabTitle?.() ?? tool?.name ?? tab.toolId;
 }
 
 function snapshot() {
-  return `${activeKey}::${tabs.map((tab) => `${tab.toolId}|${tab.title}`).join(";;")}`;
+  return `${activeKey}::${tabs.map((tab) => `${tab.toolId}|${tab.title}|${tab.dirty ? 1 : 0}`).join(";;")}`;
+}
+
+/** هل التاب تحمل عملًا محفوظًا لهذه الأداة (لتخطي تسليم ملفات الـ hub)؟ */
+function storedStateFor(tab, toolId) {
+  const env = tab?.stores.get(toolId);
+  return env && env.state != null ? env : null;
+}
+
+/** يلتقط عمل أداة في تابها (مراجع + اسم المخرج) ويجمّد dirty. */
+function captureInto(tab, tool) {
+  if (!tab || !tool) return;
+  if (typeof tool.captureState === "function" && typeof tool.restoreState === "function") {
+    tab.stores.set(tool.id, { state: tool.captureState(), name: getName() });
+  }
+  if (tab.key === activeKey) syncActiveDirty();
+}
+
+/** يحدّث dirty للتاب النشطة من الأداة المعروضة حاليًا. */
+function syncActiveDirty() {
+  const tab = tabs.find((item) => item.key === activeKey);
+  const tool = activeTool();
+  if (!tab || !tool) return;
+  tab.dirty = tool.isDirty?.() ?? tool.captureState?.() != null;
+}
+
+/**
+ * يستعيد عمل التاب للأداة المستهدفة (أو يفرّغها لتاب جديدة) + اسم المخرج.
+ * @param {{ key: number; toolId: string; title: string; dirty: boolean; stores: Map<string, any> }} tab
+ */
+async function restoreInto(tab) {
+  const tool = getTool(tab.toolId);
+  if (!tool) return;
+  const env = storedStateFor(tab, tool.id);
+  if (env) {
+    await tool.restoreState?.(env.state);
+    if (env.name) setName(env.name);
+  } else if (typeof tool.restoreState === "function") {
+    await tool.restoreState(null);
+  }
+  syncActiveDirty();
+  renderTabs();
 }
 
 export function renderTabs() {
   const host = el("tab-list");
   if (!host) return;
+  syncActiveDirty();
   for (const tab of tabs) tab.title = resolveTitle(tab);
   const snap = snapshot();
   if (snap === lastSnapshot) return;
@@ -111,33 +151,44 @@ export async function activateTab(key) {
     renderTabs();
     return;
   }
+  // الالتقاط الصريح أولًا — قبل تبديل activeKey حتى لا يلتقط خطاف المغادرة في التاب الخطأ.
+  const outgoing = tabs.find((item) => item.key === activeKey);
+  captureInto(outgoing, activeTool());
   if (tab.toolId === activeTool()?.id) {
+    // نفس الأداة في تاب أخرى: استعد عمل هذه التاب (أو فرّغها) بلا تنقّل.
     activeKey = key;
-    renderTabs();
+    await restoreInto(tab);
     return;
   }
   activeKey = key;
   renderTabs();
-  const landed = await settleNavigation(key, tab.toolId);
-  if (!landed) {
-    // تعذّر الوصول للتاب (موجّه مشغول وانتهت المهلة) — التاب النشطة تعكس
-    // الواقع الحالي بدل كسر التزامن مع العرض.
-    const current = tabs.find((item) => item.key === key);
-    if (current && activeKey === key) current.toolId = activeTool()?.id || current.toolId;
+  const skipFiles = storedStateFor(tab, tab.toolId) != null;
+  const landed = await settleNavigation(key, tab.toolId, skipFiles);
+  const live = tabs.find((item) => item.key === key);
+  if (live && activeKey === key) {
+    if (landed) await restoreInto(live);
+    else adoptReality(live);
+    return;
   }
   renderTabs();
 }
 
 export async function openTab() {
-  const tab = { key: (seq += 1), toolId: "start", title: "" };
+  // التقاط عمل التاب الحالية قبل إنشاء الجديدة (خطاف المغادرة سيتجاوز لاحقًا لاختلاف الأداة).
+  const outgoing = tabs.find((item) => item.key === activeKey);
+  captureInto(outgoing, activeTool());
+  const tab = { key: (seq += 1), toolId: "start", title: "", dirty: false, stores: new Map() };
   tabs.push(tab);
   activeKey = tab.key;
   renderTabs();
-  const landed = await settleNavigation(tab.key, "start");
-  // تعذّر الوصول للبداية (نادر) — تُبقي التاب على الأداة المعروضة حاليًا بدل حذفها.
-  if (!landed && activeKey === tab.key) {
-    const current = tabs.find((item) => item.key === tab.key);
-    if (current) current.toolId = activeTool()?.id || "start";
+  const landed = await settleNavigation(tab.key, "start", false);
+  const live = tabs.find((item) => item.key === tab.key);
+  if (live && activeKey === tab.key) {
+    // التاب الجديدة تبدأ فارغة عند الوصول (restore null يفرّغ بقايا التاب السابقة)؛
+    // وعند التعذّر تعتمد الواقع الحالي وتمتلكه.
+    if (landed) await restoreInto(live);
+    else adoptReality(live);
+    return;
   }
   renderTabs();
 }
@@ -148,34 +199,57 @@ export async function closeTab(key) {
   if (index < 0) return;
   const tab = tabs[index];
   const tool = getTool(tab.toolId);
-  if (tool?.isDirty?.()) {
-    const ok = await confirmDiscard(tool.name);
+  // التحذير من dirty التاب نفسها (مجمّد عند آخر نشاط)، لا من حالة الأداة الحية.
+  if (tab.dirty) {
+    const ok = await confirmDiscard(tool?.name ?? tab.title);
     if (!ok) return;
   }
   tabs.splice(index, 1);
-  if (!tabs.length) {
-    const fresh = { key: (seq += 1), toolId: "start", title: "" };
-    tabs.push(fresh);
-    activeKey = fresh.key;
-    renderTabs();
-    const landed = await settleNavigation(fresh.key, "start");
-    if (!landed && activeKey === fresh.key) fresh.toolId = activeTool()?.id || "start";
-    renderTabs();
-    return;
-  }
-  if (key === activeKey) {
-    const next = tabs[Math.min(index, tabs.length - 1)];
-    activeKey = next.key;
-    renderTabs();
-    if (next.toolId !== activeTool()?.id) {
-      const landed = await settleNavigation(next.key, next.toolId);
-      if (!landed && activeKey === next.key) next.toolId = activeTool()?.id || "start";
+  // أثناء إغلاق تاب نشطة: خطاف المغادرة لا يلتقط العمل المحذوف في تاب الجار.
+  closingKey = key;
+  try {
+    if (!tabs.length) {
+      const fresh = { key: (seq += 1), toolId: "start", title: "", dirty: false, stores: new Map() };
+      tabs.push(fresh);
+      activeKey = fresh.key;
+      renderTabs();
+      const landed = await settleNavigation(fresh.key, "start", false);
+      const live = tabs.find((item) => item.key === fresh.key);
+      if (live && activeKey === fresh.key) {
+        // الإغلاق قرار حذف: نستعيد عمل التاب الجديدة (أو نفرّغ) ولا نلتقط بقايا المحذوف.
+        if (!landed) live.toolId = activeTool()?.id || "start";
+        await restoreInto(live);
+        return;
+      }
+      renderTabs();
+      return;
+    }
+    if (key === activeKey) {
+      const next = tabs[Math.min(index, tabs.length - 1)];
+      activeKey = next.key;
+      renderTabs();
+      if (next.toolId !== activeTool()?.id) {
+        const skipFiles = storedStateFor(next, next.toolId) != null;
+        const landed = await settleNavigation(next.key, next.toolId, skipFiles);
+        const live = tabs.find((item) => item.key === next.key);
+        if (live && activeKey === next.key) {
+          if (!landed) live.toolId = activeTool()?.id || live.toolId;
+          await restoreInto(live);
+          return;
+        }
+      }
+      renderTabs();
+    } else {
       renderTabs();
     }
-  } else {
-    renderTabs();
+  } finally {
+    if (closingKey === key) closingKey = null;
   }
 }
+
+/** مفتاح تاب قيد الإغلاق — خطاف المغادرة يتجاوزه حتى لا يُحيي عملًا محذوفًا في تاب الجار. */
+/** @type {number | null} */
+let closingKey = null;
 
 export function closeActiveTab() {
   return closeTab(activeKey);
@@ -193,12 +267,8 @@ export function cycleTabs(dir) {
  * @param {string} id
  * @param {{ navigation: boolean }} [meta]
  */
-function syncFromRoute(id, meta) {
-  // التنقّل الحقيقي فقط يتبنّاه التاب النشط؛ إشعارات التحديث (تحميل تدريجي) تُحدّث العناوين فقط.
-  if (meta?.navigation !== false) {
-    const tab = tabs.find((item) => item.key === activeKey);
-    if (tab && tab.toolId !== id) tab.toolId = id;
-  }
+function syncFromRoute() {
+  // التبنّي يتم ذريًا في onRouteLeaving؛ هنا تحديث عناوين فقط.
   renderTabs();
 }
 
@@ -211,30 +281,71 @@ function routerBusy() {
  * فورًا ويُستكمل التنقل عند أول فرصة بدل الفشل الصامت.
  * @param {number} wantKey التاب التي طلب المستخدم الوصول لها
  * @param {string} id الأداة المستهدفة
+ * @param {boolean} [skipFiles] تخطي تسليم ملفات الـ hub (التاب العائدة لعمل محفوظ)
  * @returns {Promise<boolean>} true إن استقر العرض على الأداة المطلوبة
  */
-async function settleNavigation(wantKey, id) {
-  await route(id, { skipConfirm: true });
+async function settleNavigation(wantKey, id, skipFiles = false) {
+  const epoch0 = navEpoch();
+  await route(id, { skipConfirm: true, skipDeliver: skipFiles });
   if (activeTool()?.id === id) return true;
   const fromId = activeTool()?.id;
   const t0 = Date.now();
   while (Date.now() - t0 < 30000) {
-    if (activeKey !== wantKey || activeTool()?.id !== fromId) return false;
+    // تنقّل أحدث من جهة أخرى يُلغي هذه النية المتقادمة فورًا.
+    if (activeKey !== wantKey || activeTool()?.id !== fromId || navEpoch() !== epoch0) return false;
     if (!routerBusy()) break;
     await new Promise((resolve) => setTimeout(resolve, 200));
   }
-  if (activeKey !== wantKey || activeTool()?.id !== fromId || routerBusy()) return false;
-  await route(id, { skipConfirm: true });
+  if (activeKey !== wantKey || activeTool()?.id !== fromId || navEpoch() !== epoch0 || routerBusy()) return false;
+  await route(id, { skipConfirm: true, skipDeliver: skipFiles });
   return activeTool()?.id === id;
+}
+
+/**
+ * عند تعذّر/إلغاء التنقل: التاب تعتمد الواقع الحالي وتمتلكه (التقاط الحي)
+ * بدل تدميره باستعادة قديمة — ما يُرى هو ما تحفظه التاب.
+ * @param {{ key: number; toolId: string; title: string; dirty: boolean; stores: Map<string, any> }} tab
+ */
+function adoptReality(tab) {
+  tab.toolId = activeTool()?.id || tab.toolId;
+  captureInto(tab, getTool(tab.toolId), "adopt");
+  renderTabs();
+}
+
+export function hasDirtyTabs() {
+  return tabs.some((tab) => tab.dirty);
 }
 
 export function initTabs() {
   const current = activeTool()?.id || "start";
-  tabs = [{ key: (seq += 1), toolId: current, title: "" }];
+  tabs = [{ key: (seq += 1), toolId: current, title: "", dirty: false, stores: new Map() }];
   activeKey = tabs[0].key;
   onRouteChange(syncFromRoute);
+  // أي تنقّل حقيقي يلتقط عمل التاب المغادَرة ويتبنّى الوجهة ذريًا (قبل أي فجوة آجلة).
+  // يُتجاوز أثناء الإغلاق (عمل محذوف بقرار المستخدم) وعندما لا تطابق التاب الأداة المغادَرة
+  // (التدفقات التقطت صراحةً قبل تبديل activeKey).
+  onRouteLeaving((leavingId, targetId) => {
+    if (closingKey != null) return;
+    const tab = tabs.find((item) => item.key === activeKey);
+    if (!tab || tab.toolId !== leavingId) return;
+    captureInto(tab, getTool(leavingId));
+    tab.toolId = targetId;
+    // فتح لتاب بلا عمل محفوظ = بداية نظيفة: صفّر الأداة (تشمل الإعدادات
+    // الافتراضية) قبل تسليم ملفات الـ hub، وإلا ورثت إعدادات تاب أخرى عبر DOM المشترك.
+    if (!storedStateFor(tab, targetId)) {
+      try {
+        void getTool(targetId)?.restoreState?.(null);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  });
   // أي تغيّر في شريط الحالة قد يعني ملفات جديدة → حدّث العناوين.
   onChromeChange(() => renderTabs());
   el("tab-new")?.addEventListener("click", () => void openTab());
+  // إغلاق التطبيق يسأل عن تابات dirty أيضًا، لا الأداة الحية وحدها.
+  const prev = globalThis.__pdfStudioHasUnsavedWork;
+  globalThis.__pdfStudioHasUnsavedWork =
+    () => (typeof prev === "function" ? prev() : false) || hasDirtyTabs();
   renderTabs();
 }

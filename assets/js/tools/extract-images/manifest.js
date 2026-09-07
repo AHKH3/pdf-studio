@@ -4,7 +4,7 @@ import { ACTIONS, DocList } from "../../ui/doclist.js";
 import { endProgress, startProgress, updateProgress } from "../../ui/feedback.js";
 import { wireIntake } from "../../ui/intake.js";
 import { getName, setName, setRunEnabled, setSource, setState } from "../../ui/titleblock.js";
-import { confirmDiscard, confirmLarge, confirmReplace, pad, readPdfFile, reportFailure, reportSave, tabTitle } from "../shared.js";
+import { confirmDiscard, confirmLarge, confirmReplace, pad, readInputValues, readPdfFile, reportFailure, reportSave, tabTitle, writeInputValues } from "../shared.js";
 import { extractEmbeddedImages } from "./extract.js";
 
 export const id = "extract-images";
@@ -23,6 +23,8 @@ let session = null;
 /** @type {DocList | null} */
 let list = null;
 let wired = false;
+/** قيم المدخلات الافتراضية (لتاب جديدة لا ترث إعدادات تاب أخرى). */
+let defaultInputs = null;
 
 function target() {
   return /** @type {HTMLSelectElement | null} */ (el("extract-images-target"))?.value || "zip";
@@ -198,6 +200,7 @@ export function mount(host) {
   }
   if (wired) return;
   wired = true;
+  defaultInputs = readInputValues(["extract-images-target"]);
 
   list = new DocList("extract-images-list", {
     emptyText: "لا توجد صور مضمّنة في هذا الملف. إذا أردت صورة لكل صفحة فاستخدم «PDF → صور».",
@@ -249,6 +252,16 @@ export const extractImagesTool = {
   enter,
   run,
   acceptFiles,
+  captureState() {
+    if (!session) return null;
+    return { session, inputs: readInputValues(["extract-images-target"]) };
+  },
+  restoreState(state) {
+    // الجلسة (بايتات + صور مستخرجة) مشاركة بالمراجع — بلا revoke/clear هنا.
+    session = state ? state.session : null;
+    writeInputValues(state ? state.inputs : defaultInputs);
+    enter();
+  },
   outputName: outputStem
 };
 

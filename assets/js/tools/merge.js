@@ -161,6 +161,15 @@ export const mergeTool = {
   actionLabel: "دمج",
   outputName: () => "مستند-مدمج.pdf",
   tabTitle: () => tabTitle(mergeTool.name, items[0]?.name),
+  captureState() {
+    return items.length ? { items: items.slice(), saved } : null;
+  },
+  restoreState(state) {
+    // تفريغ لطيف: إعادة إسناد فقط بلا revoke — اللقطات الأخرى تشارك المراجع.
+    items = state ? state.items.slice() : [];
+    saved = state ? state.saved : true;
+    refresh();
+  },
 
   setup() {
     list = new DocList("merge-list", {
