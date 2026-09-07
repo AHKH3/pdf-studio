@@ -31,7 +31,12 @@ function mapPoints(pageAngle, mediaW, mediaH, points) {
 }
 
 function svgPath(points, close) {
-  const cmds = points.map((point, index) => `${index ? "L" : "M"} ${point.x.toFixed(3)} ${point.y.toFixed(3)}`);
+  // pdf-lib's drawSvgPath assumes SVG space (origin top-left, y down) and
+  // always applies scale(1,-1). Our points are already in PDF media space
+  // (origin bottom-left, y up), so pre-negate y: the flip maps (x,-y) back
+  // to (x,y). Without this, rects/triangles land mirrored below the page
+  // and vanish from the saved file while the on-screen preview looks fine.
+  const cmds = points.map((point, index) => `${index ? "L" : "M"} ${point.x.toFixed(3)} ${(-point.y).toFixed(3)}`);
   return `${cmds.join(" ")}${close ? " Z" : ""}`;
 }
 

@@ -67,6 +67,39 @@ function pageText(doc, index) {
   return parts.join("\n");
 }
 
+/**
+ * Every drawn point of a page stream, transformed by its own graphics-state
+ * CTM (tracks `cm` per q…Q block). Presence-only assertions once let rects
+ * and triangles pass while pdf-lib's drawSvgPath Y-flip stamped them mirrored
+ * below the page — invisible in the saved file. This pins placement on-page.
+ */
+function placedPoints(stream) {
+  const mul = (m2, m1) => [
+    m2[0] * m1[0] + m2[2] * m1[1], m2[1] * m1[0] + m2[3] * m1[1],
+    m2[0] * m1[2] + m2[2] * m1[3], m2[1] * m1[2] + m2[3] * m1[3],
+    m2[0] * m1[4] + m2[2] * m1[5] + m2[4], m2[1] * m1[4] + m2[3] * m1[5] + m2[5]
+  ];
+  const num = "(-?\\d+\\.?\\d*)";
+  const pts = [];
+  for (const block of stream.match(/q[\s\S]*?Q/g) || []) {
+    let ctm = [1, 0, 0, 1, 0, 0];
+    for (const m of block.matchAll(new RegExp(`${num}\\s+${num}\\s+${num}\\s+${num}\\s+${num}\\s+${num}\\s+cm(?=\\s|$)`, "g"))) {
+      ctm = mul([1, 2, 3, 4, 5, 6].map((i) => Number(m[i])), ctm);
+    }
+    const raw = [];
+    for (const m of block.matchAll(new RegExp(`${num}\\s+${num}\\s+[ml](?=\\s|$)`, "g"))) {
+      raw.push([Number(m[1]), Number(m[2])]);
+    }
+    for (const m of block.matchAll(new RegExp(`${num}\\s+${num}\\s+${num}\\s+${num}\\s+${num}\\s+${num}\\s+c(?=\\s|$)`, "g"))) {
+      raw.push([Number(m[1]), Number(m[2])], [Number(m[3]), Number(m[4])], [Number(m[5]), Number(m[6])]);
+    }
+    for (const [x, y] of raw) {
+      pts.push({ x: ctm[0] * x + ctm[2] * y + ctm[4], y: ctm[1] * x + ctm[3] * y + ctm[5] });
+    }
+  }
+  return pts;
+}
+
 console.log("\nedit flatten (production stamp → saved file → decoded pages)");
 
 const source = await PDFDocument.create();
@@ -113,6 +146,16 @@ check(
   t1.slice(0, 160)
 );
 check("output is larger than the input (paint actually added)", outBytes.length > inputBytes.length);
+
+for (const [i, t] of [t0, t1, t2].entries()) {
+  const pts = placedPoints(t);
+  const bad = pts.filter((p) => p.x < -1 || p.x > 596 || p.y < -1 || p.y > 843);
+  check(
+    `page ${i + 1} paints every vector point inside the page (no off-page mirror)`,
+    pts.length > 0 && bad.length === 0,
+    bad.slice(0, 3).map((p) => `(${p.x.toFixed(1)},${p.y.toFixed(1)})`).join(" ") || `no points`
+  );
+}
 
 console.log(`\n${checks - failures}/${checks} checks passed`);
 process.exit(failures ? 1 : 0);
