@@ -90,7 +90,7 @@ export async function flattenObjects(bytes, objects) {
   const total = Math.max(1, objects.length);
   for (const [index, obj] of objects.entries()) {
     throwIfCancelled();
-    const page = pages[obj.pageIndex];
+    const page = Number.isInteger(obj?.pageIndex) ? pages[obj.pageIndex] : undefined;
     if (!page) continue;
     const { width: mediaW, height: mediaH } = page.getSize();
     const pageAngle = page.getRotation().angle || 0;
@@ -131,6 +131,9 @@ export async function flattenObjects(bytes, objects) {
       const fill = obj.fillOn === false ? undefined : hexToRgb(obj.fill || "#8AA4E0");
       const stroke = hexToRgb(obj.stroke || "#1E3A8A");
       const borderWidth = Math.max(0, finiteNumber(obj.strokeWidth, 1.5));
+      // A shape with no fill and no stroke paints nothing: skipping it keeps
+      // the output identical instead of risking a driver quirk on empty paths.
+      if (!fill && !borderWidth) continue;
 
       if (obj.kind === "ellipse") {
         const c = alongLocal(obj, 0, 0);

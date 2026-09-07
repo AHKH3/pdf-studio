@@ -204,6 +204,48 @@ export function scalePoints(points, from, to) {
 }
 
 /**
+ * Rigid group translation: the largest dx/dy that keeps EVERY box inside the
+ * page, so multi-selected layers move together without drifting apart at edges.
+ *
+ * @param {Array<{ x: number; y: number; width: number; height: number }>} boxes
+ * @param {number} dx
+ * @param {number} dy
+ * @param {number} pageW
+ * @param {number} pageH
+ */
+export function clampGroupDelta(boxes, dx, dy, pageW, pageH) {
+  let minDx = -Infinity;
+  let maxDx = Infinity;
+  let minDy = -Infinity;
+  let maxDy = Infinity;
+  for (const box of boxes) {
+    minDx = Math.max(minDx, -box.x);
+    maxDx = Math.min(maxDx, pageW - (box.x + box.width));
+    minDy = Math.max(minDy, -box.y);
+    maxDy = Math.min(maxDy, pageH - (box.y + box.height));
+  }
+  if (minDx === -Infinity) return { dx: 0, dy: 0 };
+  return {
+    dx: Math.min(Math.max(dx, minDx), maxDx),
+    dy: Math.min(Math.max(dy, minDy), maxDy)
+  };
+}
+
+/**
+ * Visual-space rectangle intersection (marquee selection).
+ * Rotation is ignored: the unrotated box is used on purpose so a rotated
+ * layer is still easy to catch with the marquee.
+ *
+ * @param {{ x: number; y: number; width: number; height: number }} a
+ * @param {{ x: number; y: number; width: number; height: number }} b
+ */
+export function rectsIntersect(a, b) {
+  return (
+    a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
+  );
+}
+
+/**
  * @param {Array<{ x: number; y: number }>} points
  * @param {number} dx
  * @param {number} dy

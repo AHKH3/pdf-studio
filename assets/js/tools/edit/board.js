@@ -1,13 +1,20 @@
 /**
  * Interactive page board for the edit overlay.
  * Object rectangles live in visual PDF space (origin bottom-left, upright).
+ *
+ * Selection model: every tool manipulates objects directly (click moves,
+ * handles resize/rotate, text focuses for typing). The select tool never
+ * activates itself — it only multi-selects (click / ctrl-click / marquee)
+ * so several layers can be moved, duplicated or deleted together.
  */
 import { openDocument, pdfRenderContext } from "../../pdf/core.js";
 import {
   MIN_PT,
   bboxFromPoints,
   clampBox,
+  clampGroupDelta,
   clampedMove,
+  rectsIntersect,
   scalePoints,
   worldToLocal
 } from "./coords.js";
@@ -23,8 +30,8 @@ const FREE_HANDLES = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
  * @param {HTMLElement} options.layer
  * @param {HTMLElement} [options.wrap]
  * @param {() => Array<any>} options.getObjects
- * @param {() => string} options.getSelectedId
- * @param {(id: string) => void} options.setSelectedId
+ * @param {() => string[]} options.getSelectedIds
+ * @param {(ids: string[]) => void} options.setSelectedIds
  * @param {() => string} options.getTool
  * @param {() => object} options.getStyle
  * @param {(obj: any) => void} options.onCreate
@@ -40,8 +47,8 @@ export function createBoard(options) {
     layer,
     wrap,
     getObjects,
-    getSelectedId,
-    setSelectedId,
+    getSelectedIds,
+    setSelectedIds,
     getTool,
     getStyle,
     onCreate,
@@ -64,6 +71,8 @@ export function createBoard(options) {
   let ghostInk = null;
   /** @type {SVGSVGElement | null} */
   let ghost = null;
+  /** @type {HTMLElement | null} */
+  let marquee = null;
   let zoom = 1;
   let fitPx = 0;
   let hiResTimer = 0;
@@ -100,7 +109,7 @@ export function createBoard(options) {
     };
   }
 
-  /** CSS px per pt at zoom 1 — fit the page inside the visible wrap, never upscale past 1:1. */
+  /** CSS px per pt at zoom 1 — fit the page into the visible wrap (fills it). */
   function computeFitPx() {
     if (!visualWidth || !visualHeight) return 0;
     const { w, h } = availableBox();
@@ -288,7 +297,8 @@ export function createBoard(options) {
   }
 
   function paintOverlay() {
-    const selected = getSelectedId();
+    const selected = new Set(getSelectedIds());
+    const singleId = selected.size === 1 ? [...selected][0] : "";
     const focused = document.activeElement;
     const keepFocusId =
       focused instanceof HTMLTextAreaElement ? focused.closest(".edit-obj")?.dataset.id : "";
@@ -303,14 +313,15 @@ export function createBoard(options) {
     layer.dataset.tool = getTool();
 
     for (const obj of objectsOnPage()) {
+      const isSelected = selected.has(obj.id);
       const node = document.createElement("div");
-      node.className = "edit-obj" + (obj.id === selected ? " is-selected" : "");
+      node.className = "edit-obj" + (isSelected ? " is-selected" : "");
       node.dataset.id = obj.id;
       node.dataset.type = obj.type;
       node.tabIndex = 0;
       node.setAttribute("role", "button");
       node.setAttribute("aria-label", labelFor(obj));
-      node.setAttribute("aria-selected", obj.id === selected ? "true" : "false");
+      node.setAttribute("aria-selected", isSelected ? "true" : "false");
       positionNode(node, obj);
 
       if (obj.type === "text") {
@@ -326,7 +337,7 @@ export function createBoard(options) {
         node.style.lineHeight = "1.45";
         node.style.textAlign = obj.align || "right";
         node.style.padding = `${padPx}px`;
-        if (obj.id === selected || obj.id === keepFocusId) {
+        if (obj.id === singleId || obj.id === keepFocusId) {
           const area = document.createElement("textarea");
           area.value = obj.text || "";
           area.dir = "rtl";
@@ -336,7 +347,7 @@ export function createBoard(options) {
             if (event.key === "Escape") {
               event.preventDefault();
               event.stopPropagation();
-              setSelectedId("");
+              setSelectedIds([]);
               paintOverlay();
               onChange();
             }
@@ -369,19 +380,23 @@ export function createBoard(options) {
         node.append(inkSvg(obj));
       }
 
-      const handles = obj.type === "image" ? CORNER_HANDLES : FREE_HANDLES;
-      for (const handle of handles) {
-        const grip = document.createElement("span");
-        grip.className = "edit-handle";
-        grip.dataset.handle = handle;
-        grip.setAttribute("aria-hidden", "true");
-        node.append(grip);
+      // Handles + rotate grip only for a single selection: precise control
+      // stays predictable, groups move as one block.
+      if (obj.id === singleId) {
+        const handles = obj.type === "image" ? CORNER_HANDLES : FREE_HANDLES;
+        for (const handle of handles) {
+          const grip = document.createElement("span");
+          grip.className = "edit-handle";
+          grip.dataset.handle = handle;
+          grip.setAttribute("aria-hidden", "true");
+          node.append(grip);
+        }
+        const rotate = document.createElement("span");
+        rotate.className = "edit-rotate";
+        rotate.dataset.handle = "rotate";
+        rotate.setAttribute("aria-hidden", "true");
+        node.append(rotate);
       }
-      const rotate = document.createElement("span");
-      rotate.className = "edit-rotate";
-      rotate.dataset.handle = "rotate";
-      rotate.setAttribute("aria-hidden", "true");
-      node.append(rotate);
 
       layer.append(node);
 
@@ -442,6 +457,33 @@ export function createBoard(options) {
     return null;
   }
 
+  function beginMarquee(visual) {
+    endMarquee();
+    marquee = document.createElement("div");
+    marquee.className = "edit-marquee";
+    layer.append(marquee);
+    return { start: visual };
+  }
+
+  function updateMarquee(start, visual) {
+    if (!marquee) return { x: 0, y: 0, width: 0, height: 0 };
+    const x = Math.min(start.x, visual.x);
+    const y = Math.min(start.y, visual.y);
+    const width = Math.abs(visual.x - start.x);
+    const height = Math.abs(visual.y - start.y);
+    const scale = displayScale();
+    marquee.style.left = `${x * scale}px`;
+    marquee.style.top = `${(visualHeight - y - height) * scale}px`;
+    marquee.style.width = `${width * scale}px`;
+    marquee.style.height = `${height * scale}px`;
+    return { x, y, width, height };
+  }
+
+  function endMarquee() {
+    marquee?.remove();
+    marquee = null;
+  }
+
   async function renderPage(index) {
     if (!pdf) return;
     const token = (generation += 1);
@@ -484,6 +526,43 @@ export function createBoard(options) {
     paintOverlay();
   }
 
+  /**
+   * Sharp page thumbnail: rendered at 2x its CSS size so small previews stay
+   * crisp on hidpi screens (this is what used to look blurry everywhere).
+   * @param {number} index 0-based
+   * @param {number} [longestPx] backing-store longest edge
+   */
+  async function renderThumb(index, longestPx = 320) {
+    if (!pdf) return null;
+    const token = generation;
+    try {
+      const page = await pdf.getPage(index + 1);
+      if (token !== generation || !pdf) {
+        try {
+          page.cleanup();
+        } catch {
+          /* تجاهل */
+        }
+        return null;
+      }
+      const base = page.getViewport({ scale: 1 });
+      const scale = longestPx / Math.max(base.width, base.height);
+      const viewport = page.getViewport({ scale });
+      const thumb = document.createElement("canvas");
+      thumb.width = Math.max(1, Math.ceil(viewport.width));
+      thumb.height = Math.max(1, Math.ceil(viewport.height));
+      const ctx = pdfRenderContext(thumb);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, thumb.width, thumb.height);
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      page.cleanup();
+      if (token !== generation) return null;
+      return thumb;
+    } catch {
+      return null;
+    }
+  }
+
   function pointerDown(event) {
     if (event.target instanceof HTMLTextAreaElement) return;
     const tool = getTool();
@@ -491,17 +570,92 @@ export function createBoard(options) {
     const handle = event.target.closest?.("[data-handle]");
     const node = event.target.closest?.(".edit-obj");
 
-    if (tool === "select" || (node && handle) || (node && tool !== "pen")) {
-      if (!node) {
-        setSelectedId("");
+    // ——— select tool: multi-select only ———
+    if (tool === "select") {
+      if (handle && node) {
+        // Handles exist only on single selections.
+        const obj = getObjects().find((item) => item.id === node.dataset.id);
+        if (!obj) return;
+        event.preventDefault();
+        layer.setPointerCapture(event.pointerId);
+        onHistory();
+        drag = {
+          pointerId: event.pointerId,
+          mode: handle.dataset.handle,
+          origin: {
+            ...obj,
+            points: obj.points ? obj.points.map((point) => ({ ...point })) : undefined
+          },
+          startX: event.clientX,
+          startY: event.clientY,
+          dirty: false,
+          historyPushed: true
+        };
+        return;
+      }
+      if (node) {
+        const obj = getObjects().find((item) => item.id === node.dataset.id);
+        if (!obj) return;
+        event.preventDefault();
+        const current = getSelectedIds();
+        if (event.shiftKey || event.ctrlKey || event.metaKey) {
+          const next = current.includes(obj.id)
+            ? current.filter((id) => id !== obj.id)
+            : [...current, obj.id];
+          setSelectedIds(next);
+          paintOverlay();
+          onChange();
+          return;
+        }
+        const ids = current.includes(obj.id) && current.length > 1 ? current.slice() : [obj.id];
+        setSelectedIds(ids);
         paintOverlay();
+        if (obj.type === "text") focusSelectedText();
+        layer.setPointerCapture(event.pointerId);
+        onHistory();
+        drag = startGroupDrag(event, ids);
         onChange();
         return;
       }
+      // Empty: marquee.
       event.preventDefault();
+      if (!event.shiftKey) setSelectedIds([]);
+      layer.setPointerCapture(event.pointerId);
+      drag = {
+        pointerId: event.pointerId,
+        mode: "marquee",
+        ...(event.shiftKey ? { add: true } : null),
+        ...beginMarquee(visual),
+        box: { x: visual.x, y: visual.y, width: 0, height: 0 }
+      };
+      paintOverlay();
+      onChange();
+      return;
+    }
+
+    // ——— pen draws only on empty space; objects move directly ———
+    if (tool === "pen" && !node && !handle) {
+      event.preventDefault();
+      layer.setPointerCapture(event.pointerId);
+      const style = getStyle();
+      drag = {
+        pointerId: event.pointerId,
+        mode: "pen",
+        points: [{ x: visual.x, y: visual.y }],
+        color: style.penColor,
+        strokeWidth: style.penWeight
+      };
+      drag.livePath = beginLiveInk(drag.color, drag.strokeWidth);
+      drawLiveInk();
+      return;
+    }
+
+    // ——— every other tool manipulates objects directly ———
+    if (node) {
       const obj = getObjects().find((item) => item.id === node.dataset.id);
       if (!obj) return;
-      setSelectedId(obj.id);
+      event.preventDefault();
+      setSelectedIds([obj.id]);
       paintOverlay();
       if (obj.type === "text") focusSelectedText();
       layer.setPointerCapture(event.pointerId);
@@ -523,31 +677,8 @@ export function createBoard(options) {
       return;
     }
 
-    if (tool === "pen") {
-      event.preventDefault();
-      layer.setPointerCapture(event.pointerId);
-      const style = getStyle();
-      drag = {
-        pointerId: event.pointerId,
-        mode: "pen",
-        points: [{ x: visual.x, y: visual.y }],
-        color: style.penColor,
-        strokeWidth: style.penWeight
-      };
-      drag.livePath = beginLiveInk(drag.color, drag.strokeWidth);
-      drawLiveInk();
-      return;
-    }
-
     if (tool === "text") {
       event.preventDefault();
-      const hit = hitObject(visual.x, visual.y);
-      if (hit) {
-        setSelectedId(hit.id);
-        paintOverlay();
-        onChange();
-        return;
-      }
       const style = getStyle();
       onHistory();
       onCreate({
@@ -562,6 +693,8 @@ export function createBoard(options) {
         fontSize: style.fontSize,
         color: style.textColor,
         bold: style.bold,
+        italic: style.italic,
+        underline: style.underline,
         align: style.align
       });
       return;
@@ -569,13 +702,6 @@ export function createBoard(options) {
 
     if (tool === "rect" || tool === "ellipse" || tool === "triangle") {
       event.preventDefault();
-      const hit = hitObject(visual.x, visual.y);
-      if (hit) {
-        setSelectedId(hit.id);
-        paintOverlay();
-        onChange();
-        return;
-      }
       layer.setPointerCapture(event.pointerId);
       drag = {
         pointerId: event.pointerId,
@@ -588,12 +714,49 @@ export function createBoard(options) {
       layer.append(ghost);
       return;
     }
+
+    // image / unknown on empty space: just clear the selection.
+    setSelectedIds([]);
+    paintOverlay();
+    onChange();
+  }
+
+  /**
+   * @param {PointerEvent} event
+   * @param {string[]} ids
+   */
+  function startGroupDrag(event, ids) {
+    /** @type {Map<string, any>} */
+    const origins = new Map();
+    for (const id of ids) {
+      const obj = getObjects().find((item) => item.id === id);
+      if (!obj || obj.pageIndex !== pageIndex) continue;
+      origins.set(id, {
+        ...obj,
+        points: obj.points ? obj.points.map((point) => ({ ...point })) : undefined
+      });
+    }
+    return {
+      pointerId: event.pointerId,
+      mode: "move-group",
+      ids: [...origins.keys()],
+      origins,
+      startX: event.clientX,
+      startY: event.clientY,
+      dirty: false,
+      historyPushed: true
+    };
   }
 
   function pointerMove(event) {
     if (!drag || event.pointerId !== drag.pointerId) return;
     event.preventDefault();
     const visual = clientToVisual(event.clientX, event.clientY);
+
+    if (drag.mode === "marquee") {
+      drag.box = updateMarquee(drag.start, visual);
+      return;
+    }
 
     if (drag.mode === "pen") {
       const last = drag.points[drag.points.length - 1];
@@ -616,6 +779,30 @@ export function createBoard(options) {
         ghost.style.height = `${height * scale}px`;
         ghost.style.borderRadius = drag.kind === "ellipse" ? "50%" : "0";
       }
+      return;
+    }
+
+    if (drag.mode === "move-group") {
+      const scale = displayScale();
+      const dxPt = (event.clientX - drag.startX) / scale;
+      const dyPdf = -(event.clientY - drag.startY) / scale;
+      const boxes = [...drag.origins.values()];
+      const allowed = clampGroupDelta(boxes, dxPt, dyPdf, visualWidth, visualHeight);
+      for (const [id, origin] of drag.origins) {
+        const obj = getObjects().find((item) => item.id === id);
+        if (!obj) continue;
+        obj.x = origin.x + allowed.dx;
+        obj.y = origin.y + allowed.dy;
+        if (obj.points) {
+          obj.points = origin.points.map((point) => ({
+            x: point.x + allowed.dx,
+            y: point.y + allowed.dy
+          }));
+        }
+        const el = layer.querySelector(`[data-id="${id}"]`);
+        if (el) positionNode(/** @type {HTMLElement} */ (el), obj);
+      }
+      drag.dirty = allowed.dx !== 0 || allowed.dy !== 0;
       return;
     }
 
@@ -655,13 +842,31 @@ export function createBoard(options) {
         next.height !== drag.origin.height;
     }
 
-    const node = layer.querySelector(`[data-id="${obj.id}"]`);
-    if (node) positionNode(/** @type {HTMLElement} */ (node), obj);
+    const el = layer.querySelector(`[data-id="${obj.id}"]`);
+    if (el) positionNode(/** @type {HTMLElement} */ (el), obj);
   }
 
   function pointerUp(event) {
     if (!drag || event.pointerId !== drag.pointerId) return;
     const mode = drag.mode;
+
+    if (mode === "marquee") {
+      const box = drag.box || { x: 0, y: 0, width: 0, height: 0 };
+      const base = drag.add ? getSelectedIds().slice() : [];
+      drag = null;
+      endMarquee();
+      if (box.width > 4 || box.height > 4) {
+        const hit = objectsOnPage()
+          .filter((obj) => rectsIntersect(obj, box))
+          .map((obj) => obj.id);
+        const next = [...base];
+        for (const id of hit) if (!next.includes(id)) next.push(id);
+        setSelectedIds(next);
+      }
+      paintOverlay();
+      onChange();
+      return;
+    }
 
     if (mode === "pen") {
       const points = drag.points;
@@ -720,7 +925,7 @@ export function createBoard(options) {
       return;
     }
 
-    if (mode === "move" || mode === "rotate" || CORNER_HANDLES.includes(mode) || FREE_HANDLES.includes(mode)) {
+    if (mode === "move-group" || mode === "move" || mode === "rotate" || FREE_HANDLES.includes(mode)) {
       if (!drag.dirty && drag.historyPushed) onDiscardHistory?.();
       drag = null;
       paintOverlay();
@@ -736,7 +941,7 @@ export function createBoard(options) {
     if (!node) return;
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      setSelectedId(node.dataset.id);
+      setSelectedIds([node.dataset.id]);
       paintOverlay();
       onChange();
     }
@@ -771,6 +976,7 @@ export function createBoard(options) {
     ghost?.remove();
     ghost = null;
     endLiveInk();
+    endMarquee();
     if (hiResTimer) {
       clearTimeout(hiResTimer);
       hiResTimer = 0;
@@ -812,7 +1018,11 @@ export function createBoard(options) {
     get visualHeight() {
       return visualHeight;
     },
+    getPageIndex() {
+      return pageIndex;
+    },
     paintOverlay,
+    renderThumb,
     async load(bytes) {
       await closePdf();
       canvas.style.visibility = "hidden";
@@ -861,15 +1071,24 @@ export function createBoard(options) {
     syncTool() {
       layer.dataset.tool = getTool();
     },
+    /**
+     * Move every selected layer on the current page as one rigid block.
+     * @param {number} dxPt
+     * @param {number} dyPt
+     */
     nudge(dxPt, dyPt) {
-      const obj = getObjects().find((item) => item.id === getSelectedId());
-      if (!obj || obj.pageIndex !== pageIndex) return false;
-      const moved = clampedMove(obj, dxPt, dyPt, visualWidth, visualHeight);
-      if (moved.dx === 0 && moved.dy === 0) return false;
-      obj.x = moved.x;
-      obj.y = moved.y;
-      if (obj.points) {
-        obj.points = obj.points.map((point) => ({ x: point.x + moved.dx, y: point.y + moved.dy }));
+      const targets = getObjects().filter(
+        (item) => getSelectedIds().includes(item.id) && item.pageIndex === pageIndex
+      );
+      if (!targets.length) return false;
+      const allowed = clampGroupDelta(targets, dxPt, dyPt, visualWidth, visualHeight);
+      if (allowed.dx === 0 && allowed.dy === 0) return false;
+      for (const obj of targets) {
+        obj.x += allowed.dx;
+        obj.y += allowed.dy;
+        if (obj.points) {
+          obj.points = obj.points.map((point) => ({ x: point.x + allowed.dx, y: point.y + allowed.dy }));
+        }
       }
       paintOverlay();
       onChange();
@@ -881,10 +1100,12 @@ export function createBoard(options) {
     },
     /** Mirror side-panel text into the on-canvas textarea (when not focused). */
     syncSelectedText(value) {
-      const node = layer.querySelector(".edit-obj.is-selected");
+      const ids = getSelectedIds();
+      if (ids.length !== 1) return;
+      const node = layer.querySelector(`.edit-obj[data-id="${ids[0]}"]`);
       const area = node?.querySelector("textarea");
       if (!(area instanceof HTMLTextAreaElement) || document.activeElement === area) return;
-      const obj = getObjects().find((item) => item.id === node?.dataset.id);
+      const obj = getObjects().find((item) => item.id === ids[0]);
       if (!obj) return;
       area.value = value || "";
       growTextArea(area, obj);

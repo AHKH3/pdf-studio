@@ -28,7 +28,8 @@ const session = {
   pageIndex: 0,
   /** @type {any[]} */
   objects: [],
-  selectedId: "",
+  /** @type {string[]} */
+  selectedIds: [],
   saved: true,
   /** @type {any[][]} */
   history: [],
@@ -36,7 +37,11 @@ const session = {
   redoStack: [],
   historyBatch: false,
   syncing: false,
-  zoom: 1
+  zoom: 1,
+  /** @type {IntersectionObserver | null} */
+  pagesObserver: null,
+  /** @type {Map<number, HTMLCanvasElement>} */
+  thumbCache: new Map()
 };
 
 function hasTitleblock() {
@@ -91,9 +96,28 @@ export function syncChrome() {
   }
 }
 
+/** Board-level drawing tool: the unified "shapes" tool maps to its kind. */
+function activeShapeKind() {
+  const picked = session.root?.querySelector('input[name="edit-shape"]:checked');
+  const value = /** @type {HTMLInputElement | null} */ (picked)?.value;
+  return value === "ellipse" || value === "triangle" ? value : "rect";
+}
+
 function activeTool() {
   const picked = session.root?.querySelector('input[name="edit-tool"]:checked');
-  return /** @type {HTMLInputElement | null} */ (picked)?.value || "select";
+  const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "text";
+  if (value === "shapes") return activeShapeKind();
+  if (value === "rect" || value === "ellipse" || value === "triangle") return value;
+  if (value === "select" || value === "pen" || value === "image") return value;
+  return "text";
+}
+
+function activePanel() {
+  const picked = session.root?.querySelector('input[name="edit-tool"]:checked');
+  const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "text";
+  if (value === "rect" || value === "ellipse" || value === "triangle" || value === "shapes") return "shapes";
+  if (value === "select" || value === "pen" || value === "image" || value === "text") return value;
+  return "text";
 }
 
 function activeAlign() {
@@ -124,21 +148,29 @@ function getStyle() {
   };
 }
 
-function selectedObject() {
-  return session.objects.find((obj) => obj.id === session.selectedId) || null;
+/** @param {string[]} ids */
+function setSelectedIds(ids) {
+  const next = [...new Set(ids)].filter((id) => session.objects.some((obj) => obj.id === id));
+  const prev = session.selectedIds;
+  const prevPrimary = prev[prev.length - 1] || "";
+  const nextPrimary = next[next.length - 1] || "";
+  if (prev.length === next.length && prev.every((id, i) => id === next[i])) return;
+  if (prevPrimary !== nextPrimary) pruneEmptyText(prevPrimary, nextPrimary);
+  session.selectedIds = next;
+}
+
+function selectedObjects() {
+  const set = new Set(session.selectedIds);
+  return session.objects.filter((obj) => set.has(obj.id));
+}
+
+function singleSelectedObject() {
+  if (session.selectedIds.length !== 1) return null;
+  return session.objects.find((obj) => obj.id === session.selectedIds[0]) || null;
 }
 
 function showPanels() {
-  const tool = activeTool();
-  const selected = selectedObject();
-  /** @type {string} */
-  let panel = "";
-  if (selected?.type === "text" || tool === "text") panel = "text";
-  else if (selected?.type === "ink" || tool === "pen") panel = "pen";
-  else if (selected?.type === "shape" || tool === "rect" || tool === "ellipse" || tool === "triangle") {
-    panel = "shape";
-  } else if (selected?.type === "image" || tool === "image") panel = "image";
-
+  const panel = activePanel();
   for (const node of session.root?.querySelectorAll("[data-edit-panel]") ?? []) {
     /** @type {HTMLElement} */ (node).hidden = node.getAttribute("data-edit-panel") !== panel;
   }
@@ -190,7 +222,7 @@ function undo() {
   const previous = session.objects;
   session.objects = session.history.pop() || [];
   revokeUnusedUrls(previous, session.objects);
-  if (!session.objects.some((obj) => obj.id === session.selectedId)) session.selectedId = "";
+  session.selectedIds = session.selectedIds.filter((id) => session.objects.some((obj) => obj.id === id));
   session.saved = false;
   refresh();
 }
@@ -206,7 +238,7 @@ function redo() {
   const previous = session.objects;
   session.objects = session.redoStack.pop() || [];
   revokeUnusedUrls(previous, session.objects);
-  if (!session.objects.some((obj) => obj.id === session.selectedId)) session.selectedId = "";
+  session.selectedIds = session.selectedIds.filter((id) => session.objects.some((obj) => obj.id === id));
   session.saved = false;
   refresh();
 }
@@ -224,66 +256,193 @@ function refresh(overlay = true) {
   if (session.ui?.prev) session.ui.prev.disabled = session.pageIndex <= 0;
   if (session.ui?.next) session.ui.next.disabled = session.pageIndex >= session.pages - 1;
   if (session.ui?.save) session.ui.save.disabled = session.objects.length === 0;
-  if (session.ui?.remove) session.ui.remove.disabled = !session.selectedId;
+  const hasSel = session.selectedIds.length > 0;
+  if (session.ui?.remove) session.ui.remove.disabled = !hasSel;
+  if (session.ui?.dup) session.ui.dup.disabled = !hasSel;
+  if (session.ui?.front) session.ui.front.disabled = !hasSel;
+  if (session.ui?.back) session.ui.back.disabled = !hasSel;
+  if (session.ui?.clearSel) session.ui.clearSel.disabled = !hasSel;
+  if (session.ui?.selCount) {
+    session.ui.selCount.textContent = hasSel ? `${session.selectedIds.length} محدد` : "لا تحديد";
+  }
+  if (session.ui?.layersCount) {
+    session.ui.layersCount.textContent = session.objects.length ? String(session.objects.length) : "";
+  }
   if (session.ui?.undo) session.ui.undo.disabled = session.history.length === 0;
   if (session.ui?.redo) session.ui.redo.disabled = session.redoStack.length === 0;
+  markActivePage();
   syncChrome();
+}
+
+function layerLabel(obj) {
+  if (obj.type === "text") return obj.text ? `نص: ${String(obj.text).trim().slice(0, 20)}` : "نص فارغ";
+  if (obj.type === "ink") return "رسم حر";
+  if (obj.type === "image") return obj.label ? `صورة: ${String(obj.label).slice(0, 16)}` : "صورة";
+  if (obj.kind === "ellipse") return "دائرة";
+  if (obj.kind === "triangle") return "مثلث";
+  return "مستطيل";
+}
+
+function layerIcon(obj) {
+  if (obj.type === "text") return "icon-file";
+  if (obj.type === "ink") return "icon-sign";
+  if (obj.type === "image") return "icon-images";
+  return "icon-crop";
 }
 
 function renderLayers() {
   const host = session.ui?.layers;
   if (!host) return;
   host.replaceChildren();
-  const currentPageObjects = session.objects.filter((obj) => obj.pageIndex === session.pageIndex);
-  for (const obj of currentPageObjects) {
-    const row = document.createElement("div");
-    row.className = `edit-layer-row${obj.id === session.selectedId ? " is-selected" : ""}`;
-    row.dataset.id = obj.id;
-    row.draggable = true;
-    const iconMap = { text: "icon-file", ink: "icon-sign", shape: "icon-crop", image: "icon-images" };
-    const labelMap = {
-      text: obj.text ? `نص: ${String(obj.text).trim().slice(0, 20) || "نص"}` : "نص فارغ",
-      ink: "رسم حر",
-      shape: obj.kind === "ellipse" ? "دائرة" : obj.kind === "triangle" ? "مثلث" : "مستطيل",
-      image: obj.label ? `صورة: ${obj.label.slice(0, 16)}` : "صورة"
-    };
-    const icon = iconMap[obj.type] || "icon-file";
-    const label = labelMap[obj.type] || obj.type;
-    row.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#icon-grip"></use></svg><svg class="icon" aria-hidden="true"><use href="#${icon}"></use></svg><span class="edit-layer-row__name">${label}</span><button class="edit-layer-row__del" aria-label="حذف" data-del="${obj.id}"><svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg></button>`;
-    row.addEventListener("click", (e) => {
-      const del = e.target.closest("[data-del]");
-      if (del) {
-        e.stopPropagation();
-        session.selectedId = obj.id;
-        deleteSelected();
-        return;
-      }
-      session.selectedId = obj.id;
-      refresh(false);
-    });
-    row.addEventListener("dragstart", (e) => {
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/plain", obj.id);
-      row.style.opacity = "0.5";
-    });
-    row.addEventListener("dragend", () => { row.style.opacity = ""; });
-    row.addEventListener("dragover", (e) => e.preventDefault());
-    row.addEventListener("drop", (e) => {
-      e.preventDefault();
-      const draggedId = e.dataTransfer.getData("text/plain");
-      if (!draggedId || draggedId === obj.id) return;
-      const draggedIndex = session.objects.findIndex((o) => o.id === draggedId && o.pageIndex === session.pageIndex);
-      const targetIndex = session.objects.findIndex((o) => o.id === obj.id && o.pageIndex === session.pageIndex);
-      if (draggedIndex < 0 || targetIndex < 0) return;
-      const [dragged] = session.objects.splice(draggedIndex, 1);
-      const newTarget = session.objects.findIndex((o) => o.id === obj.id && o.pageIndex === session.pageIndex);
-      session.objects.splice(newTarget, 0, dragged);
-      session.saved = false;
-      pushHistory();
-      refresh();
-    });
-    host.append(row);
+  const selected = new Set(session.selectedIds);
+  const byPage = new Map();
+  for (const obj of session.objects) {
+    if (!byPage.has(obj.pageIndex)) byPage.set(obj.pageIndex, []);
+    byPage.get(obj.pageIndex).push(obj);
   }
+  const pages = [...byPage.keys()].sort((a, b) => a - b);
+  for (const page of pages) {
+    const group = document.createElement("div");
+    const head = document.createElement("div");
+    head.className = `edit-layers__page${page === session.pageIndex ? " is-current" : ""}`;
+    head.textContent = `صفحة ${page + 1}`;
+    group.append(head);
+    for (const obj of byPage.get(page)) {
+      const row = document.createElement("div");
+      row.className = `edit-layer-row${selected.has(obj.id) ? " is-selected" : ""}`;
+      row.dataset.id = obj.id;
+      row.draggable = true;
+      row.innerHTML =
+        `<span class="edit-layer-row__grip"><svg class="icon" aria-hidden="true"><use href="#icon-grip"></use></svg></span>` +
+        `<svg class="icon" aria-hidden="true"><use href="#${layerIcon(obj)}"></use></svg>` +
+        `<span class="edit-layer-row__name"></span>` +
+        `<button class="edit-layer-row__btn" aria-label="مضاعفة" data-dup="${obj.id}"><svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg></button>` +
+        `<button class="edit-layer-row__btn edit-layer-row__btn--del" aria-label="حذف" data-del="${obj.id}"><svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg></button>`;
+      row.querySelector(".edit-layer-row__name").textContent = layerLabel(obj);
+      row.addEventListener("click", (e) => {
+        const dup = e.target.closest("[data-dup]");
+        if (dup) {
+          e.stopPropagation();
+          duplicateObjects([obj.id]);
+          return;
+        }
+        const del = e.target.closest("[data-del]");
+        if (del) {
+          e.stopPropagation();
+          deleteObjects([obj.id]);
+          return;
+        }
+        if (e.ctrlKey || e.metaKey || e.shiftKey) {
+          const next = selected.has(obj.id)
+            ? session.selectedIds.filter((item) => item !== obj.id)
+            : [...session.selectedIds, obj.id];
+          setSelectedIds(next);
+        } else {
+          setSelectedIds([obj.id]);
+        }
+        if (obj.pageIndex !== session.pageIndex) {
+          void goTo(obj.pageIndex);
+          return;
+        }
+        refresh(false);
+      });
+      row.addEventListener("dragstart", (e) => {
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", obj.id);
+        row.style.opacity = "0.5";
+      });
+      row.addEventListener("dragend", () => { row.style.opacity = ""; });
+      row.addEventListener("dragover", (e) => e.preventDefault());
+      row.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const draggedId = e.dataTransfer.getData("text/plain");
+        if (!draggedId || draggedId === obj.id) return;
+        const draggedIndex = session.objects.findIndex((o) => o.id === draggedId && o.pageIndex === obj.pageIndex);
+        const targetIndex = session.objects.findIndex((o) => o.id === obj.id && o.pageIndex === obj.pageIndex);
+        if (draggedIndex < 0 || targetIndex < 0) return;
+        breakChange();
+        pushHistory();
+        const [dragged] = session.objects.splice(draggedIndex, 1);
+        const newTarget = session.objects.findIndex((o) => o.id === obj.id && o.pageIndex === obj.pageIndex);
+        session.objects.splice(newTarget, 0, dragged);
+        session.saved = false;
+        refresh();
+      });
+      group.append(row);
+    }
+    host.append(group);
+  }
+}
+
+/* ——— pages rail: sharp lazy thumbnails ——— */
+
+function buildPages() {
+  const host = session.ui?.pages;
+  if (!host) return;
+  session.pagesObserver?.disconnect();
+  session.pagesObserver = null;
+  session.thumbCache.clear();
+  host.replaceChildren();
+  if (!session.pages) return;
+  session.pagesObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        const holder = /** @type {HTMLElement} */ (entry.target);
+        session.pagesObserver?.unobserve(holder);
+        void paintThumb(holder);
+      }
+    },
+    { root: host, rootMargin: "240px 0px" }
+  );
+  for (let i = 0; i < session.pages; i += 1) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "edit-page";
+    btn.dataset.page = String(i);
+    btn.setAttribute("role", "listitem");
+    btn.setAttribute("aria-label", `صفحة ${i + 1}`);
+    const holder = document.createElement("span");
+    holder.className = "edit-page__img";
+    holder.dataset.page = String(i);
+    holder.textContent = `${i + 1}`;
+    const num = document.createElement("span");
+    num.className = "edit-page__num num";
+    num.textContent = String(i + 1);
+    btn.append(holder, num);
+    btn.addEventListener("click", () => {
+      if (i !== session.pageIndex) void goTo(i);
+    });
+    host.append(btn);
+    session.pagesObserver.observe(holder);
+  }
+  markActivePage();
+}
+
+async function paintThumb(holder) {
+  const index = Number(holder.dataset.page);
+  if (!Number.isInteger(index)) return;
+  if (holder.querySelector("canvas")) return;
+  const cached = session.thumbCache.get(index);
+  if (cached) {
+    holder.replaceChildren(cached);
+    return;
+  }
+  const thumb = await session.board?.renderThumb(index, 336);
+  if (!thumb || !holder.isConnected || holder.querySelector("canvas")) return;
+  session.thumbCache.set(index, thumb);
+  holder.replaceChildren(thumb);
+}
+
+function markActivePage() {
+  const host = session.ui?.pages;
+  if (!host) return;
+  for (const node of host.children) {
+    if (node instanceof HTMLElement) {
+      node.classList.toggle("is-active", Number(node.dataset.page) === session.pageIndex);
+    }
+  }
+  host.querySelector(".edit-page.is-active")?.scrollIntoView({ block: "nearest" });
 }
 
 function updateZoomLabel() {
@@ -297,7 +456,7 @@ function setZoom(value) {
 }
 
 function syncInspectorFromSelection() {
-  const obj = selectedObject();
+  const obj = singleSelectedObject();
   const ui = session.ui;
   if (!ui || session.syncing) return;
   session.syncing = true;
@@ -317,6 +476,10 @@ function syncInspectorFromSelection() {
       ui.penColor.value = obj.color || "#1E3A8A";
       ui.penWeight.value = String(obj.strokeWidth || 2.2);
     } else if (obj?.type === "shape") {
+      const kind = obj.kind === "ellipse" || obj.kind === "triangle" ? obj.kind : "rect";
+      for (const input of session.root?.querySelectorAll('input[name="edit-shape"]') ?? []) {
+        /** @type {HTMLInputElement} */ (input).checked = input.value === kind;
+      }
       ui.fillOn.checked = obj.fillOn !== false;
       ui.fillColor.value = obj.fill || "#8AA4E0";
       ui.strokeColor.value = obj.stroke || "#1E3A8A";
@@ -346,7 +509,8 @@ function saveStylePrefs() {
     localStorage.setItem(
       STYLE_KEY,
       JSON.stringify({
-        tool: /** @type {HTMLInputElement | null} */ (picked)?.value || "select",
+        tool: /** @type {HTMLInputElement | null} */ (picked)?.value || "text",
+        shape: activeShapeKind(),
         textSize: ui.textSize.value,
         textColor: ui.textColor.value,
         bold: ui.textBold.checked,
@@ -372,6 +536,15 @@ function applySavedStyle() {
   if (!ui || !saved) return;
   if (saved.tool) {
     const radio = session.root?.querySelector(`input[name="edit-tool"][value="${saved.tool}"]`);
+    if (radio instanceof HTMLInputElement) radio.checked = true;
+    else if (saved.tool === "rect" || saved.tool === "ellipse" || saved.tool === "triangle") {
+      const shapes = session.root?.querySelector('input[name="edit-tool"][value="shapes"]');
+      if (shapes instanceof HTMLInputElement) shapes.checked = true;
+    }
+  }
+  const shape = saved.shape === "ellipse" || saved.shape === "triangle" ? saved.shape : saved.tool;
+  if (shape === "rect" || shape === "ellipse" || shape === "triangle") {
+    const radio = session.root?.querySelector(`input[name="edit-shape"][value="${shape}"]`);
     if (radio instanceof HTMLInputElement) radio.checked = true;
   }
   if (saved.textSize) ui.textSize.value = String(saved.textSize);
@@ -425,7 +598,7 @@ function setStyleInput(inputId, value, eventName) {
 
 function applyInspectorToSelection() {
   if (session.syncing) return;
-  const obj = selectedObject();
+  const obj = singleSelectedObject();
   if (!obj || (obj.type !== "text" && obj.type !== "ink" && obj.type !== "shape")) return;
   beginChange();
   const style = getStyle();
@@ -456,30 +629,28 @@ function createObject(partial) {
     toast("انتظر اكتمال تحميل الصفحة.", "info");
     return;
   }
+  const previousPrimary = session.selectedIds[session.selectedIds.length - 1] || "";
+  // The object always lands on the page the user actually sees: never trust a
+  // stale pageIndex, or edits silently end up on the wrong page of the output.
+  const pageIndex = session.board.getPageIndex?.() ?? session.pageIndex;
   const obj = {
     id: uid("edit"),
     rotation: 0,
-    ...partial
+    ...partial,
+    pageIndex
   };
-  pruneEmptyText(session.selectedId, obj.id);
+  pruneEmptyText(previousPrimary, obj.id);
   clampBox(obj, session.board.visualWidth, session.board.visualHeight);
   if (obj.type === "image") obj.aspect = obj.width / Math.max(1, obj.height);
   breakChange();
   session.objects.push(obj);
-  session.selectedId = obj.id;
+  session.selectedIds = [obj.id];
   session.saved = false;
   refresh();
   if (obj.type === "text") {
     queueMicrotask(() => session.board?.focusSelectedText());
   }
-  if (obj.type === "image" || obj.type === "text" || obj.type === "shape") {
-    const select = session.root?.querySelector('input[name="edit-tool"][value="select"]');
-    if (select instanceof HTMLInputElement) {
-      select.checked = true;
-      session.board?.syncTool();
-      showPanels();
-    }
-  }
+  // No auto-switch to the select tool: each tool keeps working directly.
 }
 
 function pruneEmptyText(previousId, nextId) {
@@ -495,18 +666,78 @@ function pruneEmptyText(previousId, nextId) {
   session.saved = false;
 }
 
-function deleteSelected() {
-  const index = session.objects.findIndex((obj) => obj.id === session.selectedId);
-  if (index < 0) return;
+/** @param {string[]} ids */
+function deleteObjects(ids) {
+  const set = new Set(ids);
+  const doomed = session.objects.filter((obj) => set.has(obj.id));
+  if (!doomed.length) return;
   breakChange();
   pushHistory();
-  const [removed] = session.objects.splice(index, 1);
-  session.selectedId = "";
-  if (removed.url && !session.objects.some((obj) => obj.url === removed.url)) {
-    URL.revokeObjectURL(removed.url);
+  session.objects = session.objects.filter((obj) => !set.has(obj.id));
+  session.selectedIds = session.selectedIds.filter((id) => !set.has(id));
+  revokeUnusedUrls(doomed, session.objects);
+  session.saved = false;
+  refresh();
+}
+
+/** @param {string[]} ids */
+function duplicateObjects(ids) {
+  const set = new Set(ids);
+  const sources = session.objects.filter((obj) => set.has(obj.id));
+  if (!sources.length) return;
+  breakChange();
+  pushHistory();
+  const clones = sources.map((obj) => {
+    const clone = {
+      ...obj,
+      id: uid("edit"),
+      points: obj.points ? obj.points.map((point) => ({ ...point })) : undefined,
+      x: obj.x + 12,
+      y: obj.y + 12
+    };
+    if (session.board?.visualWidth && session.board?.visualHeight) {
+      clampBox(clone, session.board.visualWidth, session.board.visualHeight);
+    }
+    return clone;
+  });
+  // Images share the same blob URL + bytes: no new object URLs to leak, and
+  // revokeUnusedUrls keeps the shared URL alive while any clone uses it.
+  for (const clone of clones) session.objects.push(clone);
+  session.selectedIds = clones.map((clone) => clone.id);
+  session.saved = false;
+  refresh();
+}
+
+/**
+ * Move the selection one step through the paint order of its page.
+ * @param {1 | -1} dir +1 paints later (on top), -1 paints earlier.
+ */
+function reorderSelected(dir) {
+  const set = new Set(session.selectedIds);
+  const targets = session.objects.filter((obj) => set.has(obj.id) && obj.pageIndex === session.pageIndex);
+  if (!targets.length) return;
+  breakChange();
+  pushHistory();
+  const order = dir > 0 ? targets.slice().reverse() : targets.slice();
+  let moved = false;
+  for (const obj of order) {
+    const index = session.objects.findIndex((o) => o.id === obj.id);
+    const swap = index + dir;
+    if (index < 0 || swap < 0 || swap >= session.objects.length) continue;
+    if (session.objects[swap].pageIndex !== obj.pageIndex || set.has(session.objects[swap].id)) continue;
+    [session.objects[index], session.objects[swap]] = [session.objects[swap], session.objects[index]];
+    moved = true;
+  }
+  if (!moved) {
+    discardLastHistory();
+    return;
   }
   session.saved = false;
   refresh();
+}
+
+function deleteSelected() {
+  deleteObjects(session.selectedIds);
 }
 
 async function goTo(index) {
@@ -599,7 +830,7 @@ async function resetObjects() {
   const urls = new Set(session.objects.map((obj) => obj.url).filter(Boolean));
   for (const url of urls) URL.revokeObjectURL(url);
   session.objects = [];
-  session.selectedId = "";
+  session.selectedIds = [];
   session.history = [];
   session.redoStack = [];
   session.historyBatch = false;
@@ -620,7 +851,7 @@ function captureEditState() {
     size: session.size,
     pageIndex: session.pageIndex,
     objects: session.objects.slice(),
-    selectedId: session.selectedId,
+    selectedIds: session.selectedIds.slice(),
     saved: session.saved,
     history: session.history.map((step) => step.slice()),
     redoStack: session.redoStack.map((step) => step.slice()),
@@ -638,7 +869,7 @@ async function restoreEditState(state) {
     session.size = 0;
     session.pageIndex = 0;
     session.objects = [];
-    session.selectedId = "";
+    session.selectedIds = [];
     session.saved = true;
     session.history = [];
     session.redoStack = [];
@@ -658,7 +889,11 @@ async function restoreEditState(state) {
   session.size = state.size;
   session.pageIndex = state.pageIndex;
   session.objects = state.objects.slice();
-  session.selectedId = state.selectedId;
+  session.selectedIds = Array.isArray(state.selectedIds)
+    ? state.selectedIds.slice()
+    : state.selectedId
+      ? [state.selectedId]
+      : [];
   session.saved = state.saved;
   session.history = state.history.map((step) => step.slice());
   session.redoStack = state.redoStack.map((step) => step.slice());
@@ -677,6 +912,7 @@ async function restoreEditState(state) {
     }
     await session.board.whenLaidOut?.();
     await session.board.showPage(session.pageIndex);
+    buildPages();
     renderLayers();
   }
   syncChrome();
@@ -693,6 +929,7 @@ async function loadFile(file) {
     if (!loaded) return;
     await resetObjects();
     const pages = await session.board.load(loaded.bytes);
+    boardBytes = loaded.bytes;
     session.fileName = loaded.name;
     session.bytes = loaded.bytes;
     session.pages = pages;
@@ -705,6 +942,7 @@ async function loadFile(file) {
     session.ui.workspace.hidden = false;
     await session.board.whenLaidOut?.();
     await session.board.showPage(0);
+    buildPages();
     refresh();
   } catch (error) {
     reportFailure(error, "تعذّر فتح المستند.");
@@ -726,6 +964,7 @@ async function closeDocument() {
   session.pageIndex = 0;
   if (session.ui?.drop) session.ui.drop.hidden = false;
   if (session.ui?.workspace) session.ui.workspace.hidden = true;
+  session.thumbCache.clear();
   await session.board?.clear();
   refresh();
 }
@@ -754,7 +993,7 @@ async function pickImage(file) {
     pushHistory();
     createObject({
       type: "image",
-      pageIndex: session.pageIndex,
+      pageIndex: session.board?.getPageIndex?.() ?? session.pageIndex,
       x: (pageW - targetWidth) / 2,
       y: 80,
       width: targetWidth,
@@ -785,10 +1024,31 @@ function onRootKey(event) {
     redo();
     return;
   }
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "d") {
+    if (typing) return;
+    event.preventDefault();
+    duplicateObjects(session.selectedIds);
+    return;
+  }
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a") {
+    if (typing || activeTool() !== "select") return;
+    event.preventDefault();
+    setSelectedIds(session.objects.filter((obj) => obj.pageIndex === session.pageIndex).map((obj) => obj.id));
+    refresh(false);
+    return;
+  }
 
   if (typing) return;
 
-  if ((event.key === "Delete" || event.key === "Backspace") && session.selectedId) {
+  if (event.key === "Escape") {
+    if (session.selectedIds.length) {
+      event.preventDefault();
+      setSelectedIds([]);
+      refresh();
+    }
+    return;
+  }
+  if ((event.key === "Delete" || event.key === "Backspace") && session.selectedIds.length) {
     event.preventDefault();
     deleteSelected();
     return;
@@ -835,7 +1095,7 @@ export async function run() {
     if (saved) session.saved = true;
     reportSave(saved, `دُمج ${session.objects.length} عنصر في الملف.`);
   } catch (error) {
-    reportFailure(error, "تعذّر حفظ الملف المحرَّر.");
+    reportFailure(error, "تعذّر حفظ الملف المحرَّر.");
   } finally {
     endProgress();
   }
@@ -857,11 +1117,9 @@ export function mount(rootEl) {
     layer: session.ui.layer,
     wrap: session.ui.wrap,
     getObjects: () => session.objects,
-    getSelectedId: () => session.selectedId,
-    setSelectedId: (value) => {
-      if (value !== session.selectedId) breakChange();
-      pruneEmptyText(session.selectedId, value);
-      session.selectedId = value;
+    getSelectedIds: () => session.selectedIds,
+    setSelectedIds: (value) => {
+      setSelectedIds(value);
     },
     getTool: activeTool,
     getStyle,
@@ -891,7 +1149,7 @@ export function mount(rootEl) {
     "change",
     (event) => {
       const target = /** @type {HTMLElement} */ (event.target);
-      if (target instanceof HTMLInputElement && target.name === "edit-tool") {
+      if (target instanceof HTMLInputElement && (target.name === "edit-tool" || target.name === "edit-shape")) {
         session.board?.syncTool();
         showPanels();
         saveStylePrefs();
@@ -949,6 +1207,13 @@ export function mount(rootEl) {
   session.ui.undo.addEventListener("click", undo, { signal });
   session.ui.redo?.addEventListener("click", redo, { signal });
   session.ui.remove.addEventListener("click", deleteSelected, { signal });
+  session.ui.dup?.addEventListener("click", () => duplicateObjects(session.selectedIds), { signal });
+  session.ui.front?.addEventListener("click", () => reorderSelected(1), { signal });
+  session.ui.back?.addEventListener("click", () => reorderSelected(-1), { signal });
+  session.ui.clearSel?.addEventListener("click", () => {
+    setSelectedIds([]);
+    refresh();
+  }, { signal });
   session.ui.save.addEventListener("click", () => run(), { signal });
   session.ui.clear.addEventListener("click", () => closeDocument(), { signal });
   session.ui.prev.addEventListener("click", () => goTo(session.pageIndex - 1), { signal });
@@ -960,10 +1225,6 @@ export function mount(rootEl) {
       const file = session.ui.imageInput.files?.[0];
       session.ui.imageInput.value = "";
       if (file) pickImage(file);
-      const select = session.root?.querySelector('input[name="edit-tool"][value="select"]');
-      if (select instanceof HTMLInputElement) select.checked = true;
-      session.board?.syncTool();
-      showPanels();
     },
     { signal }
   );
@@ -980,10 +1241,13 @@ export function mount(rootEl) {
 export function unmount() {
   session.ac?.abort();
   session.ac = null;
+  session.pagesObserver?.disconnect();
+  session.pagesObserver = null;
+  session.thumbCache.clear();
   const urls = new Set(session.objects.map((obj) => obj.url).filter(Boolean));
   for (const url of urls) URL.revokeObjectURL(url);
   session.objects = [];
-  session.selectedId = "";
+  session.selectedIds = [];
   session.history = [];
   session.redoStack = [];
   session.historyBatch = false;

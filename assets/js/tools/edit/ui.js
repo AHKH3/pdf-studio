@@ -1,6 +1,6 @@
 const CSS = `
-.edit-root { display: grid; row-gap: 0; min-height: 0; }
-.edit-root .view__head { margin-bottom: var(--space-3); }
+.edit-root { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.edit-root .view__body { display: flex; flex-direction: column; min-height: 0; flex: 1; }
 
 /* ——— hero drop ——— */
 #edit-drop.intake {
@@ -10,60 +10,235 @@ const CSS = `
   border-radius: var(--radius-xl);
 }
 #edit-drop .intake__title { font-size: 1.05rem; font-weight: 700; }
-#edit-drop .intake__hint { max-width: 36ch; text-wrap: balance; line-height: 1.5; }
 
-/* ——— layout: stage + panel ——— */
-.edit-workspace {
-  display: grid;
-  grid-template-columns: minmax(0, 1.45fr) 320px;
-  gap: var(--space-4);
-  align-items: start;
+/* ——— workspace: flat, no cards ——— */
+.edit {
+  display: flex;
+  flex-direction: column;
   min-height: 0;
+  flex: 1;
 }
-.edit-stage {
-  display: grid;
-  align-content: start;
-  row-gap: var(--space-3);
-  min-width: 0;
-  background: var(--surface-1);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-xl);
-  padding: var(--space-3);
-  box-shadow: var(--shadow-soft);
-}
-.edit-stage__bar {
+
+/* toolbar under the header */
+.edit-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-soft);
+}
+.edit-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   flex-wrap: wrap;
 }
-.edit-stage__hint {
-  font-size: 0.72rem;
-  color: var(--text-muted);
+.edit-tools .choice span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: var(--radius-pill);
+}
+.edit-tools .choice span .icon { width: 15px; height: 15px; }
+.edit-tools .choice input:checked + span {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.edit-toolbar__sep { width: 1px; align-self: stretch; background: var(--border-soft); margin: 2px 4px; }
+.edit-toolbar__spacer { flex: 1; }
+.edit-toolbar .btn--compact { height: 32px; }
+
+/* contextual options bar under the toolbar */
+.edit-optbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--surface-1);
+  min-height: 52px;
+}
+.edit-optbar:empty { display: none; }
+.edit-optbar [data-edit-panel] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+.edit-optbar [data-edit-panel][hidden] { display: none; }
+.edit-optbar .field { min-width: 0; }
+.edit-optbar .field label { font-size: 0.72rem; }
+.edit-optbar input[type="number"] { width: 64px; }
+.edit-optbar input[type="color"] { width: 34px; height: 30px; padding: 2px; }
+.edit-optbar textarea {
+  flex: 1;
+  min-width: 140px;
+  min-height: 34px;
+  max-height: 68px;
+  resize: vertical;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface-0, #fff);
+  color: inherit;
+  font: inherit;
+  padding: 6px 10px;
+  line-height: 1.5;
+}
+.edit-optbar select { height: 32px; }
+.edit-selcount { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
+.edit-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   background: var(--surface-2);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-pill);
-  padding: var(--space-2) var(--space-3);
-  line-height: 1.3;
+  padding: 3px;
 }
-.edit-stage__zoom {
-  display: inline-flex;
+.edit-kind .choice span {
+  padding: 5px 12px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+}
+.edit-kind .choice input:checked + span { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ——— main: layers | preview | pages ——— */
+.edit-main {
+  direction: ltr;
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr) 196px;
+  flex: 1;
+  min-height: 0;
+}
+.edit-main > * { direction: rtl; min-width: 0; min-height: 0; }
+.edit-side {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--surface-1);
+}
+.edit-side--layers { border-right: 1px solid var(--border-soft); }
+.edit-side--pages { border-left: 1px solid var(--border-soft); }
+.edit-side__head {
+  display: flex;
   align-items: center;
   gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-soft);
+  flex: none;
 }
-.edit-stage__zoom .btn { min-width: 32px; height: 32px; padding: 0 var(--space-2); }
+.edit-side__title { font-size: 0.8rem; font-weight: 700; margin: 0; }
+.edit-side__count { font-size: 0.74rem; color: var(--text-muted); margin-inline-start: auto; }
+.edit-side__pager { display: flex; align-items: center; gap: 6px; width: 100%; }
+.edit-side__pager .btn { flex: none; }
+.edit-side__pager .scan__count { flex: 1; text-align: center; }
+
+/* layers */
+.edit-layers { overflow-y: auto; padding: var(--space-2); display: flex; flex-direction: column; gap: var(--space-2); }
+.edit-layers:empty::before {
+  content: "لا عناصر";
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 16px 8px;
+}
+.edit-layers__page {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding: 6px 4px 2px;
+}
+.edit-layers__page.is-current { color: var(--accent); }
+.edit-swatches { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.edit-swatch {
+  width: 22px; height: 22px; padding: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(15,23,42,0.14);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.edit-swatch:hover { transform: scale(1.15); }
+.edit-swatch.is-active { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px var(--accent-soft); }
+.edit-chips { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.edit-chip {
+  min-width: 32px; height: 26px; padding: 0 8px;
+  font-family: var(--data); font-size: 0.72rem; font-weight: 700;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.edit-chip:hover { border-color: var(--accent); color: var(--accent); }
+.edit-chip.is-active { background: var(--accent); border-color: var(--accent-deep); color: #fff; }
+.edit-presets { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.edit-preset {
+  height: 30px; padding: 0 10px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 0.74rem; font-weight: 600;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.edit-preset:hover { border-color: var(--accent); color: var(--ink); }
+.edit-preset i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; border: 1px solid rgba(15,23,42,0.15); flex: none; }
+.edit-layer-row {
+  display: grid;
+  grid-template-columns: auto auto minmax(0,1fr) auto auto;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: var(--surface-0, #fff);
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition: border-color .15s, background .15s;
+  user-select: none;
+}
+.edit-layer-row.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+.edit-layer-row .icon { width: 14px; height: 14px; flex: none; }
+.edit-layer-row__grip { cursor: grab; color: var(--text-muted); display: inline-flex; }
+.edit-layer-row__name { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: start; }
+.edit-layer-row__btn { width: 26px; height: 26px; display: grid; place-items: center; border: 0; background: transparent; color: var(--text-muted); border-radius: 6px; cursor: pointer; }
+.edit-layer-row__btn:hover { background: var(--surface-2); color: var(--ink); }
+.edit-layer-row__btn--del:hover { background: var(--danger-soft, rgba(220,38,38,0.10)); color: var(--danger, #dc2626); }
+
+/* center preview */
+.edit-center {
+  position: relative;
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+  background: var(--surface-2);
+}
 .edit-board-wrap {
   position: relative;
+  flex: 1;
   display: flex;
   align-items: safe center;
   justify-content: safe center;
-  min-height: 360px;
-  height: clamp(360px, calc(100dvh - var(--header-h) - var(--footer-h) - 17rem), 880px);
-  max-height: calc(100dvh - var(--header-h) - var(--footer-h) - 8rem);
-  background: var(--surface-2);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-lg);
+  min-height: 0;
   overflow: auto;
   overflow-anchor: none;
   scrollbar-gutter: stable;
@@ -76,7 +251,7 @@ const CSS = `
   border: 1px solid rgba(15,23,42,0.12);
   box-shadow: 0 8px 28px rgba(15,23,42,0.10), 0 1px 3px rgba(15,23,42,0.08);
   border-radius: 6px;
-  overflow: visible;
+  margin: auto;
 }
 .edit-board canvas {
   display: block;
@@ -206,6 +381,15 @@ const CSS = `
   pointer-events: none;
   border-radius: 3px;
 }
+.edit-marquee {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1.5px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  pointer-events: none;
+  border-radius: 2px;
+  z-index: 5;
+}
 .edit-ink-live {
   position: absolute;
   inset: 0;
@@ -215,131 +399,63 @@ const CSS = `
 }
 .edit-layer[data-tool="pen"] { cursor: crosshair; }
 .edit-layer[data-tool="text"] { cursor: text; }
+.edit-layer[data-tool="image"] { cursor: copy; }
 .edit-layer[data-tool="rect"],
 .edit-layer[data-tool="ellipse"],
 .edit-layer[data-tool="triangle"] { cursor: crosshair; }
-
-/* ——— panel ——— */
-.edit-panel {
-  display: grid;
-  align-content: start;
-  row-gap: var(--space-4);
-  min-width: 0;
-  max-height: calc(100vh - 180px);
-  overflow-y: auto;
-  padding-right: 2px;
-}
-.edit-panel::-webkit-scrollbar { width: 6px; }
-.edit-panel::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 999px; }
-.edit-toolbar {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-2);
-}
-.edit-toolbar .choice span {
-  display: grid;
-  justify-items: center;
-  row-gap: var(--space-1);
-  padding: var(--space-3) var(--space-2);
-  font-size: 0.72rem;
-  font-weight: 600;
-  line-height: 1;
-}
-.edit-toolbar .choice span .icon { width: 16px; height: 16px; }
-.edit-toolbar .choice input:checked + span {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
-.edit-layers {
-  display: grid;
-  align-content: start;
-  row-gap: var(--space-2);
-  max-height: 160px;
-  overflow-y: auto;
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-lg);
-  padding: var(--space-2);
-  background: var(--surface-1);
-}
-.edit-layers:empty::before {
-  content: "لا عناصر بعد — اضغط على الصفحة لإضافة نص أو شكل";
-  font-size: 0.76rem;
-  color: var(--text-muted);
-  text-align: center;
-  padding: 12px;
-}
-.edit-swatches { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.edit-swatch {
-  width: 22px; height: 22px; padding: 0;
-  border-radius: 50%;
-  border: 2px solid rgba(15,23,42,0.14);
-  cursor: pointer;
-  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
-}
-.edit-swatch:hover { transform: scale(1.15); }
-.edit-swatch.is-active { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px var(--accent-soft); }
-.edit-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.edit-chip {
-  min-width: 34px; height: 26px; padding: 0 8px;
-  font-family: var(--data); font-size: 0.72rem; font-weight: 700;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border-strong);
-  background: var(--surface-2);
-  color: var(--ink-2);
-  cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
-}
-.edit-chip:hover { border-color: var(--accent); color: var(--accent); }
-.edit-chip.is-active { background: var(--accent); border-color: var(--accent-deep); color: #fff; }
-.edit-presets { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
-.edit-preset {
-  height: 32px; padding: 0 8px;
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  font-size: 0.74rem; font-weight: 600;
-  border-radius: 10px;
-  border: 1px solid var(--border-strong);
-  background: var(--surface-2);
-  color: var(--ink-2);
-  cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
-}
-.edit-preset:hover { border-color: var(--accent); color: var(--ink); }
-.edit-preset i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; border: 1px solid rgba(15,23,42,0.15); flex: none; }
-.edit-layer-row {
-  display: grid;
-  grid-template-columns: auto minmax(0,1fr) auto;
+.edit-zoom {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-2);
+  gap: 4px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-pill);
+  padding: 4px 8px;
+  box-shadow: var(--shadow-soft);
+  z-index: 4;
+  direction: rtl;
+}
+.edit-zoom .btn { min-width: 30px; height: 28px; padding: 0 8px; }
+.edit-zoom-label { font-size: 0.74rem; min-width: 44px; text-align: center; }
+
+/* pages rail */
+.edit-pages { overflow-y: auto; padding: var(--space-2); display: flex; flex-direction: column; gap: var(--space-2); }
+.edit-page {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  padding: 6px;
   border: 1px solid var(--border-soft);
   border-radius: var(--radius);
   background: var(--surface-0, #fff);
   cursor: pointer;
-  font-size: 0.78rem;
-  transition: border-color .15s, background .15s;
 }
-.edit-layer-row.is-selected {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-weight: 600;
+.edit-page.is-active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.edit-page__img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
 }
-.edit-layer-row .icon { width: 14px; height: 14px; flex: none; }
-.edit-layer-row__name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: start; }
-.edit-layer-row__del { width: 26px; height: 26px; display: grid; place-items: center; border: 0; background: transparent; color: var(--text-muted); border-radius: 6px; cursor: pointer; }
-.edit-layer-row__del:hover { background: var(--danger-soft, rgba(220,38,38,0.10)); color: var(--danger, #dc2626); }
+.edit-page__img canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
+.edit-page__num { font-size: 0.72rem; color: var(--text-muted); }
+.edit-page.is-active .edit-page__num { color: var(--accent); font-weight: 700; }
 
 @media (max-width: 1080px) {
-  .edit-workspace { grid-template-columns: 1fr; }
-  .edit-panel { max-height: none; }
-  .edit-board-wrap { min-height: 360px; }
-}
-@media (max-width: 640px) {
-  .edit-stage { padding: var(--space-3); }
-  .edit-stage__bar { flex-direction: column; align-items: stretch; }
-  .edit-toolbar { grid-template-columns: repeat(4, 1fr); }
-  .edit-board-wrap { padding: var(--space-3); min-height: 300px; }
+  .edit-main { grid-template-columns: 1fr; grid-template-rows: minmax(320px, 1fr) auto auto; }
+  .edit-side { max-height: 190px; border: 0; border-top: 1px solid var(--border-soft); }
+  .edit-pages { flex-direction: row; overflow-x: auto; }
+  .edit-page { flex: 0 0 108px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .edit-obj { transition: none; }
@@ -369,9 +485,9 @@ export const FILL_COLORS = ["#FDE68A", "#BBF7D0", "#BFDBFE", "#FBCFE8", "#FECACA
 export const TEXT_SIZES = [12, 14, 16, 18, 24, 32, 48];
 
 function swatches(forId, colors) {
-  return `<div class="edit-swatches">${colors
+  return `<span class="edit-swatches">${colors
     .map((c) => `<button type="button" class="edit-swatch" data-swatch="${c}" data-for="${forId}" style="background:${c}" aria-label="لون ${c}"></button>`)
-    .join("")}</div>`;
+    .join("")}</span>`;
 }
 
 function choice(name, value, label, iconHref, checked = false) {
@@ -389,181 +505,132 @@ export function buildUi(root) {
       <div id="edit-drop" class="intake" data-kind="pdf">
         ${icon("icon-file")}
         <span class="intake__title">أسقط ملف PDF هنا</span>
-        <span class="intake__hint">ملف واحد · اسحب PDF ثم اضغط على الصفحة لإضافة عناصر. كل الإضافات طبقة فوق الصفحة الأصلية.</span>
         <button id="edit-browse" type="button" class="btn">تصفّح</button>
       </div>
       <input id="edit-input" type="file" accept="application/pdf,.pdf" hidden />
       <input id="edit-image-input" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" hidden />
 
-      <div id="edit-workspace" class="edit-workspace" hidden>
-        <div class="edit-stage">
-          <div class="edit-stage__bar">
-            <div class="scan__pager">
-              <button id="edit-prev" type="button" class="btn btn--compact">
-                ${icon("icon-arrow")} السابقة
-              </button>
-              <span class="scan__count num" id="edit-count">1 / 1</span>
-              <button id="edit-next" type="button" class="btn btn--compact">
-                التالية <svg class="icon flip" aria-hidden="true"><use href="#icon-arrow"></use></svg>
-              </button>
-            </div>
-            <div class="edit-stage__zoom">
-              <button id="edit-zoom-out" type="button" class="btn btn--compact" aria-label="تصغير">${icon("icon-rotate")} -</button>
-              <span class="num edit-zoom-label" id="edit-zoom-label">100%</span>
-              <button id="edit-zoom-in" type="button" class="btn btn--compact" aria-label="تكبير">${icon("icon-plus")} +</button>
-              <button id="edit-zoom-fit" type="button" class="btn btn--compact">${icon("icon-crop")} ملء</button>
-            </div>
+      <div id="edit-workspace" class="edit" hidden>
+        <div class="edit-toolbar">
+          <div class="edit-tools" role="radiogroup" aria-label="أداة التعديل">
+            ${choice("edit-tool", "select", "تحديد", "icon-quad")}
+            ${choice("edit-tool", "text", "نص", "icon-file", true)}
+            ${choice("edit-tool", "pen", "رسم", "icon-sign")}
+            ${choice("edit-tool", "shapes", "الأشكال", "icon-crop")}
+            ${choice("edit-tool", "image", "صورة", "icon-images")}
           </div>
-
-          <div class="edit-board-wrap" id="edit-wrap">
-            <div class="edit-board" id="edit-board">
-              <canvas id="edit-page" width="794" height="1123" aria-label="معاينة الصفحة مع التحرير"></canvas>
-              <div id="edit-layer" class="edit-layer" data-tool="select"></div>
-            </div>
-          </div>
-          <div class="edit-stage__hint">💡 اضغط على الصفحة لإضافة العنصر المختار · اسحب الزوايا للحجم · المقبض العلوي للتدوير · <kbd>Delete</kbd> يحذف · <kbd>Ctrl+Z</kbd> تراجع · <kbd>Ctrl</kbd>+عجلة الفأرة تكبير</div>
+          <span class="edit-toolbar__sep" aria-hidden="true"></span>
+          <button id="edit-undo" type="button" class="btn btn--compact" aria-label="تراجع">${icon("icon-rotate")} تراجع</button>
+          <button id="edit-redo" type="button" class="btn btn--compact" aria-label="إعادة">${icon("icon-rotate")} إعادة</button>
+          <span class="edit-toolbar__spacer"></span>
+          <button id="edit-clear" type="button" class="btn btn--compact btn--ghost">${icon("icon-close")} إغلاق</button>
+          <button id="edit-save" type="button" class="btn btn--compact btn--act">حفظ</button>
         </div>
 
-        <aside class="edit-panel">
-          <div class="panel-block">
-            <h3 class="panel-block__title">الأداة</h3>
-            <div class="edit-toolbar" role="radiogroup" aria-label="أداة التعديل">
-              ${choice("edit-tool", "select", "تحديد", "icon-quad", true)}
-              ${choice("edit-tool", "text", "نص", "icon-file")}
-              ${choice("edit-tool", "pen", "قلم", "icon-sign")}
-              ${choice("edit-tool", "rect", "مربع", "icon-crop")}
-              ${choice("edit-tool", "ellipse", "دائرة", "icon-contrast")}
-              ${choice("edit-tool", "triangle", "مثلث", "icon-alert")}
-              ${choice("edit-tool", "image", "صورة", "icon-images")}
-            </div>
-            <div class="btn-row">
-              <button id="edit-undo" type="button" class="btn btn--fill" aria-label="تراجع">${icon("icon-rotate")} تراجع</button>
-              <button id="edit-redo" type="button" class="btn btn--fill" aria-label="إعادة">${icon("icon-rotate")} إعادة</button>
-              <button id="edit-delete" type="button" class="btn btn--fill" aria-label="حذف المحدد">${icon("icon-trash")} حذف</button>
-            </div>
+        <div class="edit-optbar" id="edit-optbar">
+          <div data-edit-panel="select">
+            <span class="edit-selcount num" id="edit-sel-count"></span>
+            <button id="edit-dup" type="button" class="btn btn--compact">${icon("icon-plus")} مضاعفة</button>
+            <button id="edit-front" type="button" class="btn btn--compact">للأمام</button>
+            <button id="edit-back" type="button" class="btn btn--compact">للخلف</button>
+            <button id="edit-delete" type="button" class="btn btn--compact">${icon("icon-trash")} حذف</button>
+            <button id="edit-clear-sel" type="button" class="btn btn--compact btn--ghost">إلغاء التحديد</button>
           </div>
 
-          <div class="panel-block">
-            <h3 class="panel-block__title">الطبقات</h3>
-            <div id="edit-layers" class="edit-layers" aria-label="قائمة الطبقات"></div>
-          </div>
-
-          <div class="panel-block" data-edit-panel="text" hidden>
-            <h3 class="panel-block__title">النص</h3>
-            <div class="field field--wide">
-              <label for="edit-text">المحتوى</label>
-              <textarea id="edit-text" rows="3" maxlength="2000" placeholder="اكتب هنا — يظهر فوراً على الصفحة"></textarea>
-            </div>
-            <div class="grid-2col">
-              <div class="field">
-                <label for="edit-text-size">الحجم</label>
-                <input id="edit-text-size" type="number" min="10" max="96" value="18" />
-              </div>
-              <div class="field">
-                <label for="edit-text-color">اللون</label>
-                <input id="edit-text-color" type="color" value="#1E3A8A" />
-              </div>
-            </div>
-            ${swatches("edit-text-color", INK_COLORS)}
-            <div class="edit-chips" role="group" aria-label="مقاسات جاهزة">
+          <div data-edit-panel="text" hidden>
+            <textarea id="edit-text" rows="2" maxlength="2000" aria-label="نص العنصر"></textarea>
+            <span class="field"><input id="edit-text-size" type="number" min="10" max="96" value="18" aria-label="حجم الخط" /></span>
+            <span class="edit-chips" role="group" aria-label="مقاسات">
               ${TEXT_SIZES.map((s) => `<button type="button" class="edit-chip" data-size-chip="${s}" data-for="edit-text-size">${s}</button>`).join("")}
-            </div>
-            <div class="grid-2col">
-              <label class="check">
-                <input id="edit-text-bold" type="checkbox" />
-                عريض
-              </label>
-              <label class="check">
-                <input id="edit-text-italic" type="checkbox" />
-                مائل
-              </label>
-            </div>
-            <label class="check">
-              <input id="edit-text-underline" type="checkbox" />
-              تسطير
-            </label>
-            <div class="field field--wide">
-              <span id="edit-align-label">المحاذاة</span>
-              <div class="choice-grid" role="radiogroup" aria-labelledby="edit-align-label">
-                ${choice("edit-align", "right", "يمين", null, true)}
-                ${choice("edit-align", "center", "وسط", null, false)}
-                ${choice("edit-align", "left", "يسار", null, false)}
-              </div>
-            </div>
+            </span>
+            <span class="field"><input id="edit-text-color" type="color" value="#1E3A8A" aria-label="لون النص" /></span>
+            ${swatches("edit-text-color", INK_COLORS)}
+            <label class="check"><input id="edit-text-bold" type="checkbox" />عريض</label>
+            <label class="check"><input id="edit-text-italic" type="checkbox" />مائل</label>
+            <label class="check"><input id="edit-text-underline" type="checkbox" />تسطير</label>
+            <span class="choice-grid" role="radiogroup" aria-label="المحاذاة">
+              ${choice("edit-align", "right", "يمين", null, true)}
+              ${choice("edit-align", "center", "وسط", null, false)}
+              ${choice("edit-align", "left", "يسار", null, false)}
+            </span>
           </div>
 
-          <div class="panel-block" data-edit-panel="pen" hidden>
-            <h3 class="panel-block__title">القلم الحر</h3>
-            <div class="grid-2col">
-              <div class="field">
-                <label for="edit-pen-color">اللون</label>
-                <input id="edit-pen-color" type="color" value="#1E3A8A" />
-              </div>
-              <div class="field">
-                <label for="edit-pen-weight">السُمك</label>
-                <select id="edit-pen-weight">
-                  <option value="1.2">رفيع</option>
-                  <option value="2.2" selected>متوسط</option>
-                  <option value="4">سميك</option>
-                  <option value="7">عريض</option>
-                </select>
-              </div>
-            </div>
+          <div data-edit-panel="pen" hidden>
+            <span class="field"><input id="edit-pen-color" type="color" value="#1E3A8A" aria-label="لون القلم" /></span>
             ${swatches("edit-pen-color", INK_COLORS)}
-            <p class="panel-block__meta">اسحب على الصفحة للرسم. كل شوط رسم يُحفظ كطبقة.</p>
+            <span class="field">
+              <select id="edit-pen-weight" aria-label="سمك القلم">
+                <option value="1.2">رفيع</option>
+                <option value="2.2" selected>متوسط</option>
+                <option value="4">سميك</option>
+                <option value="7">عريض</option>
+              </select>
+            </span>
           </div>
 
-          <div class="panel-block" data-edit-panel="shape" hidden>
-            <h3 class="panel-block__title">الشكل</h3>
-            <div class="edit-presets" role="group" aria-label="أنماط جاهزة">
-              <button type="button" class="edit-preset" data-shape-preset="highlight"><i style="background:#FDE68A"></i> تظليل</button>
-              <button type="button" class="edit-preset" data-shape-preset="frame"><i style="background:#fff;border-color:#DC2626"></i> إطار</button>
-              <button type="button" class="edit-preset" data-shape-preset="fill"><i style="background:#BFDBFE"></i> تعبئة</button>
-              <button type="button" class="edit-preset" data-shape-preset="cover"><i style="background:#fff"></i> تغطية</button>
-            </div>
-            <label class="check">
-              <input id="edit-fill-on" type="checkbox" checked />
-              تعبئة
-            </label>
-            <div class="grid-2col">
-              <div class="field">
-                <label for="edit-fill-color">لون التعبئة</label>
-                <input id="edit-fill-color" type="color" value="#8AA4E0" />
-              </div>
-              <div class="field">
-                <label for="edit-stroke-color">لون الحد</label>
-                <input id="edit-stroke-color" type="color" value="#1E3A8A" />
-              </div>
-            </div>
+          <div data-edit-panel="shapes" hidden>
+            <span class="edit-kind" role="radiogroup" aria-label="نوع الشكل">
+              ${choice("edit-shape", "rect", "مستطيل", null, true)}
+              ${choice("edit-shape", "ellipse", "دائرة", null, false)}
+              ${choice("edit-shape", "triangle", "مثلث", null, false)}
+            </span>
+            <span class="edit-presets" role="group" aria-label="أنماط">
+              <button type="button" class="edit-preset" data-shape-preset="highlight"><i style="background:#FDE68A"></i>تظليل</button>
+              <button type="button" class="edit-preset" data-shape-preset="frame"><i style="background:#fff;border-color:#DC2626"></i>إطار</button>
+              <button type="button" class="edit-preset" data-shape-preset="fill"><i style="background:#BFDBFE"></i>تعبئة</button>
+              <button type="button" class="edit-preset" data-shape-preset="cover"><i style="background:#fff"></i>تغطية</button>
+            </span>
+            <label class="check"><input id="edit-fill-on" type="checkbox" checked />تعبئة</label>
+            <span class="field"><input id="edit-fill-color" type="color" value="#8AA4E0" aria-label="لون التعبئة" /></span>
             ${swatches("edit-fill-color", FILL_COLORS)}
+            <span class="field"><input id="edit-stroke-color" type="color" value="#1E3A8A" aria-label="لون الحد" /></span>
             ${swatches("edit-stroke-color", INK_COLORS)}
-            <div class="field">
-              <label for="edit-stroke-width">سُمك الحد</label>
-              <input id="edit-stroke-width" type="number" min="0" max="24" step="0.5" value="1.5" />
-            </div>
+            <span class="field"><input id="edit-stroke-width" type="number" min="0" max="24" step="0.5" value="1.5" aria-label="سمك الحد" /></span>
           </div>
 
-          <div class="panel-block" data-edit-panel="image" hidden>
-            <h3 class="panel-block__title">الصورة</h3>
-            <p class="panel-block__meta" id="edit-image-meta">PNG أو JPG أو WEBP — تُضاف في الوسط ويمكن سحب زواياها.</p>
-            <button id="edit-image-browse" type="button" class="btn btn--wide">
+          <div data-edit-panel="image" hidden>
+            <button id="edit-image-browse" type="button" class="btn btn--compact">
               ${icon("icon-upload")} اختيار صورة
             </button>
+            <span class="edit-selcount" id="edit-image-meta"></span>
+          </div>
+        </div>
+
+        <div class="edit-main">
+          <aside class="edit-side edit-side--layers" aria-label="الطبقات">
+            <div class="edit-side__head">
+              <h3 class="edit-side__title">الطبقات</h3>
+              <span class="edit-side__count num" id="edit-layers-count"></span>
+            </div>
+            <div id="edit-layers" class="edit-layers" aria-label="قائمة الطبقات"></div>
+          </aside>
+
+          <div class="edit-center">
+            <div class="edit-board-wrap" id="edit-wrap">
+              <div class="edit-board" id="edit-board">
+                <canvas id="edit-page" width="794" height="1123" aria-label="صفحة PDF"></canvas>
+                <div id="edit-layer" class="edit-layer" data-tool="text"></div>
+              </div>
+            </div>
+            <div class="edit-zoom">
+              <button id="edit-zoom-out" type="button" class="btn btn--compact" aria-label="تصغير">−</button>
+              <span class="num edit-zoom-label" id="edit-zoom-label">100%</span>
+              <button id="edit-zoom-in" type="button" class="btn btn--compact" aria-label="تكبير">+</button>
+              <button id="edit-zoom-fit" type="button" class="btn btn--compact" aria-label="ملء">ملء</button>
+            </div>
           </div>
 
-          <div class="panel-block panel-block--dashed">
-            <p class="note note--bare">
-              <strong>الناتج PDF مسطّح:</strong> العناصر تُرسم فوق الصفحة الأصلية. لا يُعدَّل النص داخل الملف نفسه — إن أردت تعديل نص موجود، غطّه بمستطيل أبيض ثم أضف نصاً جديداً فوقه.
-            </p>
-          </div>
-
-          <div class="panel-block panel-block--bare">
-            <button id="edit-save" type="button" class="btn btn--act btn--wide">حفظ التعديل — دمج الطبقات</button>
-            <button id="edit-clear" type="button" class="btn btn--wide">
-              ${icon("icon-close")} إغلاق المستند
-            </button>
-          </div>
-        </aside>
+          <aside class="edit-side edit-side--pages" aria-label="الصفحات">
+            <div class="edit-side__head">
+              <div class="edit-side__pager">
+                <button id="edit-prev" type="button" class="btn btn--compact" aria-label="السابقة">${icon("icon-arrow")}</button>
+                <span class="scan__count num" id="edit-count">1 / 1</span>
+                <button id="edit-next" type="button" class="btn btn--compact" aria-label="التالية"><svg class="icon flip" aria-hidden="true"><use href="#icon-arrow"></use></svg></button>
+              </div>
+            </div>
+            <div id="edit-pages" class="edit-pages" role="list" aria-label="صفحات المستند"></div>
+          </aside>
+        </div>
       </div>
     </div>
   `;
@@ -579,17 +646,21 @@ export function buildUi(root) {
     imageBrowse: root.querySelector("#edit-image-browse"),
     imageMeta: root.querySelector("#edit-image-meta"),
     workspace: root.querySelector("#edit-workspace"),
+    optbar: root.querySelector("#edit-optbar"),
     canvas: root.querySelector("#edit-page"),
     layer: root.querySelector("#edit-layer"),
     wrap: root.querySelector("#edit-wrap"),
     prev: root.querySelector("#edit-prev"),
     next: root.querySelector("#edit-next"),
     count: root.querySelector("#edit-count"),
+    pages: root.querySelector("#edit-pages"),
     zoomIn: root.querySelector("#edit-zoom-in"),
     zoomOut: root.querySelector("#edit-zoom-out"),
     zoomFit: root.querySelector("#edit-zoom-fit"),
     zoomLabel: root.querySelector("#edit-zoom-label"),
     layers: root.querySelector("#edit-layers"),
+    layersCount: root.querySelector("#edit-layers-count"),
+    selCount: root.querySelector("#edit-sel-count"),
     text: root.querySelector("#edit-text"),
     textSize: root.querySelector("#edit-text-size"),
     textColor: root.querySelector("#edit-text-color"),
@@ -604,6 +675,10 @@ export function buildUi(root) {
     strokeWidth: root.querySelector("#edit-stroke-width"),
     undo: root.querySelector("#edit-undo"),
     redo: root.querySelector("#edit-redo"),
+    dup: root.querySelector("#edit-dup"),
+    front: root.querySelector("#edit-front"),
+    back: root.querySelector("#edit-back"),
+    clearSel: root.querySelector("#edit-clear-sel"),
     remove: root.querySelector("#edit-delete"),
     save: root.querySelector("#edit-save"),
     clear: root.querySelector("#edit-clear")

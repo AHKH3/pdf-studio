@@ -3,13 +3,15 @@
  * silently mismatch the on-screen preview (page /Rotate, ink rotation, clamp).
  */
 import {
+  clampGroupDelta,
   clampedMove,
   orientedPoints,
+  rectsIntersect,
   rotatePoint,
   visualPointToMedia,
   visualRectToMedia
 } from "../assets/js/tools/edit/coords.js";
-import { fitPageCssWidth, stabilizeFitPx } from "../assets/js/tools/edit/fit.js";
+import { MAX_FIT_SCALE, fitPageCssWidth, stabilizeFitPx } from "../assets/js/tools/edit/fit.js";
 
 let failures = 0;
 let checks = 0;
@@ -129,7 +131,7 @@ console.log("\nedit coords (visual ↔ media, ink rotation, clamp)");
   check("clamp at far edge reports no delta", bump.dx === 0 && bump.x === 80);
 }
 
-console.log("\nedit fit (page CSS width must not oscillate on open)");
+console.log("\nedit fit (page fills the pane by default, no first-open jump)");
 
 {
   const A4W = 595;
@@ -145,8 +147,8 @@ console.log("\nedit fit (page CSS width must not oscillate on open)");
   const fitted = fitPageCssWidth(A4W, A4H, paneW, paneH);
   const expected = paneH * (A4W / A4H);
   check(
-    "visible pane height-limits A4 without exceeding width or 1:1",
-    close(fitted, expected, 0.5) && fitted <= paneW && fitted <= A4W,
+    "visible pane height-limits A4 without exceeding the pane",
+    close(fitted, expected, 0.5) && fitted <= paneW,
     String(fitted)
   );
 
@@ -157,6 +159,17 @@ console.log("\nedit fit (page CSS width must not oscillate on open)");
   check(
     "tiny pane is height-limited instead of forced to 120px",
     fitPageCssWidth(A4W, A4H, 100, 80) < 120 && fitPageCssWidth(A4W, A4H, 100, 80) > 0
+  );
+
+  check(
+    "roomy pane upscales past 1:1 so the page fills its area",
+    fitPageCssWidth(A4W, A4H, 1600, 1200) > A4W,
+    String(fitPageCssWidth(A4W, A4H, 1600, 1200))
+  );
+  check(
+    "upscale is capped so absurd panes cannot explode memory",
+    fitPageCssWidth(A4W, A4H, 9000, 9000) <= A4W * MAX_FIT_SCALE + 1,
+    String(fitPageCssWidth(A4W, A4H, 9000, 9000))
   );
 
   check(
@@ -207,6 +220,90 @@ console.log("\nedit fit (page CSS width must not oscillate on open)");
     new Set(stable).size === 1 && stable[0] > 120,
     stable.join(" → ")
   );
+}
+
+console.log("\nedit multi-select (rigid group move + marquee)");
+
+{
+  const a = { x: 10, y: 10, width: 20, height: 20 };
+  const b = { x: 60, y: 60, width: 20, height: 20 };
+  const free = clampGroupDelta([a, b], 5, 5, 100, 100);
+  check("group move keeps the requested delta inside the page", free.dx === 5 && free.dy === 5);
+
+  const blocked = clampGroupDelta([a, b], -30, 0, 100, 100);
+  check("group stops at the tightest edge (a pins at x=0)", blocked.dx === -10 && blocked.dy === 0);
+
+  const far = { x: 80, y: 0, width: 20, height: 20 };
+  const pinned = clampGroupDelta([a, far], 40, 7, 100, 100);
+  check("group stays glued: far edge blocks dx, both still move in dy", pinned.dx === 0 && pinned.dy === 7);
+
+  check("empty selection never moves", clampGroupDelta([], 5, 5, 100, 100).dx === 0);
+
+  // The single-object path must agree with the group path on one box.
+  const one = clampGroupDelta([{ x: 40, y: 40, width: 20, height: 10 }], 5, 3, 100, 100);
+  const solo = clampedMove({ x: 40, y: 40, width: 20, height: 10 }, 5, 3, 100, 100);
+  check("group-of-one matches clampedMove", one.dx === solo.dx && one.dy === solo.dy);
+}
+
+{
+  check(
+    "marquee catches overlap",
+    rectsIntersect({ x: 0, y: 0, width: 10, height: 10 }, { x: 5, y: 5, width: 10, height: 10 })
+  );
+  check(
+    "marquee ignores disjoint boxes",
+    !rectsIntersect({ x: 0, y: 0, width: 10, height: 10 }, { x: 20, y: 20, width: 10, height: 10 })
+  );
+  check(
+    "touching edges do not count as selection",
+    !rectsIntersect({ x: 0, y: 0, width: 10, height: 10 }, { x: 10, y: 0, width: 10, height: 10 })
+  );
+}
+
+console.log(`\n${checks - failures}/${checks} checks passed`);
+if (failures) process.exit(1);
+
+console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
+
+{
+  const { readFile } = await import("node:fs/promises");
+  const { fileURLToPath } = await import("node:url");
+  const path = (await import("node:path")).default;
+  const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+  const uiSrc = await readFile(path.join(ROOT, "assets/js/tools/edit/ui.js"), "utf8");
+  const appSrc = await readFile(path.join(ROOT, "assets/js/tools/edit/app.js"), "utf8");
+  const boardSrc = await readFile(path.join(ROOT, "assets/js/tools/edit/board.js"), "utf8");
+
+  const returnBlock = uiSrc.match(/return\s*\{([\s\S]*?)\};\s*\n\}/);
+  check("buildUi return block is parseable", Boolean(returnBlock));
+  const returned = new Set((returnBlock?.[1].match(/(\w+)\s*:/g) || []).map((m) => m.replace(/\s*:/, "")));
+  check("buildUi returns a usable handle set", returned.size > 20, `keys=${returned.size}`);
+
+  const touched = new Set();
+  for (const m of appSrc.matchAll(/session\.ui\?\.(\w+)|session\.ui\.(\w+)/g)) touched.add(m[1] || m[2]);
+  const missing = [...touched].filter((k) => !returned.has(k));
+  check("every session.ui.* in app.js exists in buildUi()", missing.length === 0, missing.join(","));
+
+  // board.js gets its nodes from options only — it must not look up edit ids.
+  check(
+    "board.js uses no edit element id lookups",
+    !/(getElementById\(|querySelector\("#edit-|\bel\("edit-)/.test(boardSrc)
+  );
+
+  const templateIds = new Set((uiSrc.match(/id="([\w-]+)"/g) || []).map((m) => m.slice(4, -1)));
+  const queriedIds = new Set((uiSrc.match(/querySelector\("#([\w-]+)"\)/g) || []).map((m) => m.match(/#([\w-]+)/)[1]));
+  const dangling = [...queriedIds].filter((id) => !templateIds.has(id));
+  check("every querySelector id exists in the template", dangling.length === 0, dangling.join(","));
+
+  // One tool, one settings bar: shapes (all kinds) share a single panel.
+  const panels = (uiSrc.match(/data-edit-panel="(\w+)"/g) || []).map((m) => m.match(/"(\w+)"/)[1]);
+  check(
+    "panels are exactly select/text/pen/shapes/image",
+    JSON.stringify([...new Set(panels)].sort()) === JSON.stringify(["image", "pen", "select", "shapes", "text"]),
+    panels.join(",")
+  );
+  check("no rect/ellipse/triangle tool radios remain", !/name="edit-tool"[^>]*value="(rect|ellipse|triangle)"/.test(uiSrc));
+  check("no usage-instruction text in the edit template", !/(يظهر فوراً|اسحب الزوايا|لطيفة|💡|لطبقة فوق|الناتج PDF)/.test(uiSrc));
 }
 
 console.log(`\n${checks - failures}/${checks} checks passed`);
