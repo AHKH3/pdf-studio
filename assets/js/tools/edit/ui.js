@@ -265,10 +265,10 @@ const CSS = `
   flex-direction: column;
   gap: 2px;
   padding: 6px;
-  background: var(--surface-0, #fff);
+  background: var(--surface-3);
   border: 1px solid var(--border-strong);
   border-radius: 12px;
-  box-shadow: 0 12px 32px rgba(15,23,42,0.18);
+  box-shadow: var(--shadow-panel);
 }
 .edit-dd__menu[hidden] { display: none; }
 .edit-presetrow {
@@ -693,12 +693,11 @@ export function buildUi(root) {
               <span class="edit-dd">
                 <button type="button" class="edit-toolbtn edit-dd__btn" id="edit-shape-style" aria-haspopup="listbox" aria-expanded="false" aria-label="نمط الشكل">
                   <span class="edit-dd__prev" data-dd-prev></span>
-                  <span data-dd-name>تعبئة بدون إطار</span>
+                  <span data-dd-name>تظليل</span>
                   <svg class="icon icon--chev" aria-hidden="true"><use href="#icon-chev"></use></svg>
                 </button>
                 <span class="edit-dd__menu" id="edit-shape-menu" role="listbox" aria-label="نمط الشكل" hidden>
                   <button type="button" role="option" class="edit-presetrow" data-preset="custom" aria-selected="false"><svg viewBox="0 0 30 24" aria-hidden="true"><rect x="3" y="4" width="24" height="16" rx="3" fill="none" stroke="currentColor" stroke-dasharray="4 3" stroke-width="2"/></svg><span>مخصص</span></button>
-                  <button type="button" role="option" class="edit-presetrow" data-preset="flat" data-shape-preset="flat" aria-selected="false"><svg viewBox="0 0 30 24" aria-hidden="true"><rect x="3" y="4" width="24" height="16" rx="3" fill="#BFDBFE"/></svg><span>تعبئة بدون إطار</span></button>
                   <button type="button" role="option" class="edit-presetrow" data-preset="highlight" data-shape-preset="highlight" aria-selected="false"><svg viewBox="0 0 30 24" aria-hidden="true"><rect x="3" y="4" width="24" height="16" rx="3" fill="#FDE68A" stroke="#FDE68A"/></svg><span>تظليل</span></button>
                   <button type="button" role="option" class="edit-presetrow" data-preset="frame" data-shape-preset="frame" aria-selected="false"><svg viewBox="0 0 30 24" aria-hidden="true"><rect x="3" y="4" width="24" height="16" rx="3" fill="none" stroke="#DC2626" stroke-width="2.5"/></svg><span>إطار</span></button>
                   <button type="button" role="option" class="edit-presetrow" data-preset="fill" data-shape-preset="fill" aria-selected="false"><svg viewBox="0 0 30 24" aria-hidden="true"><rect x="3" y="4" width="24" height="16" rx="3" fill="#BFDBFE" stroke="#1E3A8A" stroke-width="2"/></svg><span>تعبئة</span></button>
@@ -708,9 +707,9 @@ export function buildUi(root) {
             </span>
             <span class="edit-sep" aria-hidden="true"></span>
             <label class="check"><input id="edit-fill-on" type="checkbox" checked />تعبئة</label>
-            <span class="field"><label for="edit-fill-color">لون التعبئة</label><input id="edit-fill-color" type="color" value="#BFDBFE" aria-label="لون التعبئة — اضغط لاختيار اللون" title="اضغط لاختيار لون التعبئة" /></span>
+            <span class="field"><label for="edit-fill-color">لون التعبئة</label><input id="edit-fill-color" type="color" value="#FDE68A" aria-label="لون التعبئة — اضغط لاختيار اللون" title="اضغط لاختيار لون التعبئة" /></span>
             <span class="edit-sep" aria-hidden="true"></span>
-            <span class="field"><label for="edit-stroke-color">لون الإطار</label><input id="edit-stroke-color" type="color" value="#BFDBFE" aria-label="لون الإطار — اضغط لاختيار اللون" title="اضغط لاختيار لون الإطار" /></span>
+            <span class="field"><label for="edit-stroke-color">لون الإطار</label><input id="edit-stroke-color" type="color" value="#FDE68A" aria-label="لون الإطار — اضغط لاختيار اللون" title="اضغط لاختيار لون الإطار" /></span>
             <span class="field"><label for="edit-stroke-width">السمك</label><input id="edit-stroke-width" type="range" min="0" max="24" step="0.5" value="0" aria-label="سمك الإطار" /></span>
             <span class="num edit-width-val" id="edit-stroke-width-val">0</span>
           </div>

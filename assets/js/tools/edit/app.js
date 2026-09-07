@@ -148,7 +148,7 @@ function getStyle() {
     penColor: ui?.penColor.value || "#1E3A8A",
     penWeight: finiteNumber(ui?.penWeight.value, 2.2),
     fillOn: Boolean(ui?.fillOn.checked),
-    fill: ui?.fillColor.value || "#BFDBFE",
+    fill: ui?.fillColor.value || "#FDE68A",
     stroke: ui?.strokeColor.value || "#1E3A8A",
     strokeWidth: Math.max(0, finiteNumber(ui?.strokeWidth.value, 0))
   };
@@ -580,7 +580,6 @@ function applySavedStyle() {
 }
 
 const SHAPE_PRESETS = {
-  flat: { fillOn: true, fill: "#BFDBFE", stroke: "#BFDBFE", strokeWidth: 0 },
   highlight: { fillOn: true, fill: "#FDE68A", stroke: "#FDE68A", strokeWidth: 0 },
   frame: { fillOn: false, fill: "#BFDBFE", stroke: "#DC2626", strokeWidth: 2 },
   fill: { fillOn: true, fill: "#BFDBFE", stroke: "#1E3A8A", strokeWidth: 1.5 },
@@ -589,7 +588,6 @@ const SHAPE_PRESETS = {
 
 const PRESET_LABELS = {
   custom: "مخصص",
-  flat: "تعبئة بدون إطار",
   highlight: "تظليل",
   frame: "إطار",
   fill: "تعبئة",
