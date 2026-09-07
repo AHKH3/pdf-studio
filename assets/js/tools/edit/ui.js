@@ -231,7 +231,6 @@ const CSS = `
   min-height: 0;
   min-width: 0;
   background: var(--surface-2);
-  border-radius: 12px;
   overflow: hidden;
 }
 .edit-board-wrap {
