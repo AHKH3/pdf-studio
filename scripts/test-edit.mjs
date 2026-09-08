@@ -280,9 +280,13 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
   const { fileURLToPath } = await import("node:url");
   const path = (await import("node:path")).default;
   const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-  const uiSrc = await readFile(path.join(ROOT, "assets/js/tools/edit/ui.js"), "utf8");
-  const appSrc = await readFile(path.join(ROOT, "assets/js/tools/edit/app.js"), "utf8");
-  const boardSrc = await readFile(path.join(ROOT, "assets/js/tools/edit/board.js"), "utf8");
+  // Line-ending immunity: Windows checkouts often materialize CRLF while the
+  // blobs (and other checkouts) are LF. The exact-match assertions below must
+  // not depend on which one this run got (this bit CI once already).
+  const norm = (text) => String(text || "").replace(/\r\n/g, "\n");
+  const uiSrc = norm(await readFile(path.join(ROOT, "assets/js/tools/edit/ui.js"), "utf8"));
+  const appSrc = norm(await readFile(path.join(ROOT, "assets/js/tools/edit/app.js"), "utf8"));
+  const boardSrc = norm(await readFile(path.join(ROOT, "assets/js/tools/edit/board.js"), "utf8"));
 
   const returnBlock = uiSrc.match(/return\s*\{([\s\S]*?)\};\s*\n\}/);
   check("buildUi return block is parseable", Boolean(returnBlock));
@@ -399,7 +403,7 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
 
   // No big container may group a page's elements again: .view__body stays flat
   // and .view stays full-width on every tool page.
-  const cssSrc = await readFile(path.join(ROOT, "assets/css/app.css"), "utf8");
+  const cssSrc = norm(await readFile(path.join(ROOT, "assets/css/app.css"), "utf8"));
   const flat = cssSrc.replace(/\/\*[\s\S]*?\*\//g, "");
   // Tool pickers share one centered hero-card design (edit + every tool).
   const pickerRule = flat.match(/\.view__body\s*>\s*\.intake\s*\{([^}]*)\}/)?.[1] || "";
