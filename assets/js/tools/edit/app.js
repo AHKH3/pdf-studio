@@ -117,6 +117,10 @@ function activeTool() {
 }
 
 function activePanel() {
+  // A single-selected text always gets the text strip (typing + styling),
+  // no matter which tool is armed — so disarming the text tool after
+  // stamping never strands the user without style controls.
+  if (singleSelectedObject()?.type === "text") return "text";
   const picked = session.root?.querySelector('input[name="edit-tool"]:checked');
   const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "";
   // Disarmed: the bulk/selection bar stays up (disabled while empty).
@@ -460,6 +464,22 @@ function setZoom(value) {
   session.zoom = Math.max(0.5, Math.min(2.5, value));
   session.board?.setZoom?.(session.zoom);
   updateZoomLabel();
+}
+
+/**
+ * The text tool is one-shot: right after stamping a box it disarms back to
+ * select, so the next click moves/selects instead of littering accidental
+ * (often empty) boxes. Styling stays available because the text strip
+ * follows a text selection (see activePanel).
+ */
+function disarmToSelect() {
+  if (!session.root) return;
+  for (const input of session.root.querySelectorAll('input[name="edit-tool"]')) {
+    /** @type {HTMLInputElement} */ (input).checked = input.value === "select";
+  }
+  session.board?.syncTool();
+  showPanels();
+  saveStylePrefs();
 }
 
 /** @param {"width" | "page"} mode */
@@ -1316,7 +1336,10 @@ export function mount(rootEl) {
     },
     getTool: activeTool,
     getStyle,
-    onCreate: createObject,
+    onCreate: (partial) => {
+      createObject(partial);
+      if (partial?.type === "text") disarmToSelect();
+    },
     onZoomChange: (value) => {
       session.zoom = value;
       updateZoomLabel();

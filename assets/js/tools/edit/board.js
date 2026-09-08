@@ -25,7 +25,7 @@ import {
   scalePoints,
   worldToLocal
 } from "./coords.js";
-import { FONT } from "./text-png.js";
+import { FONT, textPad } from "./text-png.js";
 import { MIN_BOX_PX, fitPageCssWidth, fitWidthFillPx, stabilizeFitPx } from "./fit.js";
 
 const CORNER_HANDLES = ["nw", "ne", "sw", "se"];
@@ -337,7 +337,9 @@ export function createBoard(options) {
       if (obj.type === "text") {
         const fontSize = obj.fontSize || 18;
         const scale = displayScale();
-        const padPx = Math.max(2, fontSize * 0.18) * scale;
+        // No padding on the node itself: the editor/preview children carry
+        // exactly one textPad (border-box), matching the final PNG. Padding
+        // here used to stack on top of theirs and shift the text on exit.
         node.style.color = obj.color || "#1E3A8A";
         node.style.fontFamily = FONT;
         node.style.fontWeight = obj.bold ? "700" : "400";
@@ -346,7 +348,6 @@ export function createBoard(options) {
         node.style.fontSize = `${fontSize * scale}px`;
         node.style.lineHeight = "1.45";
         node.style.textAlign = obj.align || "right";
-        node.style.padding = `${padPx}px`;
         if (obj.id === singleId || obj.id === keepFocusId) {
           const area = document.createElement("textarea");
           area.value = obj.text || "";
@@ -368,14 +369,17 @@ export function createBoard(options) {
             onChange();
           });
           node.append(area);
+          applyTextBoxMetrics(area, obj, displayScale());
           requestAnimationFrame(() => {
             if (area.isConnected) growTextArea(area, obj);
           });
         } else {
           const preview = document.createElement("div");
           preview.className = "edit-obj__text";
+          preview.style.display = "block";
           preview.textContent = obj.text || "نص";
           node.append(preview);
+          applyTextBoxMetrics(preview, obj, displayScale());
         }
       } else if (obj.type === "image") {
         const img = document.createElement("img");
@@ -575,6 +579,20 @@ export function createBoard(options) {
   function focusSelectedText() {
     const area = layer.querySelector(".edit-obj.is-selected textarea");
     if (area instanceof HTMLTextAreaElement) area.focus();
+  }
+
+  /**
+   * Shared box metrics for the editable textarea and the read-only preview
+   * so both render the text with the same padding, wrapping and border-box
+   * sizing as the final PNG (same textPad formula). Any divergence here
+   * shows up as the text jumping when edit mode is exited.
+   */
+  function applyTextBoxMetrics(target, obj, scale) {
+    const padCss = textPad(obj.fontSize || 18) * scale;
+    target.style.boxSizing = "border-box";
+    target.style.padding = `${padCss}px`;
+    target.style.whiteSpace = "pre-wrap";
+    target.style.overflowWrap = "break-word";
   }
 
   function pointerDown(event) {

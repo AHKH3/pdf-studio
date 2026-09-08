@@ -52,7 +52,19 @@ class FakeEl {
   getAttribute(k) { return this.attributes[k]; }
   append(...nodes) { for (const n of nodes) { n.parent = this; this.children.push(n); } return this; }
   appendChild(n) { return this.append(n); }
-  remove() { if (this.parent) this.parent.children = this.parent.children.filter((c) => c !== this); this.parent = null; }
+  remove() {
+    // Like the real DOM, removing the focused subtree drops focus (the app
+    // relies on this: keepFocusId must not resurrect a detached editor).
+    const active = globalThis.document?.activeElement;
+    if (active) {
+      let found = false;
+      const walk = (n) => { if (n === active) found = true; n.children.forEach(walk); };
+      walk(this);
+      if (found) globalThis.document.activeElement = null;
+    }
+    if (this.parent) this.parent.children = this.parent.children.filter((c) => c !== this);
+    this.parent = null;
+  }
   addEventListener(t, fn) { (this.listeners[t] ||= []).push(fn); }
   removeEventListener(t, fn) { this.listeners[t] = (this.listeners[t] || []).filter((f) => f !== fn); }
   focus() { globalThis.document.activeElement = this; }
@@ -327,6 +339,29 @@ async function reseed() {
   fire(area, "input", {});
   await tick();
   check("T5 typing updates obj.text", objects[0].text === "hello world", `text=${JSON.stringify(objects[0].text)}`);
+}
+
+/* T6: editor and preview share one box metric (no shift on exit) */
+{
+  await reseed();
+  const scale = 600 / 595;
+  const wantPad = Math.max(2, 18 * 0.18) * scale;
+  const near = (v) => Math.abs(parseFloat(v) - wantPad) < 0.001;
+  const area = layer.querySelector(".edit-obj.is-selected textarea");
+  check("T6 editor padding matches the final render", near(area.style.padding), `padding=${area.style.padding}`);
+  check("T6 editor is border-box", area.style.boxSizing === "border-box");
+  check("T6 editor wraps like the final render", area.style.whiteSpace === "pre-wrap" && area.style.overflowWrap === "break-word");
+  selectedIds.length = 0;
+  // Real deselection moves focus away (click/Escape); a real browser then
+  // resets activeElement when the editor is removed, so keepFocusId clears.
+  globalThis.document.activeElement = null;
+  board.paintOverlay();
+  await tick();
+  const preview = layer.querySelector(".edit-obj .edit-obj__text");
+  check("T6 preview exists after deselect", !!preview);
+  check("T6 preview uses block layout (no flex shift)", preview.style.display === "block");
+  check("T6 preview padding matches the editor", near(preview.style.padding), `padding=${preview.style.padding}`);
+  check("T6 preview is border-box", preview.style.boxSizing === "border-box");
 }
 
 console.log(failures ? `\n${failures} FAILURES` : "\nall interaction checks passed");

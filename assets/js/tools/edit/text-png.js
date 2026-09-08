@@ -5,6 +5,16 @@
 
 export const FONT = `"Noto Naskh Arabic", "Amiri", "Playfair Display", serif`;
 
+/**
+ * Inner padding of a text box in pt. Single source shared by the final PNG
+ * and the on-canvas editor/preview so the text sits in exactly the same
+ * place while typing and after saving (WYSIWYG, no shift on exit).
+ * @param {number} fontSize
+ */
+export function textPad(fontSize) {
+  return Math.max(2, Number(fontSize || 18) * 0.18);
+}
+
 /** @param {HTMLCanvasElement} canvas */
 export async function canvasToPngBytes(canvas) {
   const blob = await new Promise((resolve, reject) => {
@@ -85,7 +95,7 @@ export async function renderTextBoxPng(text, style) {
   const fontSize = Math.max(10, style.fontSize * scale);
   const weight = style.bold ? 700 : 400;
   const font = `${style.italic ? "italic " : ""}${weight} ${fontSize}px ${FONT}`;
-  const pad = Math.max(4, fontSize * 0.18);
+  const pad = textPad(style.fontSize) * scale;
   const align = style.align || "right";
 
   const canvas = document.createElement("canvas");

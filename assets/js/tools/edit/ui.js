@@ -444,10 +444,13 @@ const CSS = `
   width: 100%;
   height: 100%;
   margin: 0;
-  padding: var(--space-2) var(--space-2);
+  padding: 0;
+  box-sizing: border-box;
   resize: none;
   border: 0;
-  background: color-mix(in srgb, #fff 88%, transparent);
+  /* Direct-manipulation editing: fully transparent, no white box — what you
+     see is exactly the final text on the page, not a fake background. */
+  background: transparent;
   color: inherit;
   font: inherit;
   line-height: 1.45;
@@ -458,16 +461,15 @@ const CSS = `
   touch-action: none;
 }
 .edit-obj__text {
-  display: flex;
+  display: block;
   width: 100%;
   height: 100%;
-  padding: var(--space-2) var(--space-2);
+  padding: 0;
   box-sizing: border-box;
   white-space: pre-wrap;
   overflow: hidden;
   line-height: 1.45;
   pointer-events: none;
-  word-break: break-word;
 }
 .edit-handle {
   position: absolute;
