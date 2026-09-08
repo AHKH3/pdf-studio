@@ -411,6 +411,12 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
     /\.view__body\s*>\s*\.intake \.intake__glyph\s*\{[^}]*background\s*:\s*var\(--accent-soft\)/.test(flat)
   );
   check("edit carries no divergent picker override", !/#edit-drop\.intake\s*\{/.test(uiSrc));
+  // Layer cards breathe: rows live in a per-page group with a small gap.
+  check(
+    "layer cards have a small gap between them",
+    /group\.className = "edit-layers__group"/.test(appSrc) &&
+      /\.edit-layers__group\s*\{[^}]*gap:\s*6px/.test(uiSrc)
+  );
   const bodyRule = flat.match(/\.view__body\s*\{([^}]*)\}/)?.[1] || "";
   check("view__body has no card background", !/background\s*:\s*var\(--surface/.test(bodyRule), bodyRule.slice(0, 100));
   check("view__body has no border", /(^|;)\s*border\s*:\s*0/.test(bodyRule), bodyRule.slice(0, 100));

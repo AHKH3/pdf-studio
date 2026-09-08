@@ -203,6 +203,7 @@ const CSS = `
   text-align: center;
   padding: 16px 8px;
 }
+.edit-layers__group { display: flex; flex-direction: column; gap: 6px; }
 .edit-layers__page {
   font-size: 0.7rem;
   font-weight: 700;

@@ -309,6 +309,7 @@ function renderLayers() {
   const pages = [...byPage.keys()].sort((a, b) => a - b);
   for (const page of pages) {
     const group = document.createElement("div");
+    group.className = "edit-layers__group";
     const head = document.createElement("div");
     head.className = `edit-layers__page${page === session.pageIndex ? " is-current" : ""}`;
     head.textContent = `صفحة ${page + 1}`;
