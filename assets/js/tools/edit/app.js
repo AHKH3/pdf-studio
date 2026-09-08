@@ -479,7 +479,9 @@ function syncInspectorFromSelection() {
   session.syncing = true;
   try {
     if (obj?.type === "text") {
-      ui.text.value = obj.text || "";
+      // Assign only on real change: rewriting the same value collapses the
+      // strip caret to the end on every keystroke while editing mid-text.
+      if (ui.text.value !== (obj.text || "")) ui.text.value = obj.text || "";
       ui.textSize.value = String(obj.fontSize || 18);
       ui.textColor.value = obj.color || "#1E3A8A";
       ui.textBold.checked = Boolean(obj.bold);

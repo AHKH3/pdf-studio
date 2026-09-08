@@ -572,6 +572,11 @@ export function createBoard(options) {
     }
   }
 
+  function focusSelectedText() {
+    const area = layer.querySelector(".edit-obj.is-selected textarea");
+    if (area instanceof HTMLTextAreaElement) area.focus();
+  }
+
   function pointerDown(event) {
     // Text editing vs text moving is decided by a movement threshold: a press
     // that stays put becomes a caret click, a press that travels moves the box.
@@ -1011,6 +1016,10 @@ export function createBoard(options) {
   }
 
   function onLayerKey(event) {
+    // Typing inside the on-canvas editor must reach the text: without this
+    // guard Space/Enter never typed (eaten here) and every press rebuilt the
+    // editor mid-typing, stealing focus so following keys went nowhere.
+    if (event.target?.closest?.("textarea, input, select")) return;
     const node = event.target.closest?.(".edit-obj");
     if (!node) return;
     if (event.key === "Enter" || event.key === " ") {
@@ -1184,8 +1193,7 @@ export function createBoard(options) {
       return true;
     },
     focusSelectedText() {
-      const area = layer.querySelector(".edit-obj.is-selected textarea");
-      if (area instanceof HTMLTextAreaElement) area.focus();
+      focusSelectedText();
     },
     /**
      * Grow the single selected text box so its content fits after a style
