@@ -663,6 +663,9 @@ export function buildUi(root) {
 
       <div id="edit-workspace" class="edit" hidden>
         <div class="edit-toolbar">
+          <button id="edit-undo" type="button" class="btn btn--compact" aria-label="تراجع">${icon("icon-rotate")} تراجع</button>
+          <button id="edit-redo" type="button" class="btn btn--compact" aria-label="إعادة">${icon("icon-rotate")} إعادة</button>
+          <span class="edit-toolbar__spacer"></span>
           <div class="edit-tools" role="radiogroup" aria-label="أداة التعديل">
             ${choice("edit-tool", "select", "تحديد", "icon-quad")}
             ${choice("edit-tool", "text", "نص", "icon-file")}
@@ -670,9 +673,6 @@ export function buildUi(root) {
             ${choice("edit-tool", "shapes", "الأشكال", "icon-crop")}
             <button id="edit-image-add" type="button" class="edit-toolbtn">${icon("icon-images")}<span>صورة</span></button>
           </div>
-          <span class="edit-toolbar__sep" aria-hidden="true"></span>
-          <button id="edit-undo" type="button" class="btn btn--compact" aria-label="تراجع">${icon("icon-rotate")} تراجع</button>
-          <button id="edit-redo" type="button" class="btn btn--compact" aria-label="إعادة">${icon("icon-rotate")} إعادة</button>
           <span class="edit-toolbar__spacer"></span>
           <button id="edit-clear" type="button" class="btn btn--compact btn--ghost">${icon("icon-close")} إغلاق</button>
           <button id="edit-save" type="button" class="btn btn--compact btn--act">حفظ</button>

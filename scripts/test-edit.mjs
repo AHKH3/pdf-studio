@@ -411,6 +411,21 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
     /\.view__body\s*>\s*\.intake \.intake__glyph\s*\{[^}]*background\s*:\s*var\(--accent-soft\)/.test(flat)
   );
   check("edit carries no divergent picker override", !/#edit-drop\.intake\s*\{/.test(uiSrc));
+  // Toolbar arrangement (RTL): history far right, tools centered, actions far left.
+  const undoIdx = uiSrc.indexOf('id="edit-undo"');
+  const redoIdx = uiSrc.indexOf('id="edit-redo"');
+  const toolsIdx = uiSrc.indexOf('class="edit-tools"');
+  const clearIdx = uiSrc.indexOf('id="edit-clear"');
+  const saveIdx = uiSrc.indexOf('id="edit-save"');
+  check(
+    "toolbar order is history → tools → actions",
+    undoIdx !== -1 && undoIdx < redoIdx && redoIdx < toolsIdx && toolsIdx < clearIdx && clearIdx < saveIdx
+  );
+  const spacerIdx = [...uiSrc.matchAll(/<span class="edit-toolbar__spacer"/g)].map((m) => m.index);
+  check(
+    "tools sit centered between two spacers",
+    spacerIdx.length === 2 && spacerIdx[0] < toolsIdx && toolsIdx < spacerIdx[1]
+  );
   // Layer cards breathe: rows live in a per-page group with a small gap.
   check(
     "layer cards have a small gap between them",
