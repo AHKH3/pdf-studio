@@ -426,6 +426,16 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
     "tools sit centered between two spacers",
     spacerIdx.length === 2 && spacerIdx[0] < toolsIdx && toolsIdx < spacerIdx[1]
   );
+  // Settings panels center their content; the text panel still fills the
+  // width through its flex:1 textarea, so it is visually untouched.
+  check(
+    "settings panels center their content",
+    /\.edit-optbar \[data-edit-panel\]\s*\{[^}]*justify-content\s*:\s*center/.test(uiSrc)
+  );
+  check(
+    "text settings still fill the bar (flex textarea)",
+    /\.edit-optbar textarea\s*\{[^}]*flex\s*:\s*1/.test(uiSrc)
+  );
   // Layer cards breathe: rows live in a per-page group with a small gap.
   check(
     "layer cards have a small gap between them",

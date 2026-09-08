@@ -108,6 +108,7 @@ const CSS = `
 .edit-optbar [data-edit-panel] {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-2);
   flex-wrap: wrap;
   flex: 1;
