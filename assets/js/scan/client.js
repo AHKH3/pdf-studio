@@ -5,6 +5,17 @@
 
 const WORKER_URL = new URL("./pipeline.worker.js", import.meta.url);
 
+/**
+ * A worker call must never hang forever: without a timeout a lost reply
+ * leaves the progress overlay stuck (and the cancel button ineffective).
+ */
+const CALL_TIMEOUT_MS = 120000;
+const RELEASE_TIMEOUT_MS = 15000;
+
+function timeoutFor(op) {
+  return op === "release" ? RELEASE_TIMEOUT_MS : CALL_TIMEOUT_MS;
+}
+
 export class ScanEngine {
   constructor() {
     /** @type {Worker | null} */
@@ -29,6 +40,10 @@ export class ScanEngine {
       const failure = new Error(event.message || "توقف محرك المسح");
       for (const entry of this.pending.values()) entry.reject(failure);
       this.pending.clear();
+      // A broken worker never recovers: drop it so the next call spawns a
+      // fresh one instead of hanging forever on a dead port (export stuck
+      // at 0% with an unresponsive cancel button).
+      this.worker = null;
     });
     return this.worker;
   }
@@ -37,13 +52,39 @@ export class ScanEngine {
    * @param {string} op
    * @param {object} payload
    * @param {Transferable[]} [transfer]
+   * @param {number} [timeoutMs] rejection timeout; a late reply is ignored
    */
-  call(op, payload, transfer = []) {
-    const worker = this.ensure();
+  call(op, payload, transfer = [], timeoutMs = timeoutFor(op)) {
+    let worker;
+    try {
+      worker = this.ensure();
+    } catch (error) {
+      return Promise.reject(new Error(`تعذر تشغيل محرك المسح: ${error.message}`));
+    }
     const id = (this.nextId += 1);
     return new Promise((resolve, reject) => {
-      this.pending.set(id, { resolve, reject });
-      worker.postMessage({ id, op, payload }, transfer);
+      const timer = setTimeout(() => {
+        if (!this.pending.has(id)) return;
+        this.pending.delete(id);
+        reject(new Error("انتهت مهلة معالجة الصفحة — أعد المحاولة."));
+      }, timeoutMs);
+      this.pending.set(id, {
+        resolve: (value) => {
+          clearTimeout(timer);
+          resolve(value);
+        },
+        reject: (error) => {
+          clearTimeout(timer);
+          reject(error);
+        }
+      });
+      try {
+        worker.postMessage({ id, op, payload }, transfer);
+      } catch (error) {
+        this.pending.delete(id);
+        clearTimeout(timer);
+        reject(new Error(`تعذر إرسال المهمة إلى محرك المسح: ${error.message}`));
+      }
     });
   }
 

@@ -22,5 +22,6 @@ export async function toEmbeddable(file) {
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
   canvas.width = 0;
   canvas.height = 0;
+  if (!blob) throw new Error("تعذّر ترميز الصورة — قد تكون كبيرة جدًا على ذاكرة المتصفح.");
   return { kind: "jpg", bytes: new Uint8Array(await blob.arrayBuffer()) };
 }

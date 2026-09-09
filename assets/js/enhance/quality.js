@@ -1,9 +1,11 @@
 /**
- * Automatic image quality upgrade before PDF conversion, targeting a fixed
- * quality bar: every extracted document reaches ~A4 at 300 DPI on its long
- * side (3508px), regardless of how small or blurry the source photo is.
+ * Adaptive image quality upgrade before PDF conversion: small sources are
+ * lifted toward ~A4 at 300 DPI on the long side (3508px), while sources
+ * already at or above NATIVE_OK_SIDE are kept native — upscaling those
+ * costs minutes per page (WASM inference + full-res polish) for no
+ * visible gain on documents.
  *
- * Layers, in order of strength:
+ * Layers for the small-source path, in order of strength:
  *   1. AI upscale (ESRGAN Slim 4x/3x/2x) when the WASM heap allows it —
  *      the biggest quality jump for faded ink on old paper.
  *   2. Bicubic upscale as a guaranteed fallback — the AI can silently
@@ -20,6 +22,21 @@ import { bitmapToImageData, imageDataToBitmap } from "../lib/bitmap.js";
 
 /** A4 long side at 300 DPI. */
 export const TARGET_LONG_SIDE = 3508;
+/**
+ * Smart-upscale floor: sources at or above this long side keep their
+ * native pixels. 2000px is A4 at ~170 DPI — plenty for documents — and
+ * skipping the AI/bicubic/polish chain turns minutes per page into
+ * milliseconds for ordinary phone photos.
+ */
+export const NATIVE_OK_SIDE = 2000;
+
+/**
+ * @param {number} side longest side in pixels
+ * @returns {boolean} true when the source is small enough to be worth upscaling
+ */
+export function needsUpscale(side) {
+  return side < NATIVE_OK_SIDE;
+}
 /**
  * WASM heap safety: the largest measured-successful AI output was ~9.5M
  * pixels (700x850 4x); ~16M pixels crashed. Bicubic has no such limit.
@@ -115,8 +132,9 @@ async function bicubicUpscale(bitmap, targetSide) {
 }
 
 /**
- * Upscales toward TARGET_LONG_SIDE. AI first, bicubic fallback, sharpen
- * last. Returns the original bitmap when it already reaches the target.
+ * Upscales small sources toward TARGET_LONG_SIDE. AI first, bicubic
+ * fallback, sharpen last. Returns the original bitmap when native pixels
+ * are already good enough (see NATIVE_OK_SIDE).
  * Callers own the input bitmap; only internally produced bitmaps are
  * closed here.
  * @param {ImageBitmap} bitmap
@@ -124,7 +142,7 @@ async function bicubicUpscale(bitmap, targetSide) {
  */
 export async function upscaleToTarget(bitmap) {
   const side = Math.max(bitmap.width, bitmap.height);
-  if (side >= TARGET_LONG_SIDE) return bitmap;
+  if (!needsUpscale(side)) return bitmap;
 
   const scale = aiScaleFor(side);
   if (scale && bitmap.width * bitmap.height * scale * scale <= MAX_AI_OUTPUT_PIXELS) {

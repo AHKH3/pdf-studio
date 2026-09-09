@@ -213,15 +213,16 @@
                           tabindex="0"></canvas>
                   <p class="scan__overlay-hint" id="scan-hint">اسحب الأركان على الصورة الأصلية. التدوير والألوان تظهر فوراً.</p>
                   <div class="scan__pager">
-                    <button id="scan-prev" type="button" class="btn btn--compact">
+                    <button id="scan-prev" type="button" class="btn btn--compact" title="الصفحة السابقة (PageUp)">
                       <svg class="icon flip" aria-hidden="true"><use href="#icon-arrow"></use></svg> السابقة
                     </button>
                     <span class="scan__count num" id="scan-count">1 / 1</span>
-                    <button id="scan-next" type="button" class="btn btn--compact">
+                    <button id="scan-next" type="button" class="btn btn--compact" title="الصفحة التالية (PageDown)">
                       التالية <svg class="icon" aria-hidden="true"><use href="#icon-arrow"></use></svg>
                     </button>
                   </div>
                 </div>
+                <div class="scan__strip" id="scan-strip" role="listbox" aria-label="صفحات المستند — اضغط للانتقال واسحب لإعادة الترتيب" tabindex="-1"></div>
               </div>
 
               <aside class="scan__panel">
@@ -243,18 +244,7 @@
                     </div>
 
                 <div class="panel-block">
-                  <h3 class="panel-block__title">المعالجة</h3>
-                  <div class="choice-grid choice-grid--tones" role="radiogroup" aria-label="نمط المعالجة">
-                    <label class="choice" data-tone="color"><input type="radio" name="scan-mode" value="color" checked /><span><i class="tone" aria-hidden="true"></i> ملوّن</span></label>
-                    <label class="choice" data-tone="sharp"><input type="radio" name="scan-mode" value="sharp" /><span><i class="tone" aria-hidden="true"></i> تباين</span></label>
-                    <label class="choice" data-tone="gray"><input type="radio" name="scan-mode" value="gray" /><span><i class="tone" aria-hidden="true"></i> رمادي</span></label>
-                    <label class="choice" data-tone="bw"><input type="radio" name="scan-mode" value="bw" /><span><i class="tone" aria-hidden="true"></i> أبيض/أسود</span></label>
-                    <label class="choice" data-tone="original"><input type="radio" name="scan-mode" value="original" /><span><i class="tone" aria-hidden="true"></i> الأصل</span></label>
-                  </div>
-                </div>
-
-                <div class="panel-block">
-                  <h3 class="panel-block__title">الاتجاه</h3>
+                  <h3 class="panel-block__title">الصفحة والترتيب</h3>
                   <div class="btn-row">
                     <button id="scan-rotate" type="button" class="btn">
                       <svg class="icon" aria-hidden="true"><use href="#icon-rotate"></use></svg> تدوير
@@ -268,6 +258,17 @@
                     <button id="scan-remove" type="button" class="btn">
                       <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> إزالة
                     </button>
+                  </div>
+                </div>
+
+                <div class="panel-block">
+                  <h3 class="panel-block__title">المعالجة</h3>
+                  <div class="choice-grid choice-grid--tones" role="radiogroup" aria-label="نمط المعالجة">
+                    <label class="choice" data-tone="color"><input type="radio" name="scan-mode" value="color" checked /><span><i class="tone" aria-hidden="true"></i> ملوّن</span></label>
+                    <label class="choice" data-tone="sharp"><input type="radio" name="scan-mode" value="sharp" /><span><i class="tone" aria-hidden="true"></i> تباين</span></label>
+                    <label class="choice" data-tone="gray"><input type="radio" name="scan-mode" value="gray" /><span><i class="tone" aria-hidden="true"></i> رمادي</span></label>
+                    <label class="choice" data-tone="bw"><input type="radio" name="scan-mode" value="bw" /><span><i class="tone" aria-hidden="true"></i> أبيض/أسود</span></label>
+                    <label class="choice" data-tone="original"><input type="radio" name="scan-mode" value="original" /><span><i class="tone" aria-hidden="true"></i> الأصل</span></label>
                   </div>
                 </div>
 
@@ -304,6 +305,11 @@
                       <input id="scan-margin" type="number" min="0" max="40" step="1" value="0" />
                     </div>
                   </details>
+                  <label class="check" for="scan-upscale">
+                    <input id="scan-upscale" type="checkbox" />
+                    <span>رفع الجودة بالذكاء الاصطناعي (بطيء)</span>
+                  </label>
+                  <p class="note note--bare">يُحسّن الصور الصغيرة فقط — قد يستغرق دقائق لكل صفحة.</p>
                   <div class="btn-row">
                     <button id="scan-add" type="button" class="btn">
                       <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> إضافة
@@ -766,6 +772,7 @@
       <div class="progress__track"><div class="progress__bar" id="progress-bar"></div></div>
       <div class="progress__foot">
         <span class="progress__pct" id="progress-pct">0%</span>
+        <button class="btn" id="progress-skip" type="button" hidden>تخطي رفع الجودة</button>
         <button class="btn" id="progress-cancel" type="button">إيقاف</button>
       </div>
     </div>

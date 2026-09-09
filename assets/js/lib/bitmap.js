@@ -38,11 +38,13 @@ export async function bitmapToBytes(bitmap, mime, quality) {
   buffer.width = bitmap.width;
   buffer.height = bitmap.height;
   const ctx = buffer.getContext("2d", { alpha: false });
+  if (!ctx) throw new Error("تعذّر تهيئة ترميز الصورة في المتصفح.");
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, buffer.width, buffer.height);
   ctx.drawImage(bitmap, 0, 0);
   const blob = await new Promise((resolve) => buffer.toBlob(resolve, mime, quality));
   buffer.width = 0;
   buffer.height = 0;
+  if (!blob) throw new Error("تعذّر ترميز الصورة — قد تكون كبيرة جدًا على ذاكرة المتصفح.");
   return new Uint8Array(await blob.arrayBuffer());
 }

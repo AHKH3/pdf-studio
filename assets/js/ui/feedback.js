@@ -4,11 +4,15 @@ import { isDialogOpen } from "./dialog.js";
 /** @type {{ cancelled: boolean; controller: AbortController | null; depth: number; focus: HTMLElement | null }} */
 const run = { cancelled: false, controller: null, depth: 0, focus: null };
 
+/** Optional per-run "skip this stage" action (e.g. skip a slow upscale and finish now). */
+let skipHandler = null;
+
 const MAX_TOASTS = 4;
 
 export function initFeedback() {
   const cancel = el("progress-cancel");
   cancel?.addEventListener("click", requestCancel);
+  el("progress-skip")?.addEventListener("click", () => skipHandler?.());
 
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
@@ -25,6 +29,20 @@ function requestCancel() {
   updateProgress({ title: "جارٍ الإيقاف", desc: "نتوقف عند أقرب خطوة آمنة." });
   const cancel = /** @type {HTMLButtonElement | null} */ (el("progress-cancel"));
   if (cancel) cancel.disabled = true;
+}
+
+/** Registers (or clears with null) the progress overlay's skip-stage action. */
+export function setSkipHandler(fn) {
+  skipHandler = typeof fn === "function" ? fn : null;
+}
+
+/** Shows or hides the overlay's skip-stage button. */
+export function setSkipVisible(visible) {
+  const skip = /** @type {HTMLButtonElement | null} */ (el("progress-skip"));
+  if (skip) {
+    skip.hidden = !visible;
+    skip.disabled = false;
+  }
 }
 
 const TOAST_ICON = { done: "icon-check", error: "icon-alert", info: "icon-file" };
@@ -136,6 +154,8 @@ export function startProgress(options = {}) {
     cancel.hidden = options.cancellable === false;
     cancel.disabled = false;
   }
+  // Opt-in per run: tools that offer a skip-stage action show it themselves.
+  setSkipVisible(false);
 
   updateProgress({
     title: options.title || "قيد التنفيذ",

@@ -1,4 +1,4 @@
-import { el, qsa } from "../dom.js";
+import { el, qsa, yieldToUi } from "../dom.js";
 import { MM_TO_PT, PAGE_SIZES } from "../config.js";
 import { baseName, filesKey, saveFile, saveFolder, withExtension } from "../lib/files.js";
 import { ensureDecodableImage } from "../lib/heic.js";
@@ -6,7 +6,7 @@ import { bitmapToBytes } from "../lib/bitmap.js";
 import { lib } from "../pdf/core.js";
 import { ScanEngine } from "../scan/client.js";
 import { autoUpscaleIfSmall } from "../enhance/quality.js";
-import { endProgress, startProgress, throwIfCancelled, updateProgress } from "../ui/feedback.js";
+import { cancelledError, endProgress, isCancelled, isCancellation, setSkipHandler, setSkipVisible, startProgress, throwIfCancelled, toast, updateProgress } from "../ui/feedback.js";
 import { wireIntake } from "../ui/intake.js";
 import { setName, setRunEnabled, setSource, setState } from "../ui/titleblock.js";
 import { pad, readInputValues, reportFailure, reportSave, tabTitle, uid, writeInputValues } from "./shared.js";
@@ -35,6 +35,17 @@ import { pad, readInputValues, reportFailure, reportSave, tabTitle, uid, writeIn
  */
 const WORK_MAX = 3600;
 const DISPLAY_MAX = 1400;
+
+/**
+ * Per-page ceiling for the quality-upscale stage (AI + polish). TF/WASM
+ * inference cannot be aborted mid-flight, so on expiry we continue with
+ * the original pixels instead of hanging the export forever.
+ */
+const UPSCALE_STAGE_TIMEOUT_MS = 240000;
+/** Pages that fell back to original quality in the current run. */
+let upscaleFallbacks = 0;
+/** Set by the overlay's "skip upscale" button: finish now with native pixels. */
+let skipUpscale = false;
 const HANDLE_HIT = 28;
 const EDGE_HIT = 16;
 
@@ -333,6 +344,11 @@ function wireCanvas() {
   canvas.addEventListener("pointercancel", release);
 
   canvas.addEventListener("keydown", (event) => {
+    if (event.key === "PageDown" || event.key === "PageUp") {
+      event.preventDefault();
+      stepPage(event.key === "PageDown" ? 1 : -1);
+      return;
+    }
     const page = current();
     if (!page || selected < 0) return;
     const step = event.shiftKey ? 12 : 2;
@@ -393,6 +409,8 @@ function refresh() {
   setState("idle");
   if (!/\S/.test(el("tb-name").value)) setName("مستند-ممسوح.pdf");
   syncOutputLabel();
+  renderStrip();
+  syncStripSortable();
   scheduleDraw();
 }
 
@@ -481,15 +499,151 @@ function moveCurrent(delta) {
   refresh();
 }
 
-async function removeCurrent() {
-  const page = current();
+/** Move the current page, clamped to the strip bounds. */
+function stepPage(delta) {
+  if (pages.length < 2) return;
+  index = Math.max(0, Math.min(pages.length - 1, index + delta));
+  refresh();
+}
+
+/** Closes a page's bitmaps and frees its worker-side pixels. */
+async function discardPage(page) {
   if (!page) return;
   page.display.close();
   page.result?.close();
   await engine.release(page.key);
+}
+
+async function removeCurrent() {
+  const page = current();
+  if (!page) return;
   pages.splice(index, 1);
+  await discardPage(page);
   if (index >= pages.length) index = pages.length - 1;
+  if (index < 0) index = 0;
   syncPreviewButton();
+  refresh();
+}
+
+async function removePageById(id) {
+  const at = pages.findIndex((page) => page.id === id);
+  if (at < 0) return;
+  const [page] = pages.splice(at, 1);
+  await discardPage(page);
+  if (index >= pages.length) index = pages.length - 1;
+  if (index < 0) index = 0;
+  syncPreviewButton();
+  refresh();
+}
+
+/* ---------------------------------------------------------------- *
+ * Filmstrip — click to jump, drag to reorder, × to remove.
+ * ---------------------------------------------------------------- */
+
+let stripKey = "";
+let stripSortable = null;
+
+function thumbCover(ctx, bitmap, width, height) {
+  const scale = Math.max(width / bitmap.width, height / bitmap.height);
+  const drawWidth = bitmap.width * scale;
+  const drawHeight = bitmap.height * scale;
+  ctx.drawImage(bitmap, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+}
+
+function renderStrip() {
+  const host = el("scan-strip");
+  if (!host) return;
+  const key = `${pages.map((page) => page.id).join(",")}|${index}`;
+  if (key === stripKey && host.childElementCount === pages.length) {
+    let position = 0;
+    for (const node of host.children) {
+      const active = position === index;
+      node.classList.toggle("is-active", active);
+      node.setAttribute("aria-selected", String(active));
+      position += 1;
+    }
+    return;
+  }
+  stripKey = key;
+  host.replaceChildren();
+  pages.forEach((page, position) => {
+    const thumb = document.createElement("div");
+    thumb.className = "strip__thumb" + (position === index ? " is-active" : "");
+    thumb.dataset.id = page.id;
+    thumb.tabIndex = 0;
+    thumb.setAttribute("role", "option");
+    thumb.setAttribute("aria-selected", String(position === index));
+    thumb.setAttribute("aria-label", `صفحة ${position + 1}: ${page.name}`);
+    thumb.title = `صفحة ${position + 1} — اضغط للانتقال واسحب لإعادة الترتيب`;
+    const preview = document.createElement("canvas");
+    preview.width = 64;
+    preview.height = 80;
+    const ctx = preview.getContext("2d", { alpha: false });
+    if (ctx) {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, 64, 80);
+      thumbCover(ctx, page.display, 64, 80);
+    }
+    const num = document.createElement("span");
+    num.className = "strip__num";
+    num.textContent = String(position + 1);
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "strip__remove";
+    remove.dataset.remove = page.id;
+    remove.setAttribute("aria-label", `إزالة صفحة ${position + 1}`);
+    remove.title = "إزالة هذه الصفحة";
+    remove.textContent = "×";
+    thumb.append(preview, num, remove);
+    host.append(thumb);
+  });
+}
+
+function syncStripSortable() {
+  const host = el("scan-strip");
+  if (!host || stripSortable) return;
+  const SortableLib = /** @type {any} */ (window).Sortable;
+  if (!SortableLib) return;
+  stripSortable = new SortableLib(host, {
+    animation: 150,
+    draggable: ".strip__thumb",
+    filter: ".strip__remove",
+    preventOnFilter: false,
+    direction: "horizontal",
+    ghostClass: "is-ghost",
+    chosenClass: "is-chosen",
+    forceFallback: true,
+    fallbackOnBody: true,
+    scroll: true,
+    scrollSensitivity: 60,
+    onEnd: () => {
+      const ids = Array.from(host.querySelectorAll(".strip__thumb")).map(
+        (node) => /** @type {HTMLElement} */ (node).dataset.id
+      );
+      applyStripOrder(ids.filter(Boolean));
+    }
+  });
+}
+
+function applyStripOrder(ids) {
+  if (!ids.length || ids.length !== pages.length) {
+    renderStrip();
+    return;
+  }
+  const currentId = current()?.id;
+  const byId = new Map(pages.map((page) => [page.id, page]));
+  const next = [];
+  for (const id of ids) {
+    const page = byId.get(id);
+    if (page) next.push(page);
+  }
+  if (next.length !== pages.length) {
+    renderStrip();
+    return;
+  }
+  pages = next;
+  index = Math.max(0, next.findIndex((page) => page.id === currentId));
+  stripKey = "";
   refresh();
 }
 
@@ -551,19 +705,127 @@ function useFullFrame() {
   scheduleDraw();
 }
 
-/** @returns {Promise<ImageBitmap>} */
-async function renderResult(page) {
+/**
+ * Races a long stage against the stop button (polled) and an optional
+ * timeout. Worker/TF work cannot be aborted mid-flight — we stop waiting
+ * for it instead, so the overlay can always close promptly. A late result
+ * is simply ignored.
+ * @template T
+ * @param {Promise<T>} promise already-started stage promise
+ * @param {{ timeoutMs?: number; timeoutMessage?: string; onTick?: (elapsed: number) => void; skipIf?: (() => boolean) | null; skipValue?: T }} [options]
+ * @returns {Promise<T>}
+ */
+function awaitStage(promise, options = {}) {
+  const { timeoutMs = 0, timeoutMessage = "", onTick = null, skipIf = null, skipValue = undefined } = options;
+  return new Promise((resolve, reject) => {
+    const t0 = Date.now();
+    let settled = false;
+    const finish = (fn, value) => {
+      if (settled) return;
+      settled = true;
+      clearInterval(timer);
+      fn(value);
+    };
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - t0;
+      if (isCancelled()) {
+        finish(reject, cancelledError());
+        return;
+      }
+      if (typeof skipIf === "function") {
+        let skip = false;
+        try {
+          skip = skipIf() === true;
+        } catch {
+          /* a broken predicate must never fail the export */
+        }
+        if (skip) {
+          finish(resolve, skipValue);
+          return;
+        }
+      }
+      if (timeoutMs > 0 && elapsed >= timeoutMs) {
+        finish(reject, new Error(timeoutMessage || "انتهت المهلة."));
+        return;
+      }
+      if (typeof onTick === "function") {
+        try {
+          onTick(elapsed);
+        } catch {
+          /* progress-only; never fail the export */
+        }
+      }
+    }, 500);
+    promise.then(
+      (value) => finish(resolve, value),
+      (error) => finish(reject, error)
+    );
+  });
+}
+
+function reportUpscaleFallbacks() {
+  if (upscaleFallbacks > 0) {
+    toast(`تخطينا رفع الجودة في ${upscaleFallbacks} من الصفحات لانتهاء المهلة — حُفظت بالجودة الأصلية.`, "info");
+    upscaleFallbacks = 0;
+  }
+}
+
+/**
+ * @param {ScanPage} page
+ * @param {(frac: number, detail?: string) => void} [onStep] intra-page progress (0..1)
+ * @returns {Promise<ImageBitmap>}
+ */
+async function renderResult(page, onStep) {
+  const step = (frac, detail) => {
+    if (typeof onStep === "function") onStep(frac, detail);
+  };
   const stamp = stampOf(page);
-  if (page.result && page.resultKey === stamp) return page.result;
-  const output = await engine.process(page.key, {
+  if (page.result && page.resultKey === stamp) {
+    step(1);
+    return page.result;
+  }
+  step(0.05, "تسوية المنظور…");
+  const output = await awaitStage(engine.process(page.key, {
     corners: page.corners,
     size: page.size,
     mode: page.mode,
     rotate: page.rotate
-  });
+  }));
+  // Cancellation checkpoints between stages: without them the cancel button
+  // never finds a safe step and the overlay looks frozen (stuck at 0%).
+  throwIfCancelled();
   const pixels = new ImageData(output.image.data, output.image.width, output.image.height);
-  let result = await createImageBitmap(pixels);
-  const upgraded = await autoUpscaleIfSmall(result);
+  let result = await awaitStage(createImageBitmap(pixels));
+  throwIfCancelled();
+  // Upscale is opt-in (off by default: it costs minutes per page) and can
+  // be skipped mid-run from the overlay — both paths keep native pixels.
+  const wantUpscale = !skipUpscale && el("scan-upscale")?.checked === true;
+  let upgraded;
+  if (!wantUpscale) {
+    step(0.9);
+    upgraded = result;
+  } else {
+    step(0.45, "رفع الجودة…");
+    try {
+      upgraded = await awaitStage(autoUpscaleIfSmall(result), {
+        timeoutMs: UPSCALE_STAGE_TIMEOUT_MS,
+        timeoutMessage: "انتهت مهلة رفع الجودة.",
+        skipIf: () => skipUpscale,
+        skipValue: result,
+        onTick: (elapsed) => {
+          const secs = Math.floor(elapsed / 1000);
+          step(Math.min(0.85, 0.45 + secs * 0.005), `رفع الجودة… (${secs} ث)`);
+        }
+      });
+    } catch (error) {
+      if (isCancellation(error)) throw error;
+      console.warn("scan: upscale stage failed — continuing with original pixels.", error);
+      upscaleFallbacks += 1;
+      upgraded = result;
+    }
+  }
+  throwIfCancelled();
+  step(0.9, "ترميز الصفحة…");
   if (upgraded !== result) {
     result.close();
     result = upgraded;
@@ -602,15 +864,17 @@ async function toggleResultPreview() {
   const page = current();
   if (!page) return;
   if (!showingResult) {
-    startProgress({ title: "معاينة الناتج", desc: "نحسّن الجودة الآن.", cancellable: false });
+    startProgress({ title: "معاينة الناتج", desc: "نحسّن الجودة الآن." });
+    let ok = false;
     try {
       await renderResult(page);
+      ok = true;
     } catch (error) {
       reportFailure(error, "تعذّرت معاينة الناتج.");
     } finally {
       endProgress();
     }
-    showingResult = true;
+    showingResult = ok;
   } else {
     showingResult = false;
   }
@@ -628,6 +892,14 @@ async function run() {
 
   setState("busy");
   startProgress({ title: "معالجة المستند", desc: "تسوية المنظور، ثم رفع الجودة." });
+  upscaleFallbacks = 0;
+  skipUpscale = false;
+  setSkipHandler(() => {
+    skipUpscale = true;
+    updateProgress({ detail: "جارٍ تخطي رفع الجودة…" });
+  });
+  // The skip button only makes sense while upscale is enabled.
+  setSkipVisible(el("scan-upscale")?.checked === true);
   try {
     if (format === "pdf") {
       const { PDFDocument } = lib();
@@ -638,9 +910,17 @@ async function run() {
 
       for (const [order, page] of pages.entries()) {
         throwIfCancelled();
-        updateProgress({ percent: (order / pages.length) * 100, detail: `صفحة ${order + 1} من ${pages.length}` });
-        const bitmap = await renderResult(page);
+        const pageBase = order / pages.length;
+        const pageSpan = 1 / pages.length;
+        const detail = `صفحة ${order + 1} من ${pages.length}`;
+        updateProgress({ percent: pageBase * 100, detail });
+        const bitmap = await renderResult(page, (frac, stepDetail) => {
+          const clamped = Math.max(0, Math.min(1, frac));
+          updateProgress({ percent: (pageBase + pageSpan * clamped) * 100, detail: stepDetail || detail });
+        });
+        throwIfCancelled();
         const bytes = await bitmapToBytes(bitmap, "image/jpeg", 0.9);
+        throwIfCancelled();
         const embedded = await doc.embedJpg(bytes);
 
         let pageWidth;
@@ -667,6 +947,8 @@ async function run() {
           width: drawWidth,
           height: drawHeight
         });
+        // Let the overlay paint between heavy pages.
+        await yieldToUi();
       }
 
       throwIfCancelled();
@@ -675,6 +957,7 @@ async function run() {
       endProgress();
       const saved = await saveFile(bytes, withExtension(el("tb-name").value, "pdf"), "pdf");
       reportSave(saved, `تم مسح ${pages.length} صفحة إلى ملف PDF.`);
+      if (saved) reportUpscaleFallbacks();
       return;
     }
 
@@ -686,12 +969,21 @@ async function run() {
 
     for (const [order, page] of pages.entries()) {
       throwIfCancelled();
-      updateProgress({ percent: (order / pages.length) * 100, detail: `صورة ${order + 1} من ${pages.length}` });
-      const bitmap = await renderResult(page);
+      const pageBase = order / pages.length;
+      const pageSpan = 1 / pages.length;
+      const detail = `صورة ${order + 1} من ${pages.length}`;
+      updateProgress({ percent: pageBase * 100, detail });
+      const bitmap = await renderResult(page, (frac, stepDetail) => {
+        const clamped = Math.max(0, Math.min(1, frac));
+        updateProgress({ percent: (pageBase + pageSpan * clamped) * 100, detail: stepDetail || detail });
+      });
+      throwIfCancelled();
       files.push({
         name: `${baseName(el("tb-name").value || "مستند-ممسوح")}-${pad(order + 1, digits)}.${extension}`,
         data: await bitmapToBytes(bitmap, mime, 0.92)
       });
+      // Let the overlay paint between heavy pages.
+      await yieldToUi();
     }
 
     throwIfCancelled();
@@ -699,13 +991,17 @@ async function run() {
     if (files.length === 1) {
       const saved = await saveFile(files[0].data, files[0].name, format === "png" ? "png" : "jpeg");
       reportSave(saved, "تم حفظ الصورة الممسوحة.");
+      if (saved) reportUpscaleFallbacks();
       return;
     }
     const saved = await saveFolder(files, el("tb-name").value || "مستند-ممسوح");
     reportSave(saved, `تم حفظ ${files.length} صورة.`);
+    if (saved) reportUpscaleFallbacks();
   } catch (error) {
     reportFailure(error, "تعذّرت المعالجة.");
   } finally {
+    setSkipVisible(false);
+    setSkipHandler(null);
     endProgress();
   }
 }
@@ -727,7 +1023,7 @@ export const scanTool = {
     if (!pages.length) return null;
     return {
       pages: pages.slice(), index, selected, showingResult, acceptedKey,
-      inputs: readInputValues(["scan-output", "scan-page"])
+      inputs: readInputValues(["scan-output", "scan-page", "scan-upscale"])
     };
   },
   restoreState(state) {
@@ -750,7 +1046,7 @@ export const scanTool = {
   },
 
   setup() {
-    defaultInputs = readInputValues(["scan-output", "scan-page"]);
+    defaultInputs = readInputValues(["scan-output", "scan-page", "scan-upscale"]);
     defaultMode = document.querySelector('input[name="scan-mode"]:checked')?.value ?? "color";
     canvas = /** @type {HTMLCanvasElement} */ (el("scan-canvas"));
     wireCanvas();
@@ -763,18 +1059,40 @@ export const scanTool = {
     el("scan-full")?.addEventListener("click", useFullFrame);
     el("scan-preview")?.addEventListener("click", () => void toggleResultPreview());
 
-    el("scan-prev")?.addEventListener("click", () => {
-      if (index > 0) {
-        index -= 1;
+    el("scan-prev")?.addEventListener("click", () => stepPage(-1));
+    el("scan-next")?.addEventListener("click", () => stepPage(1));
+    el("scan-strip")?.addEventListener("click", (event) => {
+      const target = event.target instanceof HTMLElement ? event.target : null;
+      const thumb = target?.closest(".strip__thumb");
+      if (!thumb) return;
+      const remove = target.closest("[data-remove]");
+      if (remove) {
+        void removePageById(remove.getAttribute("data-remove"));
+        return;
+      }
+      const at = pages.findIndex((page) => page.id === thumb.dataset.id);
+      if (at >= 0) {
+        index = at;
         refresh();
       }
     });
-    el("scan-next")?.addEventListener("click", () => {
-      if (index < pages.length - 1) {
-        index += 1;
-        refresh();
+    el("scan-strip")?.addEventListener("keydown", (event) => {
+      const target = event.target instanceof HTMLElement ? event.target : null;
+      const thumb = target?.closest(".strip__thumb");
+      if (!thumb) return;
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        const at = pages.findIndex((page) => page.id === thumb.dataset.id);
+        if (at >= 0) {
+          index = at;
+          refresh();
+        }
+      } else if (event.key === "Delete" || event.key === "Backspace") {
+        event.preventDefault();
+        void removePageById(thumb.dataset.id);
       }
     });
+    syncStripSortable();
     el("scan-move-back")?.addEventListener("click", () => moveCurrent(-1));
     el("scan-move-fwd")?.addEventListener("click", () => moveCurrent(1));
 

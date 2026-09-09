@@ -5,6 +5,12 @@
 
 const WORKER_URL = new URL("./enhance.worker.js", import.meta.url);
 
+/**
+ * Same no-hang guarantee as the scan engine: a lost worker reply must
+ * reject instead of freezing the export progress overlay forever.
+ */
+const CALL_TIMEOUT_MS = 120000;
+
 export class EnhanceEngine {
   constructor() {
     /** @type {Worker | null} */
@@ -38,16 +44,38 @@ export class EnhanceEngine {
    * @param {string} op
    * @param {object} payload
    * @param {Transferable[]} [transfer]
+   * @param {number} [timeoutMs] rejection timeout; a late reply is ignored
    */
-  call(op, payload, transfer = []) {
+  call(op, payload, transfer = [], timeoutMs = CALL_TIMEOUT_MS) {
     const id = (this.nextId += 1);
     return new Promise((resolve, reject) => {
+      let worker;
       try {
-        const worker = this.ensure();
-        this.pending.set(id, { resolve, reject });
+        worker = this.ensure();
+      } catch (error) {
+        reject(new Error(`تعذر تشغيل محرك التحسين: ${error.message}`));
+        return;
+      }
+      const timer = setTimeout(() => {
+        if (!this.pending.has(id)) return;
+        this.pending.delete(id);
+        reject(new Error("انتهت مهلة تحسين الصورة — أعد المحاولة."));
+      }, timeoutMs);
+      this.pending.set(id, {
+        resolve: (value) => {
+          clearTimeout(timer);
+          resolve(value);
+        },
+        reject: (error) => {
+          clearTimeout(timer);
+          reject(error);
+        }
+      });
+      try {
         worker.postMessage({ id, op, payload }, transfer);
       } catch (error) {
         this.pending.delete(id);
+        clearTimeout(timer);
         reject(new Error(`تعذر تشغيل محرك التحسين: ${error.message}`));
       }
     });

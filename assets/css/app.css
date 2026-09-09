@@ -763,7 +763,20 @@ canvas { direction: ltr; }
 
 /* scan */
 .scan { display:grid; grid-template-columns: minmax(0,1fr) 300px; gap: var(--space-4); align-items:stretch; min-height: min(62vh, 640px); }
-.scan__stage { min-width:0; min-height:0; display:grid; grid-template-rows: minmax(0,1fr); }
+.scan__stage { min-width:0; min-height:0; display:grid; grid-template-rows: minmax(0,1fr) auto; gap: var(--space-3); }
+.scan__strip { display:flex; gap: var(--space-2); overflow-x:auto; padding: var(--space-2); background: var(--surface-1); border:1px solid var(--border-soft); border-radius: var(--radius-lg); min-height:100px; box-shadow: var(--shadow-soft); }
+.scan__strip:empty { display:none; }
+.strip__thumb { position:relative; flex:0 0 auto; width:64px; border:1px solid var(--border-soft); border-radius: var(--radius); background: var(--surface-3); padding:0; cursor:grab; overflow:hidden; }
+.strip__thumb:active { cursor:grabbing; }
+.strip__thumb canvas { display:block; width:64px; height:80px; pointer-events:none; }
+.strip__thumb.is-active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.strip__thumb.is-ghost { opacity:0.35; }
+.strip__thumb.is-chosen { border-color: var(--accent); }
+.strip__thumb:focus-visible { outline:none; box-shadow: 0 0 0 3px var(--accent-soft); }
+.strip__num { position:absolute; inset-block-start:2px; inset-inline-start:2px; min-width:20px; height:20px; padding:0 5px; display:grid; place-items:center; font-size: var(--t-xs); color:#fff; background: rgba(8,9,10,.65); border-radius: var(--radius-pill); font-variant-numeric: tabular-nums; direction:ltr; pointer-events:none; }
+.strip__thumb.is-active .strip__num { background: var(--accent); }
+.strip__remove { position:absolute; inset-block-start:2px; inset-inline-end:2px; width:20px; height:20px; display:grid; place-items:center; border:0; border-radius:50%; background: rgba(8,9,10,.65); color:#fff; font-size:12px; line-height:1; cursor:pointer; }
+.strip__remove:hover { background: var(--danger, #c41a1a); }
 .scan__canvas-wrap { position:relative; display:grid; place-items:center; flex:1; padding: var(--space-3) var(--space-3) var(--space-9); background: var(--surface-1); border:1px solid var(--border-soft); border-radius: var(--radius-lg); backdrop-filter: blur(12px); min-height:360px; box-shadow: var(--shadow-soft); }
 .scan__canvas { display:block; width:100%; height: clamp(320px, 58vh, 640px); touch-action:none; cursor:crosshair; border-radius: var(--radius); background: var(--surface-3); border:1px solid var(--border-soft); }
 .scan__overlay-hint { position:absolute; inset-block-start:var(--space-3); left:50%; transform:translateX(-50%); padding: var(--space-2) var(--space-3); font-size: var(--t-xs); color: var(--ink-2); background: var(--surface-2); border:1px solid var(--border-soft); border-radius: var(--radius-pill); backdrop-filter: blur(8px); white-space:nowrap; pointer-events:none; box-shadow: var(--shadow-soft); }
