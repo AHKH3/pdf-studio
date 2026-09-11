@@ -67,10 +67,10 @@ group("shell — titlebar drag from the tab strip");
   check("tab strip background drags the window", /-webkit-app-region\s*:\s*drag/.test(stripRule));
   const tabRule = css.match(/\.tabstrip__tab\s*\{([^}]*)\}/)?.[1] || "";
   check(
-    "holding a tab drags the window too",
-    /-webkit-app-region\s*:\s*drag/.test(tabRule) && !/no-drag/.test(tabRule)
+    "tab body is clickable (no-drag) so switching tabs works",
+    /-webkit-app-region\s*:\s*no-drag/.test(tabRule)
   );
-  const ctlRule = css.match(/\.tabstrip__close\s*,\s*\.tabstrip__new\s*\{([^}]*)\}/)?.[1] || "";
+  const ctlRule = css.match(/[^{}]*\.tabstrip__close[^{}]*\{([^}]*)\}/)?.[1] || "";
   check("tab close / new buttons stay clickable (no-drag)", /-webkit-app-region\s*:\s*no-drag/.test(ctlRule));
 }
 
