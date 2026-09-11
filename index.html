@@ -197,7 +197,7 @@
               <div id="scan-drop" class="intake intake--hero" data-kind="image">
                 <svg class="icon intake__glyph" aria-hidden="true"><use href="#icon-scan"></use></svg>
                 <span class="intake__title">أسقط صور المستندات هنا</span>
-                <span class="intake__hint">JPG · PNG · WEBP</span>
+                <span class="intake__hint">JPG · PNG · WEBP · HEIC</span>
                 <button id="scan-browse" type="button" class="btn">
                   تصفّح
                 </button>
@@ -206,120 +206,162 @@
             </div>
 
             <div id="scan-workspace" class="scan" hidden>
-              <div class="scan__stage">
-                <div class="scan__canvas-wrap">
-                  <canvas id="scan-canvas" class="scan__canvas" width="800" height="600"
-                          aria-label="معاينة الصورة مع أركان المستند القابلة للسحب"
-                          tabindex="0"></canvas>
-                  <p class="scan__overlay-hint" id="scan-hint">اسحب الأركان على الصورة الأصلية. التدوير والألوان تظهر فوراً.</p>
-                  <div class="scan__pager">
-                    <button id="scan-prev" type="button" class="btn btn--compact" title="الصفحة السابقة (PageUp)">
-                      <svg class="icon flip" aria-hidden="true"><use href="#icon-arrow"></use></svg> السابقة
-                    </button>
-                    <span class="scan__count num" id="scan-count">1 / 1</span>
-                    <button id="scan-next" type="button" class="btn btn--compact" title="الصفحة التالية (PageDown)">
-                      التالية <svg class="icon" aria-hidden="true"><use href="#icon-arrow"></use></svg>
-                    </button>
-                  </div>
-                </div>
-                <div class="scan__strip" id="scan-strip" role="listbox" aria-label="صفحات المستند — اضغط للانتقال واسحب لإعادة الترتيب" tabindex="-1"></div>
-              </div>
+              <div class="scan__toolbar" role="toolbar" aria-label="أدوات المسح">
+                <button id="scan-clear" type="button" class="btn btn--compact btn--ghost" title="تفريغ والعودة للبداية">
+                  <svg class="icon flip" aria-hidden="true"><use href="#icon-arrow"></use></svg> رجوع
+                </button>
+                <span class="scan__toolbar-sep" aria-hidden="true"></span>
 
-              <aside class="scan__panel">
-                    <div class="panel-block">
-                      <h3 class="panel-block__title">الحواف</h3>
-                      <p class="panel-block__meta" id="scan-detect-meta">لم يبدأ الكشف بعد.</p>
-                      <div class="btn-row">
-                        <button id="scan-redetect" type="button" class="btn">
-                          <svg class="icon" aria-hidden="true"><use href="#icon-quad"></use></svg> كشف
-                        </button>
-                        <button id="scan-full" type="button" class="btn">
-                          <svg class="icon" aria-hidden="true"><use href="#icon-crop"></use></svg> كاملة
-                        </button>
-                      </div>
-                      <button id="scan-preview" type="button" class="btn btn--act btn--wide" aria-pressed="true">
-                        <svg class="icon" aria-hidden="true"><use href="#icon-enhance"></use></svg>
-                        <span class="btn__label">معاينة</span>
+                <div class="scan__tools choice-grid--tones" role="radiogroup" aria-label="نمط المعالجة">
+                  <label class="scan__tone-btn" data-tone="color" title="ملوّن">
+                    <input type="radio" name="scan-mode" value="color" checked />
+                    <span><i class="tone tone--color" aria-hidden="true"></i> ملوّن</span>
+                  </label>
+                  <label class="scan__tone-btn" data-tone="sharp" title="تباين عالي">
+                    <input type="radio" name="scan-mode" value="sharp" />
+                    <span><i class="tone tone--sharp" aria-hidden="true"></i> تباين</span>
+                  </label>
+                  <label class="scan__tone-btn" data-tone="gray" title="تدرج رمادي">
+                    <input type="radio" name="scan-mode" value="gray" />
+                    <span><i class="tone tone--gray" aria-hidden="true"></i> رمادي</span>
+                  </label>
+                  <label class="scan__tone-btn" data-tone="bw" title="أبيض وأسود نقي">
+                    <input type="radio" name="scan-mode" value="bw" />
+                    <span><i class="tone tone--bw" aria-hidden="true"></i> أبيض/أسود</span>
+                  </label>
+                  <label class="scan__tone-btn" data-tone="original" title="الصورة الأصلية">
+                    <input type="radio" name="scan-mode" value="original" />
+                    <span><i class="tone tone--orig" aria-hidden="true"></i> الأصل</span>
+                  </label>
+                </div>
+
+                <span class="scan__spacer"></span>
+
+                <button id="scan-rotate" type="button" class="btn btn--compact" title="تدوير الصفحة 90°">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-rotate"></use></svg> تدوير
+                </button>
+                <button id="scan-add" type="button" class="btn btn--compact" title="إضافة صور جديدة">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> إضافة
+                </button>
+
+                <div class="scan__name-wrap" title="اسم الملف الناتج">
+                  <svg class="icon scan__name-icon" aria-hidden="true"><use href="#icon-file"></use></svg>
+                  <input id="scan-name" class="scan__name-input" type="text" placeholder="اسم الملف" value="مستند-ممسوح.pdf" spellcheck="false" />
+                </div>
+
+                <div class="scan__export-group">
+                  <button id="scan-save" type="button" class="btn btn--compact btn--act scan__export-btn">
+                    <span class="btn__label" id="scan-save-label">إنشاء PDF</span>
+                  </button>
+                  <button id="scan-settings-btn" type="button" class="btn btn--compact btn--act scan__export-toggle" aria-label="خيارات التصدير وإعدادات الصفحة" aria-haspopup="true" aria-expanded="false" title="خيارات التصدير وإعدادات الصفحة">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-chev"></use></svg>
+                  </button>
+
+                  <div id="scan-export-popover" class="scan__popover" hidden role="region" aria-label="خيارات التصدير">
+                    <div class="scan__popover-head">
+                      <h4 class="scan__popover-title">خيارات التصدير</h4>
+                      <button id="scan-popover-close" type="button" class="scan__popover-close" aria-label="إغلاق">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
                       </button>
                     </div>
 
-                <div class="panel-block">
-                  <h3 class="panel-block__title">الصفحة والترتيب</h3>
-                  <div class="btn-row">
-                    <button id="scan-rotate" type="button" class="btn">
-                      <svg class="icon" aria-hidden="true"><use href="#icon-rotate"></use></svg> تدوير
-                    </button>
-                    <button id="scan-move-back" type="button" class="btn" title="انقل الصفحة الحالية لتظهر قبل سابقتها في الملف">
-                      قدّم
-                    </button>
-                    <button id="scan-move-fwd" type="button" class="btn" title="انقل الصفحة الحالية لتظهر بعد التالية في الملف">
-                      أخّر
-                    </button>
-                    <button id="scan-remove" type="button" class="btn">
-                      <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> إزالة
-                    </button>
+                    <div class="field">
+                      <label for="scan-output">صيغة الملف</label>
+                      <select id="scan-output">
+                        <option value="pdf">ملف PDF واحد</option>
+                        <option value="jpeg">صور JPG</option>
+                        <option value="png">صور PNG</option>
+                      </select>
+                    </div>
+
+                    <details class="scan-pages" id="scan-pages-details" open>
+                      <summary class="scan-pages__summary">إعدادات الصفحة (PDF)</summary>
+                      <div class="field">
+                        <label for="scan-page">مقاس الورقة</label>
+                        <select id="scan-page">
+                          <option value="a4">A4 (قياسي)</option>
+                          <option value="a5">A5 (دفتر)</option>
+                          <option value="a3">A3 (كبير)</option>
+                          <option value="fit">ملائم للصورة</option>
+                        </select>
+                      </div>
+                      <div class="field">
+                        <label for="scan-orient">الاتجاه</label>
+                        <select id="scan-orient">
+                          <option value="auto">تلقائي حسب أبعاد الصورة</option>
+                          <option value="portrait">طولي</option>
+                          <option value="landscape">عرضي</option>
+                        </select>
+                      </div>
+                      <div class="field">
+                        <label for="scan-margin">الهامش (مم)</label>
+                        <input id="scan-margin" type="number" min="0" max="40" step="1" value="0" />
+                      </div>
+                    </details>
+
+                    <div class="scan__popover-advanced">
+                      <label class="check" for="scan-upscale">
+                        <input id="scan-upscale" type="checkbox" />
+                        <span>رفع الجودة بالذكاء الاصطناعي (بطيء)</span>
+                      </label>
+                      <p class="note note--bare">يُحسّن الصور الصغيرة فقط — قد يستغرق دقائق لكل صفحة.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="scan__main">
+                <div class="scan__stage">
+                  <div class="scan__canvas-wrap">
+                    <canvas id="scan-canvas" class="scan__canvas" width="800" height="600"
+                            aria-label="معاينة الصورة مع أركان المستند القابلة للسحب"
+                            tabindex="0"></canvas>
+
+                    <div class="scan__overlay-badge">
+                      <p class="scan__overlay-hint" id="scan-hint">اسحب الأركان لضبط الورقة بدقة.</p>
+                      <span class="scan__detect-meta" id="scan-detect-meta">لم يبدأ الكشف بعد.</span>
+                    </div>
+
+                    <div class="scan__stage-actions">
+                      <button id="scan-preview" type="button" class="btn btn--compact scan__preview-toggle" aria-pressed="false" title="معاينة المستند بعد القص وتعديل المنظور">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-eye"></use></svg>
+                        <span class="btn__label">شاهد النتيجة</span>
+                      </button>
+                      <button id="scan-full" type="button" class="btn btn--compact" title="استخدام كامل إطار الصورة دون قص">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-crop"></use></svg> إطار كامل
+                      </button>
+                      <button id="scan-detect-all" type="button" class="btn btn--compact" title="كشف تلقائي لكافة الصفحات دفعة واحدة">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-quad"></use></svg> كشف الكل
+                      </button>
+                      <button id="scan-stage-detect" type="button" class="btn btn--compact btn--act">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-quad"></use></svg>
+                        <span class="btn__label">كشف دقيق</span>
+                      </button>
+                      <button id="scan-cancel" type="button" class="btn btn--compact btn--ghost" hidden>
+                        <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إلغاء
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <div class="panel-block">
-                  <h3 class="panel-block__title">المعالجة</h3>
-                  <div class="choice-grid choice-grid--tones" role="radiogroup" aria-label="نمط المعالجة">
-                    <label class="choice" data-tone="color"><input type="radio" name="scan-mode" value="color" checked /><span><i class="tone" aria-hidden="true"></i> ملوّن</span></label>
-                    <label class="choice" data-tone="sharp"><input type="radio" name="scan-mode" value="sharp" /><span><i class="tone" aria-hidden="true"></i> تباين</span></label>
-                    <label class="choice" data-tone="gray"><input type="radio" name="scan-mode" value="gray" /><span><i class="tone" aria-hidden="true"></i> رمادي</span></label>
-                    <label class="choice" data-tone="bw"><input type="radio" name="scan-mode" value="bw" /><span><i class="tone" aria-hidden="true"></i> أبيض/أسود</span></label>
-                    <label class="choice" data-tone="original"><input type="radio" name="scan-mode" value="original" /><span><i class="tone" aria-hidden="true"></i> الأصل</span></label>
-                  </div>
-                </div>
-
-                <div class="panel-block">
-                  <h3 class="panel-block__title">الناتج</h3>
-                  <div class="field">
-                    <label for="scan-output">الصيغة</label>
-                    <select id="scan-output">
-                      <option value="pdf">ملف PDF واحد</option>
-                      <option value="jpeg">صور JPG</option>
-                      <option value="png">صور PNG</option>
-                    </select>
-                  </div>
-                  <details class="scan-pages" id="scan-pages-details">
-                    <summary class="scan-pages__summary">إعدادات الصفحة</summary>
-                    <div class="field">
-                      <label for="scan-page">مقاس الصفحة</label>
-                      <select id="scan-page">
-                        <option value="a4">A4</option>
-                        <option value="letter">Letter</option>
-                        <option value="fit">بمقاس كل صورة</option>
-                      </select>
+                <aside class="scan__rail" aria-label="الصفحات">
+                  <div class="scan__rail-head">
+                    <div class="scan__pager">
+                      <button id="scan-prev" type="button" class="btn btn--compact" title="الصفحة السابقة (PageUp)" aria-label="السابقة">
+                        <svg class="icon flip" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+                      <span class="scan__count num" id="scan-count">1 / 1</span>
+                      <button id="scan-next" type="button" class="btn btn--compact" title="الصفحة التالية (PageDown)" aria-label="التالية">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                      </button>
+                      <button id="scan-remove" type="button" class="btn btn--compact btn--ghost scan__page-del" title="إزالة هذه الصفحة (Delete)">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg>
+                      </button>
                     </div>
-                    <div class="field">
-                      <label for="scan-orient">الاتجاه</label>
-                      <select id="scan-orient">
-                        <option value="auto">تلقائي حسب الصورة</option>
-                        <option value="portrait">طولي</option>
-                        <option value="landscape">عرضي</option>
-                      </select>
-                    </div>
-                    <div class="field">
-                      <label for="scan-margin">الهامش (مم)</label>
-                      <input id="scan-margin" type="number" min="0" max="40" step="1" value="0" />
-                    </div>
-                  </details>
-                  <label class="check" for="scan-upscale">
-                    <input id="scan-upscale" type="checkbox" />
-                    <span>رفع الجودة بالذكاء الاصطناعي (بطيء)</span>
-                  </label>
-                  <p class="note note--bare">يُحسّن الصور الصغيرة فقط — قد يستغرق دقائق لكل صفحة.</p>
-                  <div class="btn-row">
-                    <button id="scan-add" type="button" class="btn">
-                      <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> إضافة
-                    </button>
-                    <button id="scan-clear" type="button" class="btn">
-                      <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg> إغلاق
-                    </button>
                   </div>
-                </div>
-              </aside>
+                  <div class="scan__strip" id="scan-strip" role="listbox" aria-label="صفحات المستند — اضغط للانتقال واسحب لإعادة الترتيب" tabindex="-1"></div>
+                </aside>
+              </div>
             </div>
           </section>
 

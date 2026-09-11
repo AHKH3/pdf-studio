@@ -25,6 +25,27 @@ const DETECT_DEFAULTS = {
   houghSpread: 12
 };
 
+/**
+ * Detection presets. `fast` is the historical single-pass behaviour used by
+ * the automatic detection on upload. `precise` costs ~2-4x (larger working
+ * image, more Hough lines, lower edge threshold) and is meant for the
+ * per-page re-detect action, where latency is acceptable.
+ */
+export const DETECT_PRESETS = {
+  fast: { ...DETECT_DEFAULTS },
+  precise: {
+    ...DETECT_DEFAULTS,
+    workingSide: 1100,
+    edgePercentile: 0.76,
+    maxLines: 44,
+    houghSpread: 16,
+    minQuadScore: 0.18
+  }
+};
+
+/** Largest plausible width/height ratio for a single photographed sheet. */
+export const MAX_QUAD_ASPECT = 3.2;
+
 const ENHANCE_DEFAULTS = {
   clipLow: 0.005,
   clipHigh: 0.995,
@@ -1392,7 +1413,11 @@ export function detectDocument(image, options) {
     method: "fallback"
   };
   try {
-    const config = { ...DETECT_DEFAULTS, ...(options || {}) };
+    const opts = options || {};
+    const preset = (opts.preset && DETECT_PRESETS[opts.preset]) || null;
+    const config = { ...DETECT_DEFAULTS, ...(preset || {}), ...opts };
+    delete config.preset;
+    delete config.multi;
     if (source.width < 16 || source.height < 16) return fallback;
     const { image: small, scaleX, scaleY } = downscale(source, config.workingSide);
     const w = small.width;
@@ -1469,6 +1494,93 @@ export function detectDocument(image, options) {
     };
   } catch {
     return fallback;
+  }
+}
+
+/**
+ * Width/height ratio of a quad from the average of opposite edge lengths.
+ * @param {Quad} corners
+ */
+export function quadAspect(corners) {
+  if (!corners || corners.length !== 4) return 1;
+  const widthTop = Math.hypot(corners[1].x - corners[0].x, corners[1].y - corners[0].y);
+  const widthBottom = Math.hypot(corners[2].x - corners[3].x, corners[2].y - corners[3].y);
+  const heightLeft = Math.hypot(corners[3].x - corners[0].x, corners[3].y - corners[0].y);
+  const heightRight = Math.hypot(corners[2].x - corners[1].x, corners[2].y - corners[1].y);
+  const avgWidth = (widthTop + widthBottom) / 2;
+  const avgHeight = (heightLeft + heightRight) / 2;
+  if (!(avgWidth > 0) || !(avgHeight > 0)) return 1;
+  return Math.max(avgWidth, avgHeight) / Math.min(avgWidth, avgHeight);
+}
+
+/**
+ * Plausibility guard against stray-corner detections that explode the output
+ * size (e.g. one collapsed side turning the export into an absurd strip).
+ * Callers should fall back to the full frame and ask for manual corners
+ * when this fails.
+ * @param {Quad} corners
+ * @param {{ width: number, height: number }} frame
+ * @returns {{ ok: boolean, reason: string, aspect: number }}
+ */
+export function guardQuad(corners, frame) {
+  const aspect = quadAspect(corners);
+  if (!(aspect <= MAX_QUAD_ASPECT)) {
+    return { ok: false, reason: "aspect", aspect };
+  }
+  if (frame && frame.width > 0 && frame.height > 0 && corners && corners.length === 4) {
+    const area = Math.abs(polygonArea(corners)) / (frame.width * frame.height);
+    if (!(area >= 0.05 && area <= 0.999)) {
+      return { ok: false, reason: "area", aspect };
+    }
+  }
+  return { ok: true, reason: "", aspect };
+}
+
+/**
+ * Multi-recipe detection for the per-page re-detect action. Runs the fast
+ * pass plus progressively more sensitive recipes and keeps the most
+ * confident plausible result, so pressing "detect" can genuinely yield a
+ * different (better) quad instead of re-computing the identical one.
+ * Never throws; falls back to `detectDocument` semantics on total failure.
+ * @param {RasterImage} image
+ * @param {Partial<typeof DETECT_DEFAULTS>} [options]
+ */
+export function detectDocumentBest(image, options) {
+  const recipes = [
+    { preset: "fast" },
+    { preset: "fast", edgePercentile: 0.74, houghSpread: 16 },
+    { preset: "precise" },
+    { preset: "precise", edgePercentile: 0.7, minQuadScore: 0.14 }
+  ];
+  let best = null;
+  for (const recipe of recipes) {
+    let result = null;
+    try {
+      result = detectDocument(image, { ...(options || {}), ...recipe });
+    } catch {
+      result = null;
+    }
+    if (!result || result.method === "fallback") continue;
+    const guard = guardQuad(result.corners, image);
+    if (!guard.ok) continue;
+    if (!best || result.confidence > best.confidence) best = result;
+    if (best && best.confidence > 0.85) break;
+  }
+  if (best) return best;
+  try {
+    return detectDocument(image, { ...(options || {}), preset: "fast" });
+  } catch {
+    const source = toRaster(image);
+    return {
+      corners: [
+        { x: 0, y: 0 },
+        { x: source.width, y: 0 },
+        { x: source.width, y: source.height },
+        { x: 0, y: source.height }
+      ],
+      confidence: 0,
+      method: "fallback"
+    };
   }
 }
 

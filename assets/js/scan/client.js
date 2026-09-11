@@ -101,9 +101,13 @@ export class ScanEngine {
     );
   }
 
-  /** @param {string} key */
-  detect(key) {
-    return this.call("detect", { key });
+  /**
+   * @param {string} key
+   * @param {object} [options] forwarded to the pipeline (`precise: true`
+   * runs the multi-recipe pass for the per-page re-detect action)
+   */
+  detect(key, options) {
+    return this.call("detect", { key, options: options || {} });
   }
 
   /**

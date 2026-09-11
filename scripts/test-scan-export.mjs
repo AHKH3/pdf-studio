@@ -281,11 +281,99 @@ console.log("\nscan page — filmstrip, keyboard, responsive export");
   );
   check(
     "strip styles exist",
-    css.includes(".scan__strip") && css.includes(".strip__thumb") && css.includes(".strip__remove")
+    css.includes(".scan__strip") && css.includes(".scan-page") && css.includes(".strip__remove")
   );
   check(
     "pager buttons advertise their shortcuts",
     html.includes("PageUp") && html.includes("PageDown")
+  );
+}
+
+console.log("\nscan page — edit-mirror chrome (top save, rail, no bottom bar)");
+{
+  check(
+    "top save button exists and is wired to run",
+    html.includes('id="scan-save"') && scanTool.includes('"scan-save"') && scanTool.includes("=> void run()"),
+    "saving must live on top like the edit page"
+  );
+  check(
+    "save label follows the output format",
+    scanTool.includes('"scan-save-label"'),
+    "mirrors tb-run-label for pdf vs images"
+  );
+  check(
+    "bottom execution bar is hidden while scan is active",
+    /\.sheet:has\(#view-scan\.view--active\) \.titleblock\s*\{\s*display\s*:\s*none/.test(css),
+    "top save owns saving, like edit"
+  );
+  check(
+    "workspace fills the viewport height",
+    /\.work:has\(#view-scan\.view--active\)/.test(css) && /#view-scan\.view--active\s*\{[^}]*height\s*:\s*100%/.test(css)
+  );
+  check(
+    "pages rail carries the pager in its head",
+    html.includes("scan__rail-head") && html.indexOf('id="scan-prev"') > html.indexOf("scan__rail-head"),
+    "navigation exactly like the edit rail"
+  );
+  check(
+    "processing modes live in the top toolbar",
+    html.indexOf('name="scan-mode"') > html.indexOf("scan__toolbar") &&
+      html.indexOf('name="scan-mode"') < html.indexOf("scan__main"),
+    "tools up top, settings on the side"
+  );
+  check(
+    "rail items mirror the edit page cards",
+    scanTool.includes('"scan-page"') && css.includes(".scan-page__img") && css.includes("aspect-ratio:3/4"),
+    "3/4 thumb card with number, like edit"
+  );
+}
+
+console.log("\nscan page — interaction audit fixes");
+{
+  check(
+    "appending lands on the first new page",
+    scanTool.includes("firstNew"),
+    "adding files must not rewind a reviewed batch to page one"
+  );
+  check(
+    "no blind dragging on the final preview",
+    scanTool.includes("عدت للأصل"),
+    "a press on the result must step back to the original first"
+  );
+  check(
+    "hand edits take ownership even mid-review",
+    scanTool.includes("can never eat hand-drawn"),
+    "cancel must not destroy hand-drawn corners"
+  );
+  check(
+    "detect-all never stomps a staged review",
+    scanTool.includes("staged review"),
+    "pages awaiting verdict are skipped, not overwritten"
+  );
+  {
+    const fullStart = scanTool.indexOf("function useFullFrame");
+    const fullEnd = scanTool.indexOf("}", scanTool.indexOf("scheduleDraw();", fullStart));
+    const fullBody = fullStart >= 0 && fullEnd > fullStart ? scanTool.slice(fullStart, fullEnd) : "";
+    check(
+      "full-frame clears any staged review",
+      fullBody.includes("page.review = null") && fullBody.includes("page.accepted = true"),
+      "a manual frame is an owned verdict, not a pending one"
+    );
+  }
+  check(
+    "full-frame button is explicit",
+    html.includes("إطار كامل"),
+    "«كاملة» meant nothing out of context"
+  );
+  check(
+    "paper settings are visible by default",
+    html.includes('id="scan-pages-details" open'),
+    "paper size is core to this tool, not an advanced detail"
+  );
+  check(
+    "stage hint follows the current state",
+    scanTool.includes("function syncHint") && scanTool.includes("موافق أو إلغاء"),
+    "review/original/result each get their own guidance"
   );
 }
 

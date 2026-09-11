@@ -8,7 +8,7 @@
  * Source pixels are uploaded once under a key and kept here, so adjusting
  * corners or switching enhancement modes never re-sends a full-size image.
  */
-import { detectDocument, processDocument, suggestOutputSize } from "./pipeline.js";
+import { detectDocument, detectDocumentBest, processDocument, suggestOutputSize } from "./pipeline.js";
 
 /** @type {Map<string, { width: number, height: number, data: Uint8ClampedArray }>} */
 const store = new Map();
@@ -54,7 +54,10 @@ self.addEventListener("message", (event) => {
       return;
     }
     if (op === "detect") {
-      const detection = detectDocument(resolveImage(payload), payload.options);
+      const options = payload.options || {};
+      const detection = options.precise
+        ? detectDocumentBest(resolveImage(payload), options)
+        : detectDocument(resolveImage(payload), options);
       respond(id, {
         corners: detection.corners,
         confidence: detection.confidence,

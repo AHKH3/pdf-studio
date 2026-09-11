@@ -2,7 +2,7 @@
 
 PDF Studio (`أدوات PDF عربية`) is an **Electron desktop application** that provides Arabic (RTL) PDF tools: images→PDF, merge PDFs, edit/reorder pages, page numbering, and PDF→images. The UI is a static HTML/CSS/JS front end (`index.html` + `assets/`) that runs entirely client-side using `pdf-lib`, `pdfjs-dist`, and `sortablejs`. At runtime `electron/main.cjs` starts a tiny local HTTP server on `127.0.0.1` and loads it in a `BrowserWindow`.
 
-Standard commands live in `package.json` scripts (`start`, `pack`, `dist:*`, `vendor`). There is no dev server, no lint config, and no automated test suite in this repo.
+Standard commands live in `package.json` scripts (`start`, `pack`, `dist:*`, `vendor`). There is no dev server and no lint config. The automated suite (`npm test`, `scripts/test-*.mjs`) gates every push via the Release workflow — keep it green.
 
 ## دستور مجلد الشغل — إلزامي على كل وكيل
 
@@ -13,6 +13,13 @@ Standard commands live in `package.json` scripts (`start`, `pack`, `dist:*`, `ve
 3. ممنوع إضافة ميزات "مساعدة" غير مطلوبة أو تعديل مجالات محظورة/مجمّدة.
 4. إذا أصرّ المستخدم: سجّل القرار في `docs/DECISIONS.md` (تاريخ + طلب + قرار + تأثير) ثم أعد الفهرسة.
 5. لا تعدّل القرارات المسجلة أو تعريف النطاق أو الدستور بدون إذن صريح.
+
+## Line endings & source-reading tests — إلزامي على كل وكيل
+
+- Repo standard is **LF**. There is no `.gitattributes`, so Windows checkouts with `core.autocrlf=true` materialize **CRLF** in the working tree.
+- 2026-09-08 lesson: a CRLF `board.js` broke an exact-multiline-literal assertion in `scripts/test-edit.mjs` on CI while the same suite passed on LF checkouts. Exact string/regex matching against file bytes must never depend on line-ending style.
+- Any test that reads repo sources MUST normalize first: `src.replace(/\r\n/g, "\n")` (see the `norm()` helper in `scripts/test-edit.mjs`). This covers all four combinations (LF/CRLF blobs × LF/CRLF checkouts).
+- Keep committed blobs LF: if your editor writes CRLF, convert before staging so diffs stay clean (tests tolerate either, reviewers should not have to).
 
 ## Cursor Cloud specific instructions
 

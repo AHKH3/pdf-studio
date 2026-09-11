@@ -1,6 +1,8 @@
 /** PDF user-space units are 1/72 inch. */
 export const PAGE_SIZES = {
   a4: { width: 595.28, height: 841.89 },
+  a5: { width: 419.53, height: 595.28 },
+  a3: { width: 841.89, height: 1190.55 },
   letter: { width: 612, height: 792 }
 };
 

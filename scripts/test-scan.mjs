@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { decodePng } from "./lib/png.mjs";
-import { detectDocument, enhance, processDocument, rotateImage, suggestOutputSize, warpDocument } from "../assets/js/scan/pipeline.js";
+import { detectDocument, detectDocumentBest, enhance, guardQuad, processDocument, quadAspect, rotateImage, suggestOutputSize, warpDocument } from "../assets/js/scan/pipeline.js";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -378,6 +378,37 @@ group("detectDocument — yellow page on brown wood", () => {
     result.corners[3].y - result.corners[0].y
   );
   check("fold shadow is not the crop edge", height > 420, `height ${height.toFixed(0)}`);
+});
+
+group("quad guard + best-of-recipes detection", () => {
+  const sane = [
+    { x: 150, y: 90 },
+    { x: 760, y: 150 },
+    { x: 700, y: 610 },
+    { x: 110, y: 540 }
+  ];
+  check("sane quad aspect near 1", quadAspect(sane) < 2, `aspect ${quadAspect(sane).toFixed(2)}`);
+  check("sane quad passes the guard", guardQuad(sane, { width: 900, height: 700 }).ok);
+
+  // A ribbon quad across the frame: the classic size-explosion case where
+  // one collapsed side turns the output into an absurd wide strip.
+  const stray = [
+    { x: 20, y: 300 },
+    { x: 880, y: 300 },
+    { x: 880, y: 340 },
+    { x: 20, y: 340 }
+  ];
+  const verdict = guardQuad(stray, { width: 900, height: 700 });
+  check("stray-corner quad fails the guard", !verdict.ok, `reason=${verdict.reason}`);
+
+  const image = synthetic({ quad: tilted });
+  const best = detectDocumentBest(image);
+  const error = cornerError(best.corners, tilted);
+  check("best-of-recipes finds the tilted page", best.method !== "fallback", `method=${best.method}`);
+  check("best-of-recipes lands within 30px", error < 30, `mean error ${error.toFixed(1)}px`);
+
+  const precise = detectDocument(image, { preset: "precise" });
+  check("precise preset still detects", precise.method !== "fallback", `method=${precise.method}`);
 });
 
 console.log(`\n${checks - failures}/${checks} checks passed`);
