@@ -51,7 +51,8 @@ call, no queue, no size ceiling other than the machine's own memory, no paywall.
 
 ## Capabilities and Constraints
 
-Shipping today: document scan (perspective correction + enhancement + upscale), images → PDF,
+Shipping today (10 tools, v1.0.20): document scan unified with images → PDF
+(perspective correction + enhancement + optional AI upscale + A4/A5/A3 pages),
 merge PDFs, page organiser (insert / delete / rotate / reorder), split (ranges / every-N / extract),
 compress, page numbering, PDF → images,
 edit / markup (text, freehand, images, shapes flattened onto pages),
