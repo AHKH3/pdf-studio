@@ -61,11 +61,10 @@ async function load(files) {
   if (!file) return;
   if (doc && !(await confirmReplace(doc.name))) return;
 
-  const loaded = await readPdfFile(file);
-  if (!loaded) return;
-
   startProgress({ title: "قراءة المستند", desc: file.name, cancellable: false });
   try {
+    const loaded = await readPdfFile(file);
+    if (!loaded) return;
     await thumbs?.dispose();
     doc = loaded;
     thumbs = new PageThumbnails(loaded.bytes, loaded.password);
@@ -76,7 +75,7 @@ async function load(files) {
       toast("مستند كبير: المصغّرات تظهر أثناء التمرير. التصدير قابل للإيقاف.", "info");
     }
   } catch (error) {
-    reportFailure(error, "تعذّر فتح المستند.");
+    reportFailure(error, "تعذّر فتح المستند.", { retry: () => load(files) });
   } finally {
     endProgress();
   }
@@ -114,19 +113,23 @@ async function exportOne(pageNumber) {
   if (!doc) return;
   const kind = format();
   startProgress({ title: "تصدير الصفحة", desc: `صفحة ${pageNumber}`, cancellable: false });
+  /** @type {any} */
+  let source = null;
   try {
-    const source = await openDocument(doc.bytes, doc.password);
+    source = await openDocument(doc.bytes, doc.password);
     const page = await source.getPage(pageNumber);
     const blob = await renderPageToBlob(page, scaleFactor(), `image/${kind}`, kind === "jpeg" ? 0.92 : undefined);
     page.cleanup();
     await source.destroy();
+    source = null;
     endProgress();
     const name = `${baseName(doc.name)}-${pad(pageNumber, String(doc.pages).length)}.${kind === "jpeg" ? "jpg" : "png"}`;
     const written = await saveFile(new Uint8Array(await blob.arrayBuffer()), name, kind);
     reportSave(written, `تم حفظ صفحة ${pageNumber}.`);
   } catch (error) {
-    reportFailure(error, "تعذّر تصدير الصفحة.");
+    reportFailure(error, "تعذّر تصدير الصفحة.", { retry: () => exportOne(pageNumber) });
   } finally {
+    await source?.destroy?.().catch(() => {});
     endProgress();
   }
 }
@@ -204,7 +207,7 @@ async function run() {
       useFolder ? `تم تصدير ${count} صورة إلى مجلد.` : `تم تصدير ${count} صورة في ملف ZIP.`
     );
   } catch (error) {
-    reportFailure(error, "تعذّر التحويل.");
+    reportFailure(error, "تعذّر التحويل.", { retry: () => run() });
   } finally {
     // Cancel throws mid-loop; the document must close on every exit path.
     await source?.destroy?.().catch(() => {});

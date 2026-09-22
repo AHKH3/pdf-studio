@@ -196,6 +196,7 @@ export function createBoard(options) {
 
   function shapeSvg(obj) {
     const ns = "http://www.w3.org/2000/svg";
+    if (obj.kind === "line" || obj.kind === "arrow") return lineSvg(obj, ns);
     const svg = document.createElementNS(ns, "svg");
     svg.setAttribute("viewBox", "0 0 100 100");
     svg.setAttribute("preserveAspectRatio", "none");
@@ -226,6 +227,108 @@ export function createBoard(options) {
     el.setAttribute("stroke-width", String(sw));
     svg.append(el);
     return svg;
+  }
+
+  /** Arrowhead size from the shaft thickness (same formula as flatten). */
+  function headSize(thickness) {
+    const len = Math.min(Math.max(8, thickness * 4), 28);
+    return { len, half: len * 0.5 };
+  }
+
+  /**
+   * Filled triangular head at `tip`, pointing along the unit vector
+   * (`ux`, `uy`). Pure point math — shared by the board preview, the drag
+   * ghost and the flatten step (which keeps its own copy).
+   */
+  function arrowHeadPoints(tip, ux, uy, size) {
+    const bx = tip.x - ux * size.len;
+    const by = tip.y - uy * size.len;
+    return [tip, { x: bx - uy * size.half, y: by + ux * size.half }, { x: bx + uy * size.half, y: by - ux * size.half }];
+  }
+
+  /**
+   * Lines/arrows render from their two stored endpoints (pt viewBox, like
+   * ink) — not from box corners — so horizontal/vertical shafts stay exact
+   * and resize keeps the geometry glued via the generic points path.
+   */
+  function lineSvg(obj, ns) {
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", `0 0 ${obj.width} ${obj.height}`);
+    svg.setAttribute("preserveAspectRatio", "none");
+    const stroke = obj.stroke || "#1E3A8A";
+    const sw = Number.isFinite(Number(obj.strokeWidth)) ? Math.max(0, Number(obj.strokeWidth)) : 1.5;
+    const ends = Array.isArray(obj.points) && obj.points.length > 1
+      ? [obj.points[0], obj.points[1]]
+      : [{ x: obj.x, y: obj.y }, { x: obj.x + obj.width, y: obj.y + obj.height }];
+    const rel = ends.map((point) => ({ x: point.x - obj.x, y: obj.height - (point.y - obj.y) }));
+    const line = document.createElementNS(ns, "line");
+    line.setAttribute("x1", String(rel[0].x));
+    line.setAttribute("y1", String(rel[0].y));
+    line.setAttribute("x2", String(rel[1].x));
+    line.setAttribute("y2", String(rel[1].y));
+    line.setAttribute("stroke", stroke);
+    line.setAttribute("stroke-width", String(sw));
+    line.setAttribute("stroke-linecap", "round");
+    svg.append(line);
+    if (obj.kind === "arrow" && sw > 0) {
+      const dx = rel[1].x - rel[0].x;
+      const dy = rel[1].y - rel[0].y;
+      const len = Math.hypot(dx, dy);
+      if (len > 0.5) {
+        // Same clamp as flatten: a shrunken shaft never grows a head
+        // longer than itself, so preview and output always agree.
+        const use = Math.min(headSize(sw).len, len);
+        const head = arrowHeadPoints(rel[1], dx / len, dy / len, { len: use, half: use * 0.5 });
+        const poly = document.createElementNS(ns, "polygon");
+        poly.setAttribute("points", head.map((point) => `${point.x},${point.y}`).join(" "));
+        poly.setAttribute("fill", stroke);
+        svg.append(poly);
+      }
+    }
+    return svg;
+  }
+
+  /** Drag ghost content for line/arrow: a live shaft (+ head) preview. */
+  function buildGhostLine(ghost, kind) {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 100 100");
+    svg.setAttribute("preserveAspectRatio", "none");
+    svg.setAttribute("width", "100%");
+    svg.setAttribute("height", "100%");
+    const line = document.createElementNS(ns, "line");
+    line.style.stroke = "var(--accent)";
+    line.style.strokeWidth = "3";
+    line.setAttribute("stroke-linecap", "round");
+    svg.append(line);
+    let head = null;
+    if (kind === "arrow") {
+      head = document.createElementNS(ns, "polygon");
+      head.style.fill = "var(--accent)";
+      svg.append(head);
+    }
+    ghost.append(svg);
+    return { line, head };
+  }
+
+  function paintGhostLine(refs, from, to, box) {
+    const w = Math.max(box.width, 1e-6);
+    const h = Math.max(box.height, 1e-6);
+    const X = (point) => ((point.x - box.x) / w) * 100;
+    const Y = (point) => (1 - (point.y - box.y) / h) * 100;
+    const tip = { x: X(to), y: Y(to) };
+    refs.line.setAttribute("x1", X(from).toFixed(1));
+    refs.line.setAttribute("y1", Y(from).toFixed(1));
+    refs.line.setAttribute("x2", tip.x.toFixed(1));
+    refs.line.setAttribute("y2", tip.y.toFixed(1));
+    if (refs.head) {
+      const dx = tip.x - X(from);
+      const dy = tip.y - Y(from);
+      const len = Math.hypot(dx, dy) || 1;
+      const use = Math.min(14, len);
+      const head = arrowHeadPoints(tip, dx / len, dy / len, { len: use, half: use * 0.5 });
+      refs.head.setAttribute("points", head.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" "));
+    }
   }
 
   function inkSvg(obj) {
@@ -429,6 +532,8 @@ export function createBoard(options) {
     if (obj.type === "ink") return "رسم";
     if (obj.kind === "ellipse") return "دائرة";
     if (obj.kind === "triangle") return "مثلث";
+    if (obj.kind === "line") return "خط";
+    if (obj.kind === "arrow") return "سهم";
     return "مربع";
   }
 
@@ -765,7 +870,7 @@ export function createBoard(options) {
       return;
     }
 
-    if (tool === "rect" || tool === "ellipse" || tool === "triangle") {
+    if (tool === "rect" || tool === "ellipse" || tool === "triangle" || tool === "line" || tool === "arrow") {
       event.preventDefault();
       layer.setPointerCapture(event.pointerId);
       drag = {
@@ -777,6 +882,7 @@ export function createBoard(options) {
       ghost = document.createElement("div");
       ghost.className = "edit-ghost";
       layer.append(ghost);
+      if (tool === "line" || tool === "arrow") drag.ghostSvg = buildGhostLine(ghost, tool);
       return;
     }
 
@@ -848,6 +954,7 @@ export function createBoard(options) {
         ghost.style.width = `${width * scale}px`;
         ghost.style.height = `${height * scale}px`;
         ghost.style.borderRadius = drag.kind === "ellipse" ? "50%" : "0";
+        if (drag.ghostSvg) paintGhostLine(drag.ghostSvg, drag.start, visual, { x, y, width, height });
       }
       return;
     }
@@ -972,14 +1079,26 @@ export function createBoard(options) {
       ghost = null;
       const width = Math.abs(visual.x - start.x);
       const height = Math.abs(visual.y - start.y);
-      if (width < 8 || height < 8) return;
+      const isLine = kind === "line" || kind === "arrow";
+      // A shaft has no area: its length is the size that matters, so a
+      // horizontal/vertical drag must not be rejected by the box minimum.
+      if (isLine ? Math.hypot(width, height) < 8 : width < 8 || height < 8) return;
       const style = getStyle();
+      const linePad = isLine ? (style.strokeWidth > 0 ? style.strokeWidth : 2.5) + 2 : 0;
       const box = {
-        x: Math.min(start.x, visual.x),
-        y: Math.min(start.y, visual.y),
-        width,
-        height
+        x: Math.min(start.x, visual.x) - linePad,
+        y: Math.min(start.y, visual.y) - linePad,
+        width: width + linePad * 2,
+        height: height + linePad * 2
       };
+      if (isLine) {
+        // Center the minimum box on the shaft: clampBox only grows from x/y,
+        // which would pin a horizontal/vertical shaft to the box edge — every
+        // later resize would then drag the shaft off-center, and rotation
+        // would orbit around a point off the shaft instead of its middle.
+        if (box.width < MIN_PT) { box.x -= (MIN_PT - box.width) / 2; box.width = MIN_PT; }
+        if (box.height < MIN_PT) { box.y -= (MIN_PT - box.height) / 2; box.height = MIN_PT; }
+      }
       clampBox(box, visualWidth, visualHeight);
       onHistory();
       onCreate({
@@ -991,7 +1110,12 @@ export function createBoard(options) {
         fill: style.fill,
         fillOn: style.fillOn,
         stroke: style.stroke,
-        strokeWidth: style.strokeWidth
+        // A zero-width shaft paints nothing (flatten skips it) and a shaft
+        // has no fill to fall back on — creation guarantees visibility.
+        strokeWidth: isLine && !(style.strokeWidth > 0) ? 2.5 : style.strokeWidth,
+        // Endpoints ride along with the generic points path (move/resize),
+        // so thin shafts keep exact geometry under any box clamp.
+        ...(isLine ? { points: [{ x: start.x, y: start.y }, { x: visual.x, y: visual.y }] } : null)
       });
       return;
     }

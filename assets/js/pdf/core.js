@@ -1,6 +1,6 @@
 import { PDFJS_WORKER_SRC, THUMB_CACHE_LIMIT, THUMB_MAX_PX } from "../config.js";
+import { disposeCanvas, yieldToUi } from "../dom.js";
 import { encryptedError } from "../lib/errors.js";
-import { yieldToUi } from "../dom.js";
 
 /** @type {any} */
 let pdfjs = null;
@@ -106,8 +106,7 @@ export async function renderPageToBlob(page, scale, mime = "image/png", quality)
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   await page.render({ canvasContext: ctx, viewport }).promise;
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, mime, quality));
-  canvas.width = 0;
-  canvas.height = 0;
+  disposeCanvas(canvas);
   return blob;
 }
 
@@ -146,8 +145,7 @@ export async function renderPageAtDpi(page, dpi, grayscale, quality) {
     width: viewport.width,
     height: viewport.height
   };
-  canvas.width = 0;
-  canvas.height = 0;
+  disposeCanvas(canvas);
   return result;
 }
 
@@ -283,7 +281,6 @@ export async function textToPng(text, style) {
 
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
   const bytes = new Uint8Array(await blob.arrayBuffer());
-  canvas.width = 0;
-  canvas.height = 0;
+  disposeCanvas(canvas);
   return bytes;
 }

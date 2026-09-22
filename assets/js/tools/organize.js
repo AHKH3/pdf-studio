@@ -209,7 +209,7 @@ async function run() {
     if (written) saved = true;
     reportSave(written, `تم حفظ المستند بـ ${pages.length} صفحة.`);
   } catch (error) {
-    reportFailure(error, "تعذّر بناء المستند.");
+    reportFailure(error, "تعذّر بناء المستند.", { retry: () => run() });
   } finally {
     endProgress();
   }

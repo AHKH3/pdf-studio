@@ -126,7 +126,7 @@ async function load(files) {
     setState("idle");
     syncFields();
   } catch (error) {
-    reportFailure(error, "تعذّر فتح المستند.");
+    reportFailure(error, "تعذّر فتح المستند.", { retry: () => load(files) });
   } finally {
     endProgress();
   }
@@ -193,7 +193,7 @@ async function run() {
     if (written) saved = true;
     reportSave(written, `تم إنشاء ${outputs.length} ملفات.`);
   } catch (error) {
-    reportFailure(error, "تعذّر التقسيم.");
+    reportFailure(error, "تعذّر التقسيم.", { retry: () => run() });
   } finally {
     endProgress();
   }

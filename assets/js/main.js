@@ -1,5 +1,6 @@
 import { el } from "./dom.js";
 import { initPdfEngines } from "./pdf/core.js";
+import { friendlyMessage } from "./lib/errors.js";
 import { initFeedback, toast } from "./ui/feedback.js";
 import { enterHub, initHub } from "./ui/hub.js";
 import { guardWindowDrops } from "./ui/intake.js";
@@ -122,7 +123,25 @@ async function boot() {
       return;
     }
     console.error(event.reason);
-    toast("حدث خطأ غير متوقع. راجع وحدة التحكّم للتفاصيل.", "error");
+    event.preventDefault();
+    toast(
+      friendlyMessage(event.reason, "حدث خطأ غير متوقع. راجع وحدة التحكّم للتفاصيل.") ||
+        "حدث خطأ غير متوقع.",
+      "error"
+    );
+  });
+
+  // AHK-63: an uncaught render error must never blank the window silently.
+  window.addEventListener("error", (event) => {
+    console.error(event.error || event.message);
+    event.preventDefault();
+    toast(
+      friendlyMessage(
+        event.error || { message: String(event.message || "") },
+        "حدث خطأ غير متوقع. التطبيق ما زال يعمل — أعد المحاولة."
+      ) || "حدث خطأ غير متوقع.",
+      "error"
+    );
   });
 }
 

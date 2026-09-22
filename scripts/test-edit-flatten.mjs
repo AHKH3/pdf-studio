@@ -100,6 +100,23 @@ function placedPoints(stream) {
   return pts;
 }
 
+/** Exact-endpoint presence: shafts must land where the user drew them. */
+function hasPoint(pts, x, y, eps = 3) {
+  return pts.some((p) => Math.abs(p.x - x) <= eps && Math.abs(p.y - y) <= eps);
+}
+
+/** Longest span between painted points: rotation is rigid, so a rotated
+ * 200-long shaft must still span 200 no matter which way it points. */
+function maxSpan(pts) {
+  let m = 0;
+  for (let i = 0; i < pts.length; i += 1) {
+    for (let j = i + 1; j < pts.length; j += 1) {
+      m = Math.max(m, Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y));
+    }
+  }
+  return m;
+}
+
 console.log("\nedit flatten (production stamp → saved file → decoded pages)");
 
 const source = await PDFDocument.create();
@@ -117,6 +134,8 @@ const objects = [
   { id: "ink", type: "ink", pageIndex: 1, x: 40, y: 40, width: 160, height: 100, rotation: 0, color: "#DC2626", strokeWidth: 3, points: [{ x: 50, y: 50 }, { x: 120, y: 120 }, { x: 190, y: 70 }] },
   { id: "rect", type: "shape", kind: "rect", pageIndex: 0, x: 50, y: 50, width: 100, height: 60, rotation: 0, fill: "#FDE68A", fillOn: true, stroke: "#111827", strokeWidth: 2 },
   { id: "ell", type: "shape", kind: "ellipse", pageIndex: 1, x: 300, y: 500, width: 140, height: 90, rotation: 0, fill: "#BBF7D0", fillOn: true, stroke: "#059669", strokeWidth: 2 },
+  { id: "line", type: "shape", kind: "line", pageIndex: 0, x: 100, y: 694, width: 200, height: 16, rotation: 0, fillOn: false, fill: "#fff", stroke: "#1E3A8A", strokeWidth: 4, points: [{ x: 100, y: 700 }, { x: 300, y: 700 }] },
+  { id: "arrow", type: "shape", kind: "arrow", pageIndex: 0, x: 350, y: 594, width: 150, height: 16, rotation: 0, fillOn: false, fill: "#fff", stroke: "#DC2626", strokeWidth: 4, points: [{ x: 350, y: 600 }, { x: 500, y: 600 }] },
   { id: "empty-text", type: "text", pageIndex: 1, x: 10, y: 10, width: 100, height: 30, rotation: 0, text: "   ", fontSize: 18, color: "#111827", bold: false, align: "right" },
   { id: "invisible", type: "shape", kind: "rect", pageIndex: 0, x: 10, y: 10, width: 40, height: 40, rotation: 0, fillOn: false, fill: "#fff", stroke: "#000", strokeWidth: 0 },
   { id: "ghost-page", type: "shape", kind: "rect", pageIndex: 9, x: 10, y: 10, width: 40, height: 40, rotation: 0, fill: "#fff", fillOn: true, stroke: "#000", strokeWidth: 1 }
@@ -137,6 +156,10 @@ for (let i = 0; i < 3; i += 1) {
 }
 
 check("page 1 carries the rectangle path (m/l/h + fill)", /m[\s\S]*l[\s\S]*h[\s\S]*(f|B)/.test(t0), t0.slice(0, 160));
+const p0 = placedPoints(t0);
+check("page 1 carries the line shaft at its exact endpoints", hasPoint(p0, 100, 700) && hasPoint(p0, 300, 700));
+// Arrow: tip (500,600), head 16 long / 8 half-wide → base corners (484,592) and (484,608).
+check("page 1 carries the arrowhead (tip + base)", hasPoint(p0, 500, 600) && hasPoint(p0, 484, 592));
 check("page 2 carries the ellipse curves", /\bc\b/.test(t1) && /m[\s\S]*l/.test(t1));
 check("page 2 carries the ink stroke (m/l + S)", /m[\s\S]*l[\s\S]*S/.test(t1));
 check("page 3 carries the rotated triangle (h + fill)", /h[\s\S]*(f|B)/.test(t2));
@@ -154,6 +177,39 @@ for (const [i, t] of [t0, t1, t2].entries()) {
     `page ${i + 1} paints every vector point inside the page (no off-page mirror)`,
     pts.length > 0 && bad.length === 0,
     bad.slice(0, 3).map((p) => `(${p.x.toFixed(1)},${p.y.toFixed(1)})`).join(" ") || `no points`
+  );
+}
+
+/* A rotated arrow pivots around the shaft middle: the 200-long shaft must
+ * still span 200 on-page, with head points alongside it. */
+{
+  const rot = await PDFDocument.create();
+  rot.addPage([595, 842]);
+  const rotOut = await flattenObjects(await rot.save(), [
+    { id: "ra", type: "shape", kind: "arrow", pageIndex: 0, x: 100, y: 600, width: 200, height: 100, rotation: 45, fillOn: false, fill: "#fff", stroke: "#1E3A8A", strokeWidth: 4, points: [{ x: 100, y: 650 }, { x: 300, y: 650 }] }
+  ]);
+  const rotPts = placedPoints(pageText(await PDFDocument.load(rotOut), 0));
+  const rotBad = rotPts.filter((p) => p.x < -1 || p.x > 596 || p.y < -1 || p.y > 843);
+  check("rotated arrow stays on-page with shaft + head", rotPts.length >= 4 && rotBad.length === 0, `n=${rotPts.length}`);
+  check("rotated arrow keeps shaft length 200", Math.abs(maxSpan(rotPts) - 200) < 2, `span=${maxSpan(rotPts).toFixed(2)}`);
+}
+
+/* A zero-width shaft and a point-less arrow must emit no operators at all. */
+{
+  const one = await PDFDocument.create();
+  const oneFont = await one.embedFont(StandardFonts.Helvetica);
+  one.addPage([595, 842]).drawText("hello", { x: 72, y: 770, size: 24, font: oneFont });
+  const oneBytes = await one.save();
+  const painted = await flattenObjects(oneBytes, [
+    { id: "zw", type: "shape", kind: "line", pageIndex: 0, x: 50, y: 394, width: 200, height: 16, rotation: 0, points: [{ x: 50, y: 400 }, { x: 250, y: 400 }], fillOn: false, fill: "#fff", stroke: "#1E3A8A", strokeWidth: 0 },
+    { id: "np", type: "shape", kind: "arrow", pageIndex: 0, x: 50, y: 50, width: 200, height: 100, rotation: 0, fillOn: false, fill: "#fff", stroke: "#1E3A8A", strokeWidth: 3 }
+  ]);
+  const clean = await flattenObjects(oneBytes, []);
+  const paintedText = pageText(await PDFDocument.load(painted), 0);
+  check(
+    "unpaintable shafts leave the page stream untouched",
+    paintedText.includes("Tj") && paintedText === pageText(await PDFDocument.load(clean), 0),
+    paintedText.slice(0, 120)
   );
 }
 

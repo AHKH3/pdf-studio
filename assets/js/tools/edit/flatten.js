@@ -26,6 +26,19 @@ function trianglePoints(obj) {
   ];
 }
 
+/** Arrowhead size from the shaft thickness (same formula as the board). */
+function headSize(thickness) {
+  const len = Math.min(Math.max(8, thickness * 4), 28);
+  return { len, half: len * 0.5 };
+}
+
+/** Filled triangular head at `tip`, pointing along (`ux`, `uy`). */
+function arrowHeadPoints(tip, ux, uy, size) {
+  const bx = tip.x - ux * size.len;
+  const by = tip.y - uy * size.len;
+  return [tip, { x: bx - uy * size.half, y: by + ux * size.half }, { x: bx + uy * size.half, y: by - ux * size.half }];
+}
+
 function mapPoints(pageAngle, mediaW, mediaH, points) {
   return points.map((point) => visualPointToMedia(pageAngle, mediaW, mediaH, point.x, point.y));
 }
@@ -136,11 +149,32 @@ export async function flattenObjects(bytes, objects) {
       const fill = obj.fillOn === false ? undefined : hexToRgb(obj.fill || "#8AA4E0");
       const stroke = hexToRgb(obj.stroke || "#1E3A8A");
       const borderWidth = Math.max(0, finiteNumber(obj.strokeWidth, 1.5));
-      // A shape with no fill and no stroke paints nothing: skipping it keeps
-      // the output identical instead of risking a driver quirk on empty paths.
-      if (!fill && !borderWidth) continue;
+      const isLine = obj.kind === "line" || obj.kind === "arrow";
+      // Shafts carry no fill: an unpainted shaft must not emit operators,
+      // exactly like a fill-less width-less closed shape below.
+      if (isLine ? !borderWidth : !fill && !borderWidth) continue;
 
-      if (obj.kind === "ellipse") {
+      if (isLine && Array.isArray(obj.points) && obj.points.length > 1) {
+        const [m0, m1] = mapPoints(pageAngle, mediaW, mediaH, orientedPoints(obj, obj.points.slice(0, 2)));
+        const shaft = {
+          start: m0,
+          end: m1,
+          thickness: borderWidth,
+          color: stroke
+        };
+        if (roundCap != null) shaft.lineCap = roundCap;
+        page.drawLine(shaft);
+        if (obj.kind === "arrow") {
+          const dx = m1.x - m0.x;
+          const dy = m1.y - m0.y;
+          const len = Math.hypot(dx, dy);
+          if (len > 0.5) {
+            const use = Math.min(headSize(borderWidth).len, len);
+            const head = arrowHeadPoints(m1, dx / len, dy / len, { len: use, half: use * 0.5 });
+            page.drawSvgPath(svgPath(head, true), { x: 0, y: 0, color: stroke });
+          }
+        }
+      } else if (obj.kind === "ellipse") {
         const c = alongLocal(obj, 0, 0);
         const right = alongLocal(obj, obj.width / 2, 0);
         const top = alongLocal(obj, 0, obj.height / 2);
@@ -160,7 +194,9 @@ export async function flattenObjects(bytes, objects) {
           borderColor: stroke,
           borderWidth
         });
-      } else {
+      } else if (!isLine) {
+        // Closed kinds only (rect/triangle): a shaft without endpoints
+        // paints nothing instead of degrading into a box outline.
         const pts = obj.kind === "triangle" ? trianglePoints(obj) : objectCorners(obj);
         page.drawSvgPath(svgPath(mapPoints(pageAngle, mediaW, mediaH, pts), true), {
           x: 0,

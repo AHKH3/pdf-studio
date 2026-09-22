@@ -364,5 +364,131 @@ async function reseed() {
   check("T6 preview is border-box", preview.style.boxSizing === "border-box");
 }
 
+/* T7: drag-creates a line shaft, then an arrow with a rendered head */
+{
+  objects.length = 0;
+  selectedIds.length = 0;
+  tool = "line";
+  board.paintOverlay();
+  await tick();
+  fire(layer, "pointerdown", { clientX: VX(100), clientY: VY(700) });
+  fire(layer, "pointermove", { clientX: VX(300), clientY: VY(600) });
+  fire(layer, "pointerup", { clientX: VX(300), clientY: VY(600) });
+  await tick();
+  const created = objects[objects.length - 1];
+  check("T7 line drag creates a shaft object", !!created && created.type === "shape" && created.kind === "line", JSON.stringify(created && { type: created.type, kind: created.kind }));
+  const ends = created && created.points;
+  const lineOk = Array.isArray(ends) && ends.length === 2 &&
+    Math.abs(ends[0].x - 100) < 1 && Math.abs(ends[0].y - 700) < 1 &&
+    Math.abs(ends[1].x - 300) < 1 && Math.abs(ends[1].y - 600) < 1;
+  check("T7 line endpoints match the drag", lineOk, JSON.stringify(ends));
+  check("T7 line node renders a shaft element", !!layer.querySelector(".edit-obj.is-selected line"));
+
+  objects.length = 0;
+  selectedIds.length = 0;
+  tool = "arrow";
+  board.paintOverlay();
+  await tick();
+  fire(layer, "pointerdown", { clientX: VX(350), clientY: VY(620) });
+  fire(layer, "pointermove", { clientX: VX(500), clientY: VY(620) });
+  fire(layer, "pointerup", { clientX: VX(500), clientY: VY(620) });
+  await tick();
+  const arrow = objects[objects.length - 1];
+  check("T7 arrow drag creates an arrow object", !!arrow && arrow.type === "shape" && arrow.kind === "arrow", JSON.stringify(arrow && { type: arrow.type, kind: arrow.kind }));
+  // Horizontal drag: the generic box minimum must not bend the shaft.
+  const aEnds = arrow && arrow.points;
+  const arrowOk = Array.isArray(aEnds) && aEnds.length === 2 &&
+    Math.abs(aEnds[0].y - 620) < 1 && Math.abs(aEnds[1].y - 620) < 1 &&
+    Math.abs(aEnds[1].x - aEnds[0].x - 150) < 1;
+  check("T7 horizontal arrow stays horizontal", arrowOk, JSON.stringify(aEnds));
+  check("T7 arrow node renders shaft + head", !!layer.querySelector(".edit-obj.is-selected line") && !!layer.querySelector(".edit-obj.is-selected polygon"));
+}
+
+/* T8: click-selects a shaft node, drag moves both endpoints glued together */
+{
+  objects.length = 0;
+  selectedIds.length = 0;
+  tool = "line";
+  board.paintOverlay();
+  await tick();
+  fire(layer, "pointerdown", { clientX: VX(100), clientY: VY(700) });
+  fire(layer, "pointermove", { clientX: VX(300), clientY: VY(600) });
+  fire(layer, "pointerup", { clientX: VX(300), clientY: VY(600) });
+  await tick();
+  const made = objects.length === 1 && objects[0].kind === "line";
+  check("T8 setup: shaft created", made);
+  // Disarm, deselect, then press the node itself: selection, not a new object.
+  tool = "";
+  selectedIds.length = 0;
+  board.paintOverlay();
+  await tick();
+  const node = layer.querySelector(".edit-obj");
+  const before = objects.length;
+  fire(node, "pointerdown", { clientX: VX(200), clientY: VY(650) });
+  fire(layer, "pointermove", { clientX: VX(200) + 60, clientY: VY(650) });
+  fire(layer, "pointerup", { clientX: VX(200) + 60, clientY: VY(650) });
+  await tick();
+  check("T8 click selects the shaft node (no new object)", selectedIds.includes(objects[0].id) && objects.length === before,
+    `sel=${JSON.stringify(selectedIds)} n=${objects.length}`);
+  const scale = 600 / 595;
+  const dx = 60 / scale;
+  const p = objects[0].points;
+  const glued = Math.abs(p[0].x - (100 + dx)) < 0.05 && Math.abs(p[0].y - 700) < 0.05 &&
+    Math.abs(p[1].x - (300 + dx)) < 0.05 && Math.abs(p[1].y - 600) < 0.05;
+  check("T8 move translates both endpoints together", glued, JSON.stringify(p.map((q) => [q.x.toFixed(2), q.y.toFixed(2)])));
+}
+
+/* T8b: SE-resize scales a shaft about the box center (endpoints stay symmetric) */
+{
+  objects.length = 0;
+  selectedIds.length = 0;
+  tool = "line";
+  board.paintOverlay();
+  await tick();
+  fire(layer, "pointerdown", { clientX: VX(100), clientY: VY(620) });
+  fire(layer, "pointermove", { clientX: VX(300), clientY: VY(620) });
+  fire(layer, "pointerup", { clientX: VX(300), clientY: VY(620) });
+  await tick();
+  const grip = layer.querySelector('[data-handle="se"]');
+  check("T8b setup: shaft node offers an SE grip", !!grip);
+  const lenBefore = Math.hypot(objects[0].points[1].x - objects[0].points[0].x, objects[0].points[1].y - objects[0].points[0].y);
+  fire(grip, "pointerdown", { clientX: VX(300), clientY: VY(620) });
+  fire(layer, "pointermove", { clientX: VX(300) + 59.5, clientY: VY(620) + 42.1 });
+  fire(layer, "pointerup", {});
+  await tick();
+  const o = objects[0];
+  const cx = o.x + o.width / 2, cy = o.y + o.height / 2;
+  const mx = (o.points[0].x + o.points[1].x) / 2, my = (o.points[0].y + o.points[1].y) / 2;
+  const lenAfter = Math.hypot(o.points[1].x - o.points[0].x, o.points[1].y - o.points[0].y);
+  check("T8b resize keeps endpoints symmetric about the center", Math.abs(mx - cx) < 0.5 && Math.abs(my - cy) < 0.5,
+    `mid=(${mx.toFixed(2)},${my.toFixed(2)}) center=(${cx.toFixed(2)},${cy.toFixed(2)})`);
+  check("T8b resize grows the shaft", lenAfter > lenBefore + 40, `${lenBefore.toFixed(1)}->${lenAfter.toFixed(1)}`);
+}
+
+/* T8c: rotating a shaft pivots around its middle (creation centers the box) */
+{
+  objects.length = 0;
+  selectedIds.length = 0;
+  tool = "line";
+  board.paintOverlay();
+  await tick();
+  fire(layer, "pointerdown", { clientX: VX(100), clientY: VY(620) });
+  fire(layer, "pointermove", { clientX: VX(300), clientY: VY(620) });
+  fire(layer, "pointerup", { clientX: VX(300), clientY: VY(620) });
+  await tick();
+  const grip = layer.querySelector('[data-handle="rotate"]');
+  check("T8c setup: shaft node offers a rotate grip", !!grip);
+  fire(grip, "pointerdown", { clientX: VX(200), clientY: VY(700) });
+  fire(layer, "pointermove", { clientX: VX(270), clientY: VY(700) });
+  fire(layer, "pointerup", {});
+  await tick();
+  const o = objects[0];
+  check("T8c rotate turns the shaft", (o.rotation || 0) !== 0, `rot=${o.rotation}`);
+  const cx = o.x + o.width / 2, cy = o.y + o.height / 2;
+  const mx = (o.points[0].x + o.points[1].x) / 2, my = (o.points[0].y + o.points[1].y) / 2;
+  check("T8c rotate keeps the midpoint on the pivot", Math.abs(mx - cx) < 1 && Math.abs(my - cy) < 1,
+    `mid=(${mx.toFixed(2)},${my.toFixed(2)}) center=(${cx.toFixed(2)},${cy.toFixed(2)})`);
+}
+
 console.log(failures ? `\n${failures} FAILURES` : "\nall interaction checks passed");
 process.exit(failures ? 1 : 0);

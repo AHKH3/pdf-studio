@@ -316,10 +316,10 @@ console.log("\nscan page — edit-mirror chrome (top save, rail, no bottom bar)"
     "navigation exactly like the edit rail"
   );
   check(
-    "processing modes live in the top toolbar",
-    html.indexOf('name="scan-mode"') > html.indexOf("scan__toolbar") &&
-      html.indexOf('name="scan-mode"') < html.indexOf("scan__main"),
-    "tools up top, settings on the side"
+    "processing modes live in the side panel",
+    html.indexOf('name="scan-mode"') > html.indexOf("scan__side") &&
+      html.indexOf('name="scan-mode"') < html.indexOf("scan__stage"),
+    "tools up top, settings on the side (AHK-83)"
   );
   check(
     "rail items mirror the edit page cards",
@@ -336,9 +336,25 @@ console.log("\nscan page — interaction audit fixes");
     "adding files must not rewind a reviewed batch to page one"
   );
   check(
-    "no blind dragging on the final preview",
-    scanTool.includes("عدت للأصل"),
-    "a press on the result must step back to the original first"
+    "result preview is directly draggable (free layout)",
+    scanTool.includes("layoutDrag") && scanTool.includes("layoutHitMode"),
+    "pressing the image moves/resizes it — never leaves the preview"
+  );
+  check(
+    "empty paper is an intentional no-op (no trap exit)",
+    scanTool.includes("intentional no-op"),
+    "leaving the layout needs the mode switch or Esc, never a stray click"
+  );
+  check(
+    "cursor follows the hovered capability",
+    scanTool.includes("function updateHoverCursor") &&
+      scanTool.includes('"grab"') && scanTool.includes("nwse-resize"),
+    "grab over the image, diagonal arrows over handles, default over paper"
+  );
+  check(
+    "two-level Esc cancels drags before exiting modes",
+    scanTool.includes('"Escape"') && scanTool.includes("أُلغي السحب"),
+    "first Esc restores the drag start, second leaves the mode"
   );
   check(
     "hand edits take ownership even mid-review",
@@ -361,19 +377,251 @@ console.log("\nscan page — interaction audit fixes");
     );
   }
   check(
-    "full-frame button is explicit",
-    html.includes("إطار كامل"),
-    "«كاملة» meant nothing out of context"
+    "stage mode segmented control is explicit",
+    html.includes('id="scan-modeseg"') && html.includes('id="scan-mode-crop"'),
+    "stage segmented control houses the modes cleanly"
   );
   check(
-    "paper settings are visible by default",
-    html.includes('id="scan-pages-details" open'),
-    "paper size is core to this tool, not an advanced detail"
+    "paper settings live in the side panel",
+    html.includes('id="scan-pages-details"') &&
+      html.indexOf('id="scan-page"') > html.indexOf("scan__side") &&
+      html.indexOf('id="scan-orient"') > html.indexOf("scan__side"),
+    "paper size is core to this tool — always visible in the side, no popover (AHK-83)"
+  );
+  check(
+    "no numeric margin input — placement is manual on the sheet",
+    !html.includes('id="scan-margin"') && !scanTool.includes('scan-margin'),
+    "the margin field was removed; free layout replaces it (AHK-84)"
   );
   check(
     "stage hint follows the current state",
     scanTool.includes("function syncHint") && scanTool.includes("موافق أو إلغاء"),
     "review/original/result each get their own guidance"
+  );
+}
+
+console.log("\nscan page — AHK-83 sidebar layout and ID preset");
+{
+  check(
+    "three mode controls exist on stage",
+    html.includes('id="scan-modeseg"') &&
+      html.includes('id="scan-mode-crop"') &&
+      html.includes('id="scan-mode-layout"') &&
+      html.includes('id="scan-mode-preview"'),
+    "stage switches cleanly between crop, layout, and preview modes"
+  );
+  check(
+    "simplified tone options exist without clutter",
+    html.includes('data-tone="color"') &&
+      html.includes('data-tone="gray"') &&
+      html.includes('data-tone="original"') &&
+      !html.includes('data-tone="sharp"') &&
+      !html.includes('data-tone="bw"'),
+    "only color, gray, and original tone modes are provided"
+  );
+  check(
+    "layout switch locks during a staged review",
+    scanTool.includes("ثبّت الكشف أو ألغِه أولًا"),
+    "switching modes mid-review would show a result built on unpinned corners"
+  );
+  check(
+    "corner buttons never cover the paper",
+    css.includes(".scan__stage-btn--corner-l") &&
+      scanTool.includes("STAGE_ACTION_RESERVE") &&
+      scanTool.includes("canvas.height - STAGE_ACTION_RESERVE"),
+    "sheet and photo sit above a reserved bottom strip — portrait or landscape"
+  );
+  check(
+    "no floating stage actions overlap the preview",
+    !html.includes("scan__stage-actions"),
+    "only the two corner buttons float — the canvas stays fully visible"
+  );
+  check(
+    "id-card preset keeps one strict line, not a paragraph",
+    html.includes('name="scan-preset"') &&
+      html.includes("85.6") &&
+      !html.includes("تُطبع بمقاسها الحقيقي"),
+    "the legal size stays where the decision is made — nowhere else"
+  );
+  check(
+    "layout presets and apply-to-all appear in sidebar without redundant buttons",
+    html.includes('id="scan-layout-all"') &&
+      !html.includes('id="scan-layout-fill"') &&
+      !html.includes('id="scan-layout-center"'),
+    "presets drive layout directly — redundant fill/center buttons removed"
+  );
+  check(
+    "sheet center lines are always on in layout mode",
+    scanTool.includes("Sheet center lines") && scanTool.includes("lastSnap"),
+    "the user asked for guides by default — faint always, strong on snap"
+  );
+  check(
+    "no clutter badge overlays the document",
+    !scanTool.includes("function drawBadge"),
+    "zero-badge policy — canvas stays completely clean"
+  );
+  check(
+    "export draws the ID card at a fixed physical size",
+    scanTool.includes("ID_CARD_MM") && scanTool.includes('"id-card"'),
+    "not a ratio of the paper"
+  );
+  check(
+    "export uses the free-layout rect, not a margin box",
+    scanTool.includes("rectForPagePt(page, pageWidth, pageHeight"),
+    "what-you-see-is-what-you-export: preview rect drives drawImage"
+  );
+  check(
+    "preset choice survives tab switches",
+    scanTool.includes('"scan-preset"'),
+    "persisted like the tone mode"
+  );
+}
+
+console.log("\nscan result view — sticky across pages, instant on edits");
+{
+  const refreshBody = scanTool.slice(scanTool.indexOf("function refresh()"), scanTool.indexOf("function syncOutputLabel"));
+  check(
+    "navigation restores the result view instead of flashing corners",
+    refreshBody.includes("ensureResultView"),
+    "the preview button is global but bitmaps are per-page"
+  );
+  const ensureBody = scanTool.slice(scanTool.indexOf("async function ensureResultView"), scanTool.indexOf("async function run()"));
+  check(
+    "fresh pages render behind the progress overlay",
+    ensureBody.includes("startProgress") && ensureBody.includes("renderResult(page)")
+  );
+  check(
+    "cached pages short-circuit with no overlay",
+    ensureBody.includes("resultKey === stampOf(page)")
+  );
+  check(
+    "overlapping renders are sequenced — only the latest wins",
+    ensureBody.includes("resultViewSeq")
+  );
+  check(
+    "a failed render steps back to the original",
+    ensureBody.includes("showingResult = false"),
+    "the button must never stay pressed over the corners"
+  );
+  const dirtyBody = scanTool.slice(scanTool.indexOf("function markDirty"), scanTool.indexOf("async function refreshResultPreview"));
+  check(
+    "hand edits drop the cached result for instant feedback",
+    dirtyBody.includes("invalidateResult(page)"),
+    "keeping the stale bitmap hid the edit for seconds while the worker recomputed"
+  );
+  const rotateAt = scanTool.indexOf('scan-rotate")?.addEventListener');
+  const modeAt = scanTool.indexOf('name="scan-mode"', rotateAt);
+  check(
+    "rotate drops the cached result (no stale seconds)",
+    rotateAt >= 0 && modeAt > rotateAt && scanTool.slice(rotateAt, modeAt).includes("invalidateResult(page)")
+  );
+  const paperAt = scanTool.indexOf('"scan-page", "scan-orient"', modeAt);
+  check(
+    "tone changes drop the cached result (no stale seconds)",
+    modeAt >= 0 && paperAt > modeAt && scanTool.slice(modeAt, paperAt).includes("invalidateResult(page)")
+  );
+  const fullBody = scanTool.slice(scanTool.indexOf("function useFullFrame"), scanTool.indexOf("Races a long stage"));
+  check(
+    "full-frame drops the cached result and live-updates in result mode",
+    fullBody.includes("invalidateResult(page)") && fullBody.includes("refreshResultPreview")
+  );
+  const debouncedBody = scanTool.slice(
+    scanTool.indexOf("async function refreshResultPreview"),
+    scanTool.indexOf("async function ensureResultView")
+  );
+  check(
+    "a debounced re-render never draws over a flipped page",
+    debouncedBody.includes("current() !== page")
+  );
+  check(
+    "overlapping debounced refreshes are sequenced — only the latest paints",
+    debouncedBody.includes("previewSeq"),
+    "a fast second edit must win over an in-flight first render"
+  );
+  check(
+    "a superseded worker output never overwrites fresh edits",
+    scanTool.includes("stampOf(page) !== stamp"),
+    "an older render finishing late must drop its pixels, not paint them"
+  );
+  check(
+    "fresh results repaint the rail, not just the stage",
+    debouncedBody.includes("renderStrip()"),
+    "the side rail must mirror the new result in the same frame"
+  );
+}
+
+console.log("\nscan rail — mirrors the stage preview");
+{
+  const stripStart = scanTool.indexOf("function renderStrip");
+  const stripEnd = scanTool.indexOf("function syncStripSortable");
+  const stripBody = stripStart >= 0 && stripEnd > stripStart ? scanTool.slice(stripStart, stripEnd) : "";
+  check(
+    "rail shows the result bitmap while the stage previews it",
+    stripBody.includes("showingResult && page.result") && stripBody.includes("page.result : page.display"),
+    "what the main preview shows must appear in the side rail too"
+  );
+  check(
+    "mirrored thumbs reuse the baked bitmap without double transforms",
+    stripBody.includes("mirrored ? 0") && stripBody.includes('mirrored ? "original"'),
+    "warp/rotate/tone are already baked into the result — re-applying would distort it"
+  );
+  check(
+    "rail cache key tracks the result bitmap and the view mode",
+    stripBody.includes("resultKey") && stripBody.includes('"r" : "o"'),
+    "a fresh result must rebuild thumbs instead of reusing the original ones"
+  );
+  const toggleBody = scanTool.slice(
+    scanTool.indexOf("async function toggleResultPreview"),
+    scanTool.indexOf("async function run()")
+  );
+  check(
+    "toggling the preview repaints the rail in the same frame",
+    toggleBody.includes("renderStrip()"),
+    "flipping معاينة must swap every thumb between original and result"
+  );
+}
+
+console.log("\nscan page — ID preset shows its final shape live");
+{
+  const drawStart = scanTool.indexOf("if (!cropOpen && page.result)");
+  const drawBody = drawStart >= 0 ? scanTool.slice(drawStart, drawStart + 3400) : "";
+  check(
+    "final preview mirrors the export free-layout rect",
+    drawBody.includes("rectForPagePt(page, sheet.paperW, sheet.paperH") &&
+      scanTool.includes("Photoshop-like"),
+    "choosing the card must redraw the sheet with the fixed-size card, not the fill layout"
+  );
+  check(
+    "auto rect keeps the fixed-size ID card outside fit",
+    scanTool.includes("function autoPaperRect") &&
+      scanTool.includes('currentPreset() === "id-card"') &&
+      scanTool.includes("ID_CARD_MM"),
+    "fit keeps its own sheet — the card size applies to fixed paper like the export"
+  );
+  check(
+    "preview draws selection handles on fixed paper",
+    drawBody.includes("Selection frame + corner handles"),
+    "the free-layout affordance must be visible on the sheet"
+  );
+  const setupBody = scanTool.slice(scanTool.indexOf("setup()"), scanTool.indexOf("enter: refresh"));
+  // The preset radio appears several times (default + restore + listener):
+  // the change listener is the LAST block mentioning it inside setup().
+  const presetParts = setupBody.split('input[name="scan-preset"]');
+  const presetBody = presetParts.length > 1 ? presetParts[presetParts.length - 1].slice(0, 900) : "";
+  check(
+    "preset choice redraws the sheet immediately",
+    presetBody.includes("scheduleDraw()"),
+    "selecting fill/card must repaint instead of changing nothing"
+  );
+  check(
+    "preset choice jumps to layout mode immediately",
+    presetBody.includes('setViewMode("layout")'),
+    "paper layout is only visible in the result/layout view — selecting it must switch to layout"
+  );
+  check(
+    "preset switch reuses the cached bitmap (no worker re-render)",
+    !presetBody.includes("invalidateResult(page)"),
+    "stampOf ignores the preset — only the placement changes"
   );
 }
 

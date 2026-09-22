@@ -7,7 +7,7 @@ import { confirmDiscard } from "../ui/dialog.js";
 import { endProgress, startProgress, throwIfCancelled, toast, updateProgress } from "../ui/feedback.js";
 import { wireIntake } from "../ui/intake.js";
 import { setName, setRunEnabled, setSource, setState } from "../ui/titleblock.js";
-import { reportFailure, reportSave, tabTitle, uid } from "./shared.js";
+import { reportFailure, reportSave, tabTitle, uid, confirmLarge, confirmHeavyFile } from "./shared.js";
 
 /** @type {Array<{ id: string; name: string; bytes: Uint8Array; pages: number; size: number; thumbUrl: string; password: string }>} */
 let items = [];
@@ -72,6 +72,7 @@ async function add(files) {
       throwIfCancelled();
       await yieldToUi();
       updateProgress({ percent: (index / files.length) * 100, detail: file.name });
+      if (!(await confirmHeavyFile(file.size, file.name))) continue;
       const bytes = await readBytes(file);
       const unlocked = await resolvePassword(bytes, file.name);
       if (!unlocked) continue;
@@ -90,7 +91,7 @@ async function add(files) {
     }
     if (items.length === 1) toast("أضف ملفاً آخر لبدء الدمج.", "info");
   } catch (error) {
-    reportFailure(error, "تعذّر فتح أحد الملفات.");
+    reportFailure(error, "تعذّر فتح أحد الملفات.", { retry: () => acceptFiles(files) });
   } finally {
     endProgress();
     refresh();
@@ -124,6 +125,7 @@ async function run() {
     toast("أضف ملفين على الأقل للدمج.", "info");
     return;
   }
+  if (!(await confirmLarge(totals().pages, "دمج الملفات"))) return;
   const { PDFDocument } = lib();
 
   setState("busy");
@@ -146,7 +148,7 @@ async function run() {
     if (written) saved = true;
     reportSave(written, `تم دمج ${items.length} ملفات في مستند واحد.`);
   } catch (error) {
-    reportFailure(error, "تعذّر الدمج.");
+    reportFailure(error, "تعذّر الدمج.", { retry: () => run() });
   } finally {
     endProgress();
   }

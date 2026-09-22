@@ -287,6 +287,7 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
   const uiSrc = norm(await readFile(path.join(ROOT, "assets/js/tools/edit/ui.js"), "utf8"));
   const appSrc = norm(await readFile(path.join(ROOT, "assets/js/tools/edit/app.js"), "utf8"));
   const boardSrc = norm(await readFile(path.join(ROOT, "assets/js/tools/edit/board.js"), "utf8"));
+  const flattenSrc = norm(await readFile(path.join(ROOT, "assets/js/tools/edit/flatten.js"), "utf8"));
 
   const returnBlock = uiSrc.match(/return\s*\{([\s\S]*?)\};\s*\n\}/);
   check("buildUi return block is parseable", Boolean(returnBlock));
@@ -320,6 +321,17 @@ console.log("\nedit ui wiring (app.js must only touch refs buildUi() returns)");
     panels.join(",")
   );
   check("no rect/ellipse/triangle tool radios remain", !/name="edit-tool"[^>]*value="(rect|ellipse|triangle)"/.test(uiSrc));
+  check("no line/arrow tool radios either (shapes panel only)", !/name="edit-tool"[^>]*value="(line|arrow)"/.test(uiSrc));
+  check("shape figures include line and arrow", /name="edit-shape"[^>]*value="line"/.test(uiSrc) && /name="edit-shape"[^>]*value="arrow"/.test(uiSrc));
+  check("line/arrow get a crosshair cursor", /\.edit-layer\[data-tool="line"\]/.test(uiSrc) && /\.edit-layer\[data-tool="arrow"\]/.test(uiSrc));
+  check("shape kind mapping covers line/arrow", /value === "line" \|\| value === "arrow" \? value : "rect"/.test(appSrc));
+  check("line/arrow resolve as board tools", /value === "line" \|\| value === "arrow"\) return value/.test(appSrc));
+  check("line/arrow open the shapes panel", /value === "arrow" \|\| value === "shapes"\) return "shapes"/.test(appSrc));
+  check("layers name lines and arrows", /return "خط"/.test(appSrc) && /return "سهم"/.test(appSrc));
+  check("board drag-creates line/arrow shafts", /tool === "line" \|\| tool === "arrow"/.test(boardSrc) && /buildGhostLine/.test(boardSrc) && /paintGhostLine/.test(boardSrc));
+  check("board previews shafts from their endpoints", /function lineSvg/.test(boardSrc) && /arrowHeadPoints/.test(boardSrc));
+  check("flatten draws shafts as stroked lines", /obj\.kind === "line" \|\| obj\.kind === "arrow"/.test(flattenSrc) && /page\.drawLine\(shaft\)/.test(flattenSrc));
+  check("flatten fills arrowheads, not boxes", /arrowHeadPoints/.test(flattenSrc) && /page\.drawSvgPath\(svgPath\(head, true\)/.test(flattenSrc));
   check("no usage-instruction text in the edit template", !/(يظهر فوراً|اسحب الزوايا|لطيفة|💡|لطبقة فوق|الناتج PDF)/.test(uiSrc));
   check("image is a direct action button, not a radio", /id="edit-image-add"[^>]*class="edit-toolbtn"/.test(uiSrc) && !/name="edit-tool"[^>]*value="image"/.test(uiSrc));
   const toolbtnCss = (uiSrc.match(/\.edit-toolbtn\s*\{([\s\S]*?)\}/) || [])[1] || "";

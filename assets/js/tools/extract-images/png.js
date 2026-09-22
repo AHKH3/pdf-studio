@@ -2,6 +2,7 @@
  * Store-only PNG writer. Scanlines use filter 0; DEFLATE comes from the
  * browser so this stays free of extra dependencies.
  */
+import { disposeCanvas } from "../../dom.js";
 
 const CRC_TABLE = (() => {
   const table = new Uint32Array(256);
@@ -123,8 +124,7 @@ async function encodePngViaCanvas(pixels, width, height, channels) {
   }
   ctx.putImageData(frame, 0, 0);
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
-  canvas.width = 0;
-  canvas.height = 0;
+  disposeCanvas(canvas);
   if (!blob) throw new Error("png");
   return new Uint8Array(await blob.arrayBuffer());
 }

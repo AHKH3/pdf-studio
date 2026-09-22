@@ -15,6 +15,21 @@ export const THEME_STORAGE_KEY = "pdf-studio-theme";
 /** Above this the page grid renders thumbnails lazily and warns before bulk work. */
 export const LARGE_DOCUMENT_PAGES = 120;
 
+/** Above this byte size the app warns before loading/processing (AHK-63). */
+export const LARGE_FILE_BYTES = 100 * 1024 * 1024;
+
+/**
+ * Pure gate for the large-input warning (pages OR bytes trip it).
+ * Kept here so Node tests can cover it without DOM.
+ * @param {number} [sizeBytes]
+ * @param {number} [pageCount]
+ */
+export function shouldWarnLargeFile(sizeBytes = 0, pageCount = 0) {
+  return (
+    Number(sizeBytes) >= LARGE_FILE_BYTES || Number(pageCount) >= LARGE_DOCUMENT_PAGES
+  );
+}
+
 /** Rendered page thumbnails held in memory at once, per open document. */
 export const THUMB_CACHE_LIMIT = 140;
 

@@ -545,7 +545,9 @@ const CSS = `
 .edit-layer[data-tool="text"] { cursor: text; }
 .edit-layer[data-tool="rect"],
 .edit-layer[data-tool="ellipse"],
-.edit-layer[data-tool="triangle"] { cursor: crosshair; }
+.edit-layer[data-tool="triangle"],
+.edit-layer[data-tool="line"],
+.edit-layer[data-tool="arrow"] { cursor: crosshair; }
 
 /* pages rail */
 .edit-pages { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-2); display: flex; flex-direction: column; gap: var(--space-2); }
@@ -730,6 +732,8 @@ export function buildUi(root) {
               <label><input type="radio" name="edit-shape" value="rect" checked /><span class="edit-shapefig"><svg viewBox="0 0 32 26" aria-hidden="true"><rect x="4" y="5" width="24" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/></svg><span class="sr-only">مستطيل</span></span></label>
               <label><input type="radio" name="edit-shape" value="ellipse" /><span class="edit-shapefig"><svg viewBox="0 0 32 26" aria-hidden="true"><ellipse cx="16" cy="13" rx="13" ry="9" fill="none" stroke="currentColor" stroke-width="2.5"/></svg><span class="sr-only">دائرة</span></span></label>
               <label><input type="radio" name="edit-shape" value="triangle" /><span class="edit-shapefig"><svg viewBox="0 0 32 26" aria-hidden="true"><polygon points="16,4 4,23 28,23" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/></svg><span class="sr-only">مثلث</span></span></label>
+              <label><input type="radio" name="edit-shape" value="line" /><span class="edit-shapefig"><svg viewBox="0 0 32 26" aria-hidden="true"><line x1="5" y1="21" x2="27" y2="5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span class="sr-only">خط</span></span></label>
+              <label><input type="radio" name="edit-shape" value="arrow" /><span class="edit-shapefig"><svg viewBox="0 0 32 26" aria-hidden="true"><line x1="5" y1="21" x2="24" y2="7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><polygon points="27,4 19,5 25,12" fill="currentColor"/></svg><span class="sr-only">سهم</span></span></label>
             </span>
             <span class="edit-sep" aria-hidden="true"></span>
             <span class="field"><span class="field__label">النمط</span>

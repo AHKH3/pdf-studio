@@ -33,7 +33,43 @@ export function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (char) => ESCAPES[char]);
 }
 
-/** Lets the browser paint between heavy steps. */
+/**
+ * Lets the browser paint between heavy steps.
+ * في وضع الاختبار الخلفي (نافذة مخفية) قد لا يطلق requestAnimationFrame
+ * أبدًا، فنتسلح بمهلة احتياطية حتى لا يعلق التحميل — وفي الوضع المرئي
+ * يفوز rAF كالمعتاد ولا يتغير أي سلوك.
+ */
 export function yieldToUi() {
-  return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (!settled) {
+        settled = true;
+        resolve();
+      }
+    };
+    try {
+      requestAnimationFrame(() => requestAnimationFrame(finish));
+    } catch {
+      finish();
+    }
+    setTimeout(finish, 100);
+  });
+}
+
+/**
+ * Frees a canvas' GPU bitmap immediately (AHK-63 memory guard).
+ * Setting width/height releases the backing store; removing the node
+ * drops the last reference so long sessions do not leak.
+ * @param {HTMLCanvasElement | null | undefined} canvas
+ */
+export function disposeCanvas(canvas) {
+  if (!canvas) return;
+  try {
+    canvas.width = 0;
+    canvas.height = 0;
+    canvas.remove();
+  } catch {
+    /* never throw from cleanup */
+  }
 }

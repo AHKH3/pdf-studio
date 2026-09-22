@@ -180,6 +180,81 @@ export async function confirmLargeDocument(pageCount, verb, threshold) {
   });
 }
 
+export async function confirmLargeFile(sizeBytes, threshold, label) {
+  if (!(Number(sizeBytes) >= threshold)) return true;
+  const mb = Math.max(1, Math.round(Number(sizeBytes) / (1024 * 1024)));
+  return confirmAction({
+    title: "ملف ضخم",
+    desc: `حجم «${label || "الملف"}» حوالي ${mb} ميجابايت. المعالجة قد تبطئ الجهاز — يمكنك المتابعة مع مؤشر تقدم وإلغاء آمن.`,
+    confirmLabel: "متابعة",
+    cancelLabel: "رجوع"
+  });
+}
+
+/**
+ * Error modal with retry / back-home actions (AHK-63).
+ * Resolves to what the user picked; Escape or backdrop means "close".
+ * @param {object} [options]
+ * @param {string} [options.title]
+ * @param {string} [options.desc]
+ * @param {string} [options.retryLabel]
+ * @param {string} [options.homeLabel]
+ * @param {boolean} [options.showRetry]
+ * @param {boolean} [options.showHome]
+ * @returns {Promise<"retry" | "home" | "close">}
+ */
+export function showError(options = {}) {
+  return new Promise((resolve) => {
+    const titleId = nextId("t");
+    const descId = nextId("d");
+    let closed = false;
+
+    const finish = (value) => {
+      if (closed) return;
+      closed = true;
+      close();
+      resolve(value);
+    };
+
+    const actions = [];
+    if (options.showHome !== false) {
+      const home = document.createElement("button");
+      home.type = "button";
+      home.className = "btn";
+      home.textContent = options.homeLabel || "العودة للرئيسية";
+      home.addEventListener("click", () => finish("home"));
+      actions.push(home);
+    }
+    if (options.showRetry !== false) {
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.className = "btn btn--act";
+      retry.textContent = options.retryLabel || "إعادة المحاولة";
+      retry.addEventListener("click", () => finish("retry"));
+      actions.push(retry);
+    }
+    if (!actions.length) {
+      const closeBtn = document.createElement("button");
+      closeBtn.type = "button";
+      closeBtn.className = "btn btn--act";
+      closeBtn.textContent = "إغلاق";
+      closeBtn.addEventListener("click", () => finish("close"));
+      actions.push(closeBtn);
+    }
+
+    const close = openOverlay({
+      titleId,
+      descId,
+      title: options.title || "حدث خطأ",
+      desc: options.desc || "تعذّر إتمام العملية.",
+      body: [],
+      actions,
+      onEscape: () => finish("close"),
+      focus: actions[actions.length - 1]
+    });
+  });
+}
+
 /**
  * @param {{ retry?: boolean; fileName?: string }} [options]
  * @returns {Promise<string | null>}

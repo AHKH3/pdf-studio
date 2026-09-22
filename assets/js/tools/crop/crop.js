@@ -235,7 +235,7 @@ async function load(files) {
     await showPage(1);
     syncChrome();
   } catch (error) {
-    reportFailure(error, "تعذّر فتح المستند.");
+    reportFailure(error, "تعذّر فتح المستند.", { retry: () => load(files) });
   } finally {
     endProgress();
   }
@@ -357,7 +357,7 @@ export async function run() {
       applyAll ? `تم اقتصاص ${indexes.length} صفحة.` : `تم اقتصاص الصفحة ${pageNumber}.`
     );
   } catch (error) {
-    reportFailure(error, "تعذّر اقتصاص الملف.");
+    reportFailure(error, "تعذّر اقتصاص الملف.", { retry: () => run() });
   } finally {
     endProgress();
   }

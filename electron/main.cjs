@@ -30,6 +30,16 @@ function argvHasFlag(argv, flag) {
   return Array.isArray(argv) && argv.includes(flag);
 }
 
+/**
+ * وضع الاختبار الخلفي: عند وجود PDF_STUDIO_TEST أو PDF_STUDIO_HEADLESS
+ * تبقى النافذة مخفية تمامًا (لا show ولا focus ولا زر تاسكبار) حتى تعمل
+ * scripts/test-*.mjs في الخلفية دون أن تقفز في وجه المستخدم.
+ * الرندر يعمل عادي مخفيًا بفضل disable-renderer-backgrounding.
+ */
+function isHeadlessTest() {
+  return Boolean(process.env.PDF_STUDIO_TEST || process.env.PDF_STUDIO_HEADLESS);
+}
+
 /** Everything the renderer is allowed to fetch. Anything else 404s. */
 const SERVED_PREFIXES = ["assets/", "index.html"];
 
@@ -305,15 +315,33 @@ async function runTestProbe(win) {
               dirty[id] = "missing-button";
               continue;
             }
-            btn.click();
-            await new Promise((r) => setTimeout(r, 200));
-            const leave = document.querySelector(".progress.is-open .btn--act");
-            if (leave) {
-              leave.click();
-              await new Promise((r) => setTimeout(r, 400));
+            const tPre = Date.now();
+            while (document.querySelector(".progress.is-open") && Date.now() - tPre < 15000) {
+              await new Promise((r) => setTimeout(r, 250));
             }
-            // انتظر استقرار التحميل قبل قراءة dirty — التحميل البطيء يتجاوز 900ms.
-            // يخرج عند ظهور dirty، أو عند إغلاق overlay بعد فتحه، أو بعد 3s خمول بلا overlay.
+            btn.click();
+            let leaveClicked = false;
+            const tLeave = Date.now();
+            while (Date.now() - tLeave < 5000) {
+              const lv = document.querySelector(".progress.is-open .btn--act");
+              if (lv) {
+                lv.click();
+                leaveClicked = true;
+                break;
+              }
+              const view = document.getElementById("view-" + id);
+              if (view && !view.hidden) break;
+              await new Promise((r) => setTimeout(r, 150));
+            }
+            if (leaveClicked) {
+              const tPost = Date.now();
+              while (document.querySelector(".progress.is-open") && Date.now() - tPost < 5000) {
+                await new Promise((r) => setTimeout(r, 100));
+              }
+              while (document.getElementById("view-" + id)?.hidden && Date.now() - tPost < 5000) {
+                await new Promise((r) => setTimeout(r, 100));
+              }
+            }
             const t0 = Date.now();
             let seenOverlay = false;
             while (Date.now() - t0 < 12000) {
@@ -321,7 +349,7 @@ async function runTestProbe(win) {
               const live = typeof __pdfStudioDirtyToolIds === "function" ? __pdfStudioDirtyToolIds() : [];
               if (live.includes(id)) break;
               if (seenOverlay && !document.querySelector(".progress.is-open")) break;
-              if (!seenOverlay && Date.now() - t0 > 3000) break;
+              if (!seenOverlay && Date.now() - t0 > 6000) break;
               await new Promise((r) => setTimeout(r, 250));
             }
             await new Promise((r) => setTimeout(r, 300));
@@ -522,6 +550,8 @@ async function createWindow() {
     minWidth: 940,
     minHeight: 640,
     show: false,
+    // في وضع الاختبار: لا زر تاسكبار ولا وميض — الاختبار يعمل مخفيًا تمامًا.
+    skipTaskbar: isHeadlessTest(),
     backgroundColor: "#FFFFFF",
     autoHideMenuBar: true,
     titleBarStyle: "hidden",
@@ -550,16 +580,23 @@ async function createWindow() {
   mainWindow = new BrowserWindow(winOpts);
   attachCloseGuard(mainWindow);
 
-  // احتياط: إذا لم يطلق ready-to-show خلال 3 ثوانٍ (خطأ CSP/JS)، أظهر النافذة قسراً حتى لا يبدو التطبيق متوقفاً
-  const showFallback = setTimeout(() => {
-    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
-      console.warn("ready-to-show لم يطلق — إظهار قسري للنافذة");
-      mainWindow.show();
-    }
-  }, 3500);
+  const headlessTest = isHeadlessTest();
+  let showFallback = null;
+  if (headlessTest) {
+    bootLog("headless-test — النافذة مخفية (لا show ولا focus)");
+  } else {
+    // احتياط: إذا لم يطلق ready-to-show خلال 3 ثوانٍ (خطأ CSP/JS)، أظهر النافذة قسراً حتى لا يبدو التطبيق متوقفاً
+    showFallback = setTimeout(() => {
+      if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
+        console.warn("ready-to-show لم يطلق — إظهار قسري للنافذة");
+        mainWindow.show();
+      }
+    }, 3500);
+  }
   mainWindow.once("ready-to-show", () => {
-    clearTimeout(showFallback);
+    if (showFallback) clearTimeout(showFallback);
     bootLog("ready-to-show");
+    if (headlessTest) return;
     if (!mainWindow.isDestroyed()) mainWindow.show();
   });
   mainWindow.webContents.on("did-fail-load", (_e, code, desc, url) => {
@@ -713,6 +750,7 @@ function shouldRequestLock() {
 }
 
 function focusMainWindow() {
+  if (isHeadlessTest()) return;
   const win = getMainWindow();
   if (!win) return;
   if (win.isMinimized()) win.restore();

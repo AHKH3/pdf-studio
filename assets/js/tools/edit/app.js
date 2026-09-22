@@ -102,7 +102,7 @@ export function syncChrome() {
 function activeShapeKind() {
   const picked = session.root?.querySelector('input[name="edit-shape"]:checked');
   const value = /** @type {HTMLInputElement | null} */ (picked)?.value;
-  return value === "ellipse" || value === "triangle" ? value : "rect";
+  return value === "ellipse" || value === "triangle" || value === "line" || value === "arrow" ? value : "rect";
 }
 
 function activeTool() {
@@ -111,7 +111,7 @@ function activeTool() {
   // Disarmed (the default): mouse-only, no creation gesture armed.
   if (!value) return "";
   if (value === "shapes") return activeShapeKind();
-  if (value === "rect" || value === "ellipse" || value === "triangle") return value;
+  if (value === "rect" || value === "ellipse" || value === "triangle" || value === "line" || value === "arrow") return value;
   if (value === "select" || value === "pen") return value;
   return "text";
 }
@@ -125,7 +125,7 @@ function activePanel() {
   const value = /** @type {HTMLInputElement | null} */ (picked)?.value || "";
   // Disarmed: the bulk/selection bar stays up (disabled while empty).
   if (!value) return "select";
-  if (value === "rect" || value === "ellipse" || value === "triangle" || value === "shapes") return "shapes";
+  if (value === "rect" || value === "ellipse" || value === "triangle" || value === "line" || value === "arrow" || value === "shapes") return "shapes";
   if (value === "select" || value === "pen" || value === "text") return value;
   return "select";
 }
@@ -290,6 +290,8 @@ function layerLabel(obj) {
   if (obj.type === "image") return obj.label ? `صورة: ${String(obj.label).slice(0, 16)}` : "صورة";
   if (obj.kind === "ellipse") return "دائرة";
   if (obj.kind === "triangle") return "مثلث";
+  if (obj.kind === "line") return "خط";
+  if (obj.kind === "arrow") return "سهم";
   return "مستطيل";
 }
 
@@ -516,7 +518,7 @@ function syncInspectorFromSelection() {
       ui.penColor.value = obj.color || "#1E3A8A";
       ui.penWeight.value = String(obj.strokeWidth || 2.2);
     } else if (obj?.type === "shape") {
-      const kind = obj.kind === "ellipse" || obj.kind === "triangle" ? obj.kind : "rect";
+      const kind = obj.kind === "ellipse" || obj.kind === "triangle" || obj.kind === "line" || obj.kind === "arrow" ? obj.kind : "rect";
       for (const input of session.root?.querySelectorAll('input[name="edit-shape"]') ?? []) {
         /** @type {HTMLInputElement} */ (input).checked = input.value === kind;
       }
@@ -574,8 +576,8 @@ function applySavedStyle() {
   const saved = loadStylePrefs();
   if (!ui || !saved) return;
   // The armed tool is never restored: every open starts mouse-only.
-  const shape = saved.shape === "ellipse" || saved.shape === "triangle" ? saved.shape : saved.tool;
-  if (shape === "rect" || shape === "ellipse" || shape === "triangle") {
+  const shape = saved.shape === "ellipse" || saved.shape === "triangle" || saved.shape === "line" || saved.shape === "arrow" ? saved.shape : saved.tool;
+  if (shape === "rect" || shape === "ellipse" || shape === "triangle" || shape === "line" || shape === "arrow") {
     const radio = session.root?.querySelector(`input[name="edit-shape"][value="${shape}"]`);
     if (radio instanceof HTMLInputElement) radio.checked = true;
   }
@@ -643,7 +645,11 @@ function shapePreviewSvg(kind, style) {
       ? `<ellipse cx="23" cy="17" rx="18" ry="12" ${attrs}/>`
       : kind === "triangle"
         ? `<polygon points="23,4 5,30 41,30" ${attrs}/>`
-        : `<rect x="6" y="5" width="34" height="24" rx="2" ${attrs}/>`;
+        : kind === "line"
+          ? `<line x1="6" y1="28" x2="40" y2="6" ${attrs} stroke-linecap="round"/>`
+          : kind === "arrow"
+            ? `<line x1="6" y1="27" x2="33" y2="10" ${attrs} stroke-linecap="round"/><polygon points="41,5 31,5 37,13" fill="${stroke}"/>`
+            : `<rect x="6" y="5" width="34" height="24" rx="2" ${attrs}/>`;
   return `<svg viewBox="0 0 46 34" aria-hidden="true">${body}</svg>`;
 }
 
@@ -1380,21 +1386,26 @@ export function mount(rootEl) {
           } else {
             const kind = activeShapeKind();
             const style = getStyle();
+            const isLine = kind === "line" || kind === "arrow";
             const width = Math.min(160, board.visualWidth * 0.3);
-            const height = kind === "ellipse" ? width * 0.64 : kind === "triangle" ? width * 0.75 : width * 0.6;
+            const height = kind === "ellipse" ? width * 0.64 : kind === "triangle" ? width * 0.75 : isLine ? Math.max(24, width * 0.2) : width * 0.6;
+            const cx = board.visualWidth / 2;
+            const cy = board.visualHeight / 2;
             pushHistory();
             createObject({
               type: "shape",
               kind,
-              x: board.visualWidth / 2 - width / 2,
-              y: board.visualHeight / 2 - height / 2,
+              x: cx - width / 2,
+              y: cy - height / 2,
               width,
               height,
               rotation: 0,
               fill: style.fill,
               fillOn: style.fillOn,
               stroke: style.stroke,
-              strokeWidth: style.strokeWidth
+              strokeWidth: isLine && !(style.strokeWidth > 0) ? 2.5 : style.strokeWidth,
+              // Centered horizontal shaft (same visibility rule as the drag path).
+              ...(isLine ? { points: [{ x: cx - width / 2, y: cy }, { x: cx + width / 2, y: cy }] } : null)
             });
           }
         }

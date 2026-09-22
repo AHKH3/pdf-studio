@@ -62,7 +62,7 @@ async function load(files) {
     setState("idle");
     renderReadout(0);
   } catch (error) {
-    reportFailure(error, "تعذّر فتح المستند.");
+    reportFailure(error, "تعذّر فتح المستند.", { retry: () => load(files) });
   } finally {
     endProgress();
   }
@@ -140,7 +140,7 @@ async function run() {
         : `الناتج ${humanSize(bytes.length)} — هذا المستند مضغوط أصلاً، جرّب مستوى أقوى.`
     );
   } catch (error) {
-    reportFailure(error, "تعذّر الضغط.");
+    reportFailure(error, "تعذّر الضغط.", { retry: () => run() });
   } finally {
     // Cancel throws mid-loop; the document must close on every exit path.
     await source?.destroy?.().catch(() => {});

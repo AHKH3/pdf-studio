@@ -139,7 +139,7 @@ async function load(files) {
     setState("idle", session.images.length ? undefined : "لا صور");
     refresh();
   } catch (error) {
-    reportFailure(error, "تعذّر استخراج الصور.");
+    reportFailure(error, "تعذّر استخراج الصور.", { retry: () => load(files) });
   } finally {
     endProgress();
   }
@@ -169,7 +169,7 @@ async function run() {
       target() === "folder" ? await saveFolder(files, stem) : await saveZip(files, stem);
     reportSave(saved, `تم حفظ ${files.length} صورة.`);
   } catch (error) {
-    reportFailure(error, "تعذّر حفظ الصور.");
+    reportFailure(error, "تعذّر حفظ الصور.", { retry: () => run() });
   }
 }
 

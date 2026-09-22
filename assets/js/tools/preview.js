@@ -1,4 +1,4 @@
-import { el } from "../dom.js";
+import { disposeCanvas, el } from "../dom.js";
 import { openDocument, pdfRenderContext } from "../pdf/core.js";
 
 /**
@@ -35,6 +35,7 @@ export class PagePreview {
       ctx.fillRect(0, 0, buffer.width, buffer.height);
       await page.render({ canvasContext: ctx, viewport }).promise;
       page.cleanup();
+      disposeCanvas(this.page);
       this.page = buffer;
 
       this.canvas.width = buffer.width;
@@ -64,6 +65,7 @@ export class PagePreview {
   }
 
   reset() {
+    disposeCanvas(this.page);
     this.page = null;
     this.pageWidth = 0;
     this.pageHeight = 0;

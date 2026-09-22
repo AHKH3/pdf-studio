@@ -131,7 +131,7 @@ async function load(files) {
     await preview.load(loaded.bytes, loaded.password);
     drawPreview();
   } catch (error) {
-    reportFailure(error, "تعذّر فتح المستند.");
+    reportFailure(error, "تعذّر فتح المستند.", { retry: () => load(files) });
   } finally {
     endProgress();
   }
@@ -212,7 +212,7 @@ async function run() {
     if (written) saved = true;
     reportSave(written, `تم ترقيم ${printed} صفحة.`);
   } catch (error) {
-    reportFailure(error, "تعذّر الترقيم.");
+    reportFailure(error, "تعذّر الترقيم.", { retry: () => run() });
   } finally {
     endProgress();
   }

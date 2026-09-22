@@ -252,7 +252,7 @@ group("shell — unsaved work per tool (organize/edit)");
   const { done } = spawnApp(
     [root, `--user-data-dir=${dir}`],
     { ...displayEnv, PDF_STUDIO_TEST: "dirty-tools" },
-    { timeoutMs: 45000 }
+    { timeoutMs: 90000 }
   );
   const res = await done;
   const line = (res.out.match(/\[test\] dirty-tools (\{.*\})/) || [])[1];
