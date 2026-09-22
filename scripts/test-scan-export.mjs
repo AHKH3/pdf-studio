@@ -512,18 +512,19 @@ console.log("\nscan result view — sticky across pages, instant on edits");
   const rotateAt = scanTool.indexOf('scan-rotate")?.addEventListener');
   const modeAt = scanTool.indexOf('name="scan-mode"', rotateAt);
   check(
-    "rotate drops the cached result (no stale seconds)",
+    "rotate marks the cached result stale (mode never flickers)",
     rotateAt >= 0 && modeAt > rotateAt && scanTool.slice(rotateAt, modeAt).includes("invalidateResult(page)")
   );
   const paperAt = scanTool.indexOf('"scan-page", "scan-orient"', modeAt);
   check(
-    "tone changes drop the cached result (no stale seconds)",
+    "tone changes mark the cached result stale (mode never flickers)",
     modeAt >= 0 && paperAt > modeAt && scanTool.slice(modeAt, paperAt).includes("invalidateResult(page)")
   );
   const fullBody = scanTool.slice(scanTool.indexOf("function useFullFrame"), scanTool.indexOf("Races a long stage"));
   check(
     "full-frame drops the cached result and live-updates in result mode",
-    fullBody.includes("invalidateResult(page)") && fullBody.includes("refreshResultPreview")
+    fullBody.includes("invalidateResult(page)") &&
+      (fullBody.includes("refreshResultPreview") || fullBody.includes("schedulePreviewRefresh"))
   );
   const debouncedBody = scanTool.slice(
     scanTool.indexOf("async function refreshResultPreview"),
@@ -623,6 +624,67 @@ console.log("\nscan page — ID preset shows its final shape live");
     !presetBody.includes("invalidateResult(page)"),
     "stampOf ignores the preset — only the placement changes"
   );
+}
+
+console.log("\nscan result mode — edits never flash the crop UI");
+{
+  const invStart = scanTool.indexOf("function invalidateResult");
+  const invEnd = scanTool.indexOf("function markDirty", invStart);
+  const invBody = invStart >= 0 && invEnd > invStart ? scanTool.slice(invStart, invEnd) : "";
+  check(
+    "result-mode edits keep the stale bitmap until the fresh render lands",
+    invBody.includes("showingResult") && invBody.includes('page.resultKey = ""'),
+    "tone/rotate nulled the bitmap, so draw() fell back to crop corners for a frame"
+  );
+  check(
+    "leaving result mode still frees the bitmap",
+    invBody.includes("page.result?.close()") && invBody.includes("page.result = null"),
+    "crop-mode edits must hard-drop the hidden preview"
+  );
+  const flips = ["showingResult = false", "viewMode ="];
+  const rotAt = scanTool.indexOf('scan-rotate")?.addEventListener');
+  const toneAt = rotAt >= 0 ? scanTool.indexOf('name="scan-mode"', rotAt) : -1;
+  const presetAt = toneAt >= 0 ? scanTool.indexOf('name="scan-preset"', toneAt) : -1;
+  const bodies = {
+    markDirty: scanTool.slice(scanTool.indexOf("function markDirty"), scanTool.indexOf("async function refreshResultPreview")),
+    fullFrame: scanTool.slice(scanTool.indexOf("function useFullFrame"), scanTool.indexOf("Races a long stage")),
+    rotate: rotAt >= 0 && toneAt > rotAt ? scanTool.slice(rotAt, toneAt) : "",
+    tone: toneAt >= 0 && presetAt > toneAt ? scanTool.slice(toneAt, presetAt) : ""
+  };
+  let strayFlip = "";
+  for (const [name, body] of Object.entries(bodies)) {
+    if (!body) {
+      strayFlip = `${name} body not found — test anchors are stale`;
+      break;
+    }
+    for (const token of flips) {
+      if (body.includes(token)) {
+        strayFlip = `${name} contains "${token}"`;
+        break;
+      }
+    }
+    if (strayFlip) break;
+  }
+  check(
+    "tone/rotate/full-frame/corner edits never switch the view mode themselves",
+    strayFlip === "",
+    strayFlip || "an edit flipped the mode instead of refreshing inside it"
+  );
+  check(
+    "discrete clicks recompute immediately (no drag debounce)",
+    scanTool.includes("schedulePreviewRefresh(true)"),
+    "tone/rotate/full-frame must not wait the 600ms drag debounce"
+  );
+  {
+    const dirtyStart = scanTool.indexOf("function markDirty");
+    const dirtyEnd = scanTool.indexOf("function schedulePreviewRefresh", dirtyStart);
+    const dirtyBody = dirtyStart >= 0 && dirtyEnd > dirtyStart ? scanTool.slice(dirtyStart, dirtyEnd) : "";
+    check(
+      "continuous corner drags keep the 600ms debounce",
+      dirtyBody.includes("schedulePreviewRefresh(false)"),
+      "drag bursts must coalesce instead of queueing a worker run per move"
+    );
+  }
 }
 
 console.log(`\n${checks - failures}/${checks} checks passed`);

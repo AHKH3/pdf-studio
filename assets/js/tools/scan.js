@@ -355,6 +355,19 @@ function draw() {
         ctx.strokeStyle = "rgba(8, 9, 10, 0.45)";
         ctx.stroke();
       }
+      // Edge handles (free-layout affordance): squares on the side midpoints
+      // for single-axis resize (width OR height), like Photoshop's transform.
+      const half = 9 * scaleDpr;
+      for (const [hx, hy] of [[ix + iw / 2, iy], [ix + iw, iy + ih / 2], [ix + iw / 2, iy + ih], [ix, iy + ih / 2]]) {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(hx - half, hy - half, half * 2, half * 2);
+        ctx.lineWidth = 3 * scaleDpr;
+        ctx.strokeStyle = ink;
+        ctx.strokeRect(hx - half, hy - half, half * 2, half * 2);
+        ctx.lineWidth = Math.max(1, scaleDpr);
+        ctx.strokeStyle = "rgba(8, 9, 10, 0.45)";
+        ctx.strokeRect(hx - half - 1.5 * scaleDpr, hy - half - 1.5 * scaleDpr, (half + 1.5 * scaleDpr) * 2, (half + 1.5 * scaleDpr) * 2);
+      }
       ctx.restore();
     }
     return;
@@ -444,23 +457,28 @@ function clampCorner(page, point) {
 }
 
 /**
- * Instant-edit invariant: any edit that changes the final pixels drops the
- * cached result bitmap right away, so the stage AND the rail fall back to
- * the original (with the edit applied) on the very next frame — never a
- * stale result lingering for seconds while the worker recomputes behind it.
- * Callers then debounce refreshResultPreview() to come back to the result.
+ * Result-mode invariant: the visible mode never changes unless the user
+ * changes it — not even for a frame. While the result sheet is on screen
+ * (layout/preview), an edit only marks the cached bitmap stale (clears the
+ * key so the worker recomputes) and keeps showing it until the fresh
+ * bitmap replaces it. Hard-drop (close + null) happens only in crop mode,
+ * where no result is displayed anyway.
  */
 function invalidateResult(page) {
+  if (showingResult && page.result) {
+    page.resultKey = "";
+    return;
+  }
   page.result?.close();
   page.result = null;
   page.resultKey = "";
 }
 
 function markDirty(page, message) {
-  // Instant feedback first: the cached result is dropped (see
-  // invalidateResult) so the stage shows the edit on the next frame.
   // A hand edit means the user takes ownership of these corners — even
   // mid-review, so a later cancel can never eat hand-drawn work.
+  // In result mode the stale sheet stays on screen (see invalidateResult)
+  // until the debounced refresh lands — the view mode never flickers.
   page.review = null;
   page.accepted = true;
   invalidateResult(page);
@@ -470,9 +488,22 @@ function markDirty(page, message) {
   scheduleDraw();
   if (showingResult) {
     updateMeta("جارٍ تحديث المعاينة…");
-    clearTimeout(previewTimer);
-    previewTimer = setTimeout(() => void refreshResultPreview(), 600);
+    schedulePreviewRefresh(false);
   }
+}
+
+/**
+ * Debounced result refresh. Corner drags fire continuously, so they wait
+ * 600ms after the last move; discrete clicks (tone/rotate/full-frame) pass
+ * immediate=true and recompute right away — no fixed wait.
+ */
+function schedulePreviewRefresh(immediate) {
+  clearTimeout(previewTimer);
+  if (immediate) {
+    void refreshResultPreview();
+    return;
+  }
+  previewTimer = setTimeout(() => void refreshResultPreview(), 600);
 }
 
 /** Re-renders the live final-shape preview after an edit (debounced). */
@@ -563,7 +594,7 @@ function paperPointFromEvent(event, geom) {
   };
 }
 
-/** "move" inside the image, a corner id on a handle, or null outside. */
+/** "move" inside the image, a corner/edge id on a handle, or null outside. */
 function layoutHitMode(point, geom) {
   const tol = 14 * (window.devicePixelRatio || 1);
   const ix = geom.px + geom.rect.x * geom.fit;
@@ -574,11 +605,17 @@ function layoutHitMode(point, geom) {
   for (const [mode, [hx, hy]] of Object.entries(corners)) {
     if (Math.hypot(point.cx - hx, point.cy - hy) <= tol) return mode;
   }
+  // Edge midpoints (single-axis resize, Photoshop-like): n = top, s = bottom,
+  // e = right, w = left in canvas coords.
+  const edges = { n: [ix + iw / 2, iy], e: [ix + iw, iy + ih / 2], s: [ix + iw / 2, iy + ih], w: [ix, iy + ih / 2] };
+  for (const [mode, [hx, hy]] of Object.entries(edges)) {
+    if (Math.hypot(point.cx - hx, point.cy - hy) <= tol) return mode;
+  }
   if (point.cx >= ix && point.cx <= ix + iw && point.cy >= iy && point.cy <= iy + ih) return "move";
   return null;
 }
 
-/** Apply a layout drag (move / corner resize) and persist it on the page. */
+/** Apply a layout drag (move / corner / edge resize) and persist it on the page. */
 function moveLayoutDrag(event) {
   const drag = layoutDrag;
   if (!drag) return;
@@ -612,6 +649,38 @@ function moveLayoutDrag(event) {
       y: Math.max(0, Math.min(paperH - orig.h, ny)),
       w: orig.w,
       h: orig.h
+    };
+  } else if (drag.mode === "n" || drag.mode === "s" || drag.mode === "e" || drag.mode === "w") {
+    // Edge handles: single-axis resize (width OR height), always free —
+    // no aspect lock, exactly like Photoshop's side handles.
+    const x0 = orig.x;
+    const y0 = orig.y;
+    const x1 = orig.x + orig.w;
+    const y1 = orig.y + orig.h;
+    let left = x0;
+    let bottom = y0;
+    let w = orig.w;
+    let h = orig.h;
+    if (drag.mode === "e") { w = (x1 + dx) - x0; }
+    else if (drag.mode === "w") { left = x0 + dx; w = x1 - left; }
+    else if (drag.mode === "n") { h = (y1 + dy) - y0; }
+    else { bottom = y0 + dy; h = y1 - bottom; }
+    if (drag.mode === "e" || drag.mode === "w") {
+      w = Math.max(MIN_PT, Math.min(paperW, w));
+      h = orig.h;
+      left = drag.mode === "e" ? x0 : x1 - w;
+      bottom = y0;
+    } else {
+      h = Math.max(MIN_PT, Math.min(paperH, h));
+      w = orig.w;
+      left = x0;
+      bottom = drag.mode === "n" ? y0 : y1 - h;
+    }
+    next = {
+      x: Math.max(0, Math.min(paperW - w, left)),
+      y: Math.max(0, Math.min(paperH - h, bottom)),
+      w,
+      h
     };
   } else {
     const x0 = orig.x;
@@ -656,8 +725,9 @@ function moveLayoutDrag(event) {
 
 /**
  * Cursor contract (follows the hovered capability, like edit/board.js):
- * grab over the image, diagonal arrows over corner handles, default over
- * empty paper, crosshair in cut mode. Cheap hit-test — no throttle needed.
+ * grab over the image, diagonal arrows over corner handles, straight
+ * arrows over edge handles, default over empty paper, crosshair in cut
+ * mode. Cheap hit-test — no throttle needed.
  */
 function updateHoverCursor(event) {
   if (!canvas || !event) return;
@@ -672,7 +742,9 @@ function updateHoverCursor(event) {
       const mode = layoutHitMode(paperPointFromEvent(event, geom), geom);
       if (mode === "move") canvas.style.cursor = "grab";
       else if (mode === "nw" || mode === "se") canvas.style.cursor = "nwse-resize";
-      else if (mode) canvas.style.cursor = "nesw-resize";
+      else if (mode === "ne" || mode === "sw") canvas.style.cursor = "nesw-resize";
+      else if (mode === "n" || mode === "s") canvas.style.cursor = "ns-resize";
+      else if (mode === "e" || mode === "w") canvas.style.cursor = "ew-resize";
       else canvas.style.cursor = "default";
       return;
     }
@@ -707,7 +779,7 @@ function wireCanvas() {
             start: { x: point.x, y: point.y },
             savedLayout: page.layout ? { ...page.layout } : null
           };
-          canvas.style.cursor = mode === "move" ? "grabbing" : mode === "nw" || mode === "se" ? "nwse-resize" : "nesw-resize";
+          canvas.style.cursor = mode === "move" ? "grabbing" : mode === "nw" || mode === "se" ? "nwse-resize" : mode === "ne" || mode === "sw" ? "nesw-resize" : mode === "n" || mode === "s" ? "ns-resize" : mode === "e" || mode === "w" ? "ew-resize" : "nesw-resize";
           canvas.setPointerCapture(event.pointerId);
           canvas.focus({ preventScroll: true });
           return;
@@ -1499,11 +1571,10 @@ function useFullFrame() {
   renderStrip();
   updateMeta(showingResult ? "الصورة كاملة — جارٍ تحديث المعاينة…" : "الصورة كاملة بدون قص.");
   scheduleDraw();
-  // Instant original first, then the fresh result recomputes in the
-  // background while we stay in result mode.
+  // The stale sheet (if any) stays visible in result mode while the fresh
+  // result recomputes in the background — same mode throughout.
   if (showingResult) {
-    clearTimeout(previewTimer);
-    previewTimer = setTimeout(() => void refreshResultPreview(), 600);
+    schedulePreviewRefresh(true);
   }
 }
 
@@ -2011,8 +2082,7 @@ export const scanTool = {
       scheduleDraw();
       if (showingResult) {
         updateMeta("جارٍ تحديث المعاينة…");
-        clearTimeout(previewTimer);
-        previewTimer = setTimeout(() => void refreshResultPreview(), 600);
+        schedulePreviewRefresh(true);
       }
     });
 
@@ -2026,8 +2096,7 @@ export const scanTool = {
         scheduleDraw();
         if (showingResult) {
           updateMeta("جارٍ تحديث المعاينة…");
-          clearTimeout(previewTimer);
-          previewTimer = setTimeout(() => void refreshResultPreview(), 600);
+          schedulePreviewRefresh(true);
         }
       });
     }
