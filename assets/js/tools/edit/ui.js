@@ -680,6 +680,7 @@ export function buildUi(root) {
           </div>
           <span class="edit-toolbar__spacer"></span>
           <button id="edit-clear" type="button" class="btn btn--compact btn--ghost">${icon("icon-close")} إغلاق</button>
+          <button id="edit-print" type="button" class="btn btn--compact">${icon("icon-print")} طباعة</button>
           <button id="edit-save" type="button" class="btn btn--compact btn--act">حفظ</button>
         </div>
 
@@ -854,6 +855,7 @@ export function buildUi(root) {
     clearSel: root.querySelector("#edit-clear-sel"),
     remove: root.querySelector("#edit-delete"),
     save: root.querySelector("#edit-save"),
+    print: root.querySelector("#edit-print"),
     clear: root.querySelector("#edit-clear")
   };
 }

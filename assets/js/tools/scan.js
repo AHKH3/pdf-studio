@@ -4,6 +4,7 @@ import { baseName, filesKey, saveFile, saveFolder, withExtension } from "../lib/
 import { ensureDecodableImage } from "../lib/heic.js";
 import { bitmapToBytes } from "../lib/bitmap.js";
 import { lib } from "../pdf/core.js";
+import { printPdfBytes } from "../lib/print.js";
 import { ScanEngine } from "../scan/client.js";
 import { guardQuad } from "../scan/pipeline.js";
 import { autoUpscaleIfSmall } from "../enhance/quality.js";
@@ -56,6 +57,14 @@ let skipUpscale = false;
 const HANDLE_HIT = 28;
 const EDGE_HIT = 16;
 /**
+ * عدسة الزوايا (وضع القص): دائرة عائمة بتكبير 3x تتبع المؤشر بإزاحة
+ * (لا تغطيه) مع خطوط متقاطعة على الزاوية الدقيقة — لقطة نظيفة من طبقة
+ * الصورة فقط (بلا تعتيم ولا مقابض مكبّرة) حتى تثبت الزاوية على الحافة.
+ */
+const LENS_ZOOM = 3;
+const LENS_RADIUS_CSS = 84;
+const LENS_GAP_CSS = 24;
+/**
  * Bottom strip (CSS px) kept empty for the floating corner buttons
  * (rotate + preview) so they never cover the paper — portrait or landscape.
  */
@@ -89,6 +98,10 @@ let index = 0;
 let acceptedKey = "";
 /** @type {number} corner index, or -1 */
 let dragging = -1;
+/** @type {number} hovered corner index for the lens, or -1 */
+let hoverCorner = -1;
+/** @type {{ x: number; y: number } | null} lens anchor in canvas device px */
+let lensAt = null;
 /** @type {number} edge start-corner index, or -1 */
 let draggingEdge = -1;
 let selected = 0;
@@ -421,6 +434,12 @@ function draw() {
     ctx.textBaseline = "middle";
     ctx.fillText(String(i + 1), point.x, point.y);
   }
+
+  // عدسة الزوايا: أثناء سحب زاوية أو التحويم فوقها فقط (وضع القص).
+  const lensIndex = dragging >= 0 ? dragging : hoverCorner;
+  if (lensIndex >= 0 && lensIndex < page.corners.length) {
+    drawLens(ctx, box, page, lensIndex, lensAt);
+  }
 }
 
 function scheduleDraw() {
@@ -454,6 +473,118 @@ function clampCorner(page, point) {
     x: Math.max(0, Math.min(page.width, point.x)),
     y: Math.max(0, Math.min(page.height, point.y))
   };
+}
+
+/** أقرب زاوية ضمن مسافة الالتقاط، أو -1 (نفس عتبة الضغط). */
+function cornerHitIndex(spot, page, box) {
+  let nearest = -1;
+  let best = HANDLE_HIT * (window.devicePixelRatio || 1);
+  page.corners.forEach((corner, i) => {
+    const point = toCanvas(corner, box);
+    const distance = Math.hypot(point.x - spot.canvasX, point.y - spot.canvasY);
+    if (distance < best) {
+      best = distance;
+      nearest = i;
+    }
+  });
+  return nearest;
+}
+
+/**
+ * عدسة دائرية عائمة 3x حول الزاوية: تُرسم طبقة الصورة فقط (بالدوران
+ * والفلتر الحاليين) داخل قصّ دائري، والزاوية الدقيقة في مركز العدسة
+ * تمامًا مع خطوط متقاطعة. الموضع مزاح عن المؤشر وينقلب تلقائيًا عند
+ * الحواف حتى لا يغطي الزاوية ولا يخرج من اللوحة.
+ */
+function drawLens(ctx, box, page, lensIndex, anchor) {
+  const center = toCanvas(page.corners[lensIndex], box);
+  const at = anchor ?? center;
+  const rect = canvas.getBoundingClientRect();
+  const canvasDpr = canvas.width / Math.max(1, rect.width);
+  const radius = LENS_RADIUS_CSS * canvasDpr;
+  const gap = LENS_GAP_CSS * canvasDpr;
+  const sideX = at.x < canvas.width / 2 ? 1 : -1;
+  const sideY = at.y - radius - gap * 2 < 0 ? 1 : -1;
+  const clampNum = (v, min, max) => Math.max(min, Math.min(max, v));
+  const lx = clampNum(at.x + sideX * (radius + gap), radius + 4, Math.max(radius + 4, canvas.width - radius - 4));
+  const ly = clampNum(at.y + sideY * (radius + gap), radius + 4, Math.max(radius + 4, canvas.height - radius - 4));
+  const ink = getComputedStyle(document.documentElement).getPropertyValue("--act").trim() || "#5e6ad2";
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(lx, ly, radius, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(lx - radius, ly - radius, radius * 2, radius * 2);
+  ctx.save();
+  ctx.translate(lx, ly);
+  ctx.scale(LENS_ZOOM, LENS_ZOOM);
+  ctx.translate(-center.x, -center.y);
+  ctx.translate(box.offsetX + box.boxW * box.fit / 2, box.offsetY + box.boxH * box.fit / 2);
+  ctx.rotate(box.turns * Math.PI / 2);
+  ctx.filter = MODE_FILTER[page.mode] || "none";
+  ctx.imageSmoothingQuality = "high";
+  const drawW = box.sourceW * box.fit;
+  const drawH = box.sourceH * box.fit;
+  ctx.drawImage(box.source, -drawW / 2, -drawH / 2, drawW, drawH);
+  ctx.filter = "none";
+  ctx.restore();
+  // خطوط متقاطعة على الزاوية الدقيقة (مركز العدسة) + حلقة مركزية.
+  ctx.save();
+  ctx.strokeStyle = "rgba(8, 9, 10, 0.55)";
+  ctx.lineWidth = Math.max(1.5, canvasDpr * 1.5);
+  ctx.beginPath();
+  ctx.moveTo(lx - radius, ly);
+  ctx.lineTo(lx + radius, ly);
+  ctx.moveTo(lx, ly - radius);
+  ctx.lineTo(lx, ly + radius);
+  ctx.stroke();
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = Math.max(1, canvasDpr);
+  ctx.beginPath();
+  ctx.moveTo(lx - radius, ly);
+  ctx.lineTo(lx + radius, ly);
+  ctx.moveTo(lx, ly - radius);
+  ctx.lineTo(lx, ly + radius);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(lx, ly, 7 * canvasDpr, 0, Math.PI * 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+  ctx.lineWidth = 2.5 * canvasDpr;
+  ctx.strokeStyle = ink;
+  ctx.stroke();
+  ctx.restore();
+  ctx.restore();
+
+  // إطار العدسة: حلقة ملوّنة + حلقة داكنة خارجية (مثل مقابض الزوايا).
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(lx, ly, radius, 0, Math.PI * 2);
+  ctx.lineWidth = 3 * canvasDpr;
+  ctx.strokeStyle = ink;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(lx, ly, radius + 1.5 * canvasDpr, 0, Math.PI * 2);
+  ctx.lineWidth = Math.max(1, canvasDpr);
+  ctx.strokeStyle = "rgba(8, 9, 10, 0.45)";
+  ctx.stroke();
+  // شارة التكبير أسفل العدسة.
+  const badgeW = 34 * canvasDpr;
+  const badgeH = 18 * canvasDpr;
+  const bx = lx - badgeW / 2;
+  const by = ly + radius - badgeH - 8 * canvasDpr;
+  ctx.fillStyle = "rgba(8, 9, 10, 0.72)";
+  ctx.beginPath();
+  if (typeof ctx.roundRect === "function") ctx.roundRect(bx, by, badgeW, badgeH, badgeH / 2);
+  else ctx.rect(bx, by, badgeW, badgeH);
+  ctx.fill();
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `${11 * canvasDpr}px "Noto Naskh Arabic", sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("3×", lx, by + badgeH / 2 + canvasDpr);
+  ctx.restore();
 }
 
 /**
@@ -728,6 +859,7 @@ function moveLayoutDrag(event) {
  * grab over the image, diagonal arrows over corner handles, straight
  * arrows over edge handles, default over empty paper, crosshair in cut
  * mode. Cheap hit-test — no throttle needed.
+ * Tracks the hovered corner too, so the 3x lens follows hover + drag.
  */
 function updateHoverCursor(event) {
   if (!canvas || !event) return;
@@ -749,8 +881,27 @@ function updateHoverCursor(event) {
       return;
     }
   }
-  canvas.style.cursor = "crosshair";
+  if (viewMode !== "crop") {
+    canvas.style.cursor = "crosshair";
+    return;
+  }
+  const box = layout();
+  if (!page || !box) {
+    canvas.style.cursor = "crosshair";
+    return;
+  }
+  const spot = pointerToSource(event, box);
+  const at = { x: spot.canvasX, y: spot.canvasY };
+  const nearest = cornerHitIndex(spot, page, box);
+  const changed = nearest !== hoverCorner || JSON.stringify(lensAt) !== JSON.stringify(at);
+  hoverCorner = nearest;
+  lensAt = nearest >= 0 ? at : null;
+  canvas.style.cursor = nearest >= 0 ? "move" : "crosshair";
+  if (changed) scheduleDraw();
 }
+
+// Back-compat alias: the hover tracker doubles as the cursor updater.
+const updateHoverState = updateHoverCursor;
 
 function wireCanvas() {
   if (!canvas) return;
@@ -789,22 +940,16 @@ function wireCanvas() {
       return;
     }
     const spot = pointerToSource(event, box);
-    let nearest = -1;
-    let best = HANDLE_HIT * (window.devicePixelRatio || 1);
-    page.corners.forEach((corner, i) => {
-      const point = toCanvas(corner, box);
-      const distance = Math.hypot(point.x - spot.canvasX, point.y - spot.canvasY);
-      if (distance < best) {
-        best = distance;
-        nearest = i;
-      }
-    });
+    const nearest = cornerHitIndex(spot, page, box);
     if (nearest >= 0) {
       dragging = nearest;
       draggingEdge = -1;
       selected = nearest;
+      hoverCorner = -1;
+      lensAt = { x: spot.canvasX, y: spot.canvasY };
       dragOrigCorners = page.corners.map((corner) => ({ ...corner }));
       lastPointer = { x: spot.x, y: spot.y };
+      canvas.style.cursor = "move";
       canvas.setPointerCapture(event.pointerId);
       canvas.focus({ preventScroll: true });
       scheduleDraw();
@@ -841,7 +986,7 @@ function wireCanvas() {
       return;
     }
     if (dragging < 0 && draggingEdge < 0) {
-      updateHoverCursor(event);
+      updateHoverState(event);
       return;
     }
     const page = current();
@@ -851,6 +996,7 @@ function wireCanvas() {
     if (dragging >= 0) {
       page.corners[dragging] = clampCorner(page, spot);
       selected = dragging;
+      lensAt = { x: spot.canvasX, y: spot.canvasY };
     } else if (draggingEdge >= 0 && lastPointer) {
       const dx = spot.x - lastPointer.x;
       const dy = spot.y - lastPointer.y;
@@ -880,11 +1026,21 @@ function wireCanvas() {
     dragOrigCorners = null;
     const page = current();
     if (page) markDirty(page, "حدود يدوية.");
-    updateHoverCursor(event);
+    // Lens follows the pointer after release: recompute hover so it stays
+    // visible while parked over a corner, hides when moving away.
+    hoverCorner = -1;
+    lensAt = null;
+    updateHoverState(event);
     scheduleDraw();
   };
   canvas.addEventListener("pointerup", release);
   canvas.addEventListener("pointercancel", release);
+  canvas.addEventListener("pointerleave", () => {
+    if (dragging >= 0 || draggingEdge >= 0) return;
+    hoverCorner = -1;
+    lensAt = null;
+    scheduleDraw();
+  });
 
   canvas.addEventListener("keydown", (event) => {
     // Esc unwinds one level: ongoing drag, then staged review, then the sheet.
@@ -906,6 +1062,8 @@ function wireCanvas() {
         draggingEdge = -1;
         lastPointer = null;
         dragOrigCorners = null;
+        hoverCorner = -1;
+        lensAt = null;
         scheduleDraw();
         return;
       }
@@ -974,6 +1132,8 @@ function syncModeButtons() {
 
 async function setViewMode(mode) {
   if (mode !== "crop" && mode !== "layout" && mode !== "preview") return;
+  hoverCorner = -1;
+  lensAt = null;
   viewMode = mode;
   showingResult = mode !== "crop";
   cropOpen = mode === "crop";
@@ -1035,6 +1195,8 @@ function updateMeta(_text) {
 
 function refresh() {
   const has = pages.length > 0;
+  hoverCorner = -1;
+  lensAt = null;
   el("scan-workspace").hidden = !has;
   el("scan-start").hidden = has;
 
@@ -1425,6 +1587,8 @@ async function clearAll() {
   acceptedKey = "";
   layoutDrag = null;
   dragOrigCorners = null;
+  hoverCorner = -1;
+  lensAt = null;
   lastSnap = { x: false, y: false };
   badgeUntil = 0;
   setName("مستند-ممسوح.pdf");
@@ -1804,6 +1968,96 @@ async function toggleResultPreview() {
  * Export
  * ---------------------------------------------------------------- */
 
+/**
+ * يبني بايتات PDF من الصفحات الحالية بنفس هندسة التصدير (مقاس/اتجاه/تخطيط)
+ * ليُستخدم للحفظ أو الطباعة المباشرة دون ازدواج المنطق.
+ * @returns {Promise<Uint8Array>}
+ */
+async function buildScanPdfBytes() {
+  const { PDFDocument } = lib();
+  const doc = await PDFDocument.create();
+  const preset = /** @type {HTMLSelectElement} */ (el("scan-page")).value;
+  const orientation = /** @type {HTMLSelectElement} */ (el("scan-orient")).value;
+
+  for (const [order, page] of pages.entries()) {
+    throwIfCancelled();
+    const pageBase = order / pages.length;
+    const pageSpan = 1 / pages.length;
+    const detail = `صفحة ${order + 1} من ${pages.length}`;
+    updateProgress({ percent: pageBase * 100, detail });
+    const bitmap = await renderResult(page, (frac, stepDetail) => {
+      const clamped = Math.max(0, Math.min(1, frac));
+      updateProgress({ percent: (pageBase + pageSpan * clamped) * 100, detail: stepDetail || detail });
+    });
+    throwIfCancelled();
+    const bytes = await bitmapToBytes(bitmap, "image/jpeg", 0.9);
+    throwIfCancelled();
+    const embedded = await doc.embedJpg(bytes);
+
+    let pageWidth;
+    let pageHeight;
+    if (preset === "fit") {
+      pageWidth = embedded.width * 0.75;
+      pageHeight = embedded.height * 0.75;
+    } else {
+      const base = PAGE_SIZES[preset] ?? PAGE_SIZES.a4;
+      const landscape =
+        orientation === "landscape" || (orientation === "auto" && embedded.width > embedded.height);
+      pageWidth = landscape ? base.height : base.width;
+      pageHeight = landscape ? base.width : base.height;
+    }
+    const created = doc.addPage([pageWidth, pageHeight]);
+    const rect = preset === "fit"
+      ? { x: 0, y: 0, w: pageWidth, h: pageHeight }
+      : rectForPagePt(page, pageWidth, pageHeight, embedded.width, embedded.height);
+    created.drawImage(embedded, { x: rect.x, y: rect.y, width: rect.w, height: rect.h });
+    await yieldToUi();
+  }
+
+  throwIfCancelled();
+  updateProgress({ percent: 96, desc: "نكتب الملف.", detail: "" });
+  return doc.save();
+}
+
+function scanDocName() {
+  return ((/** @type {HTMLInputElement} */ (el("scan-name"))?.value || el("tb-name").value || "مستند-ممسوح").trim());
+}
+
+/** طباعة مباشرة: نبني PDF النهائي ثم نفتح حوار طباعة النظام. */
+async function printNow() {
+  if (!pages.length) {
+    toast("أضف صوراً أولاً.", "info");
+    return;
+  }
+  const saveButton = /** @type {HTMLButtonElement} */ (el("scan-save"));
+  const printButton = /** @type {HTMLButtonElement} */ (el("scan-print"));
+  setState("busy");
+  if (saveButton) saveButton.disabled = true;
+  if (printButton) printButton.disabled = true;
+  startProgress({ title: "تجهيز الطباعة", desc: "نجهّز الصفحات للطباعة." });
+  upscaleFallbacks = 0;
+  skipUpscale = false;
+  setSkipHandler(() => {
+    skipUpscale = true;
+    updateProgress({ detail: "جارٍ تخطي رفع الجودة…" });
+  });
+  setSkipVisible(el("scan-upscale")?.checked === true);
+  try {
+    const bytes = await buildScanPdfBytes();
+    endProgress();
+    await printPdfBytes(bytes, withExtension(scanDocName(), "pdf"));
+  } catch (error) {
+    reportFailure(error, "تعذّرت الطباعة.");
+  } finally {
+    if (saveButton) saveButton.disabled = false;
+    if (printButton) printButton.disabled = false;
+    setSkipVisible(false);
+    setSkipHandler(null);
+    endProgress();
+    setState("idle");
+  }
+}
+
 async function run() {
   if (!pages.length) return;
   const format = /** @type {HTMLSelectElement} */ (el("scan-output")).value;
@@ -1822,60 +2076,9 @@ async function run() {
   setSkipVisible(el("scan-upscale")?.checked === true);
   try {
     if (format === "pdf") {
-      const { PDFDocument } = lib();
-      const doc = await PDFDocument.create();
-      const preset = /** @type {HTMLSelectElement} */ (el("scan-page")).value;
-      const orientation = /** @type {HTMLSelectElement} */ (el("scan-orient")).value;
-
-      for (const [order, page] of pages.entries()) {
-        throwIfCancelled();
-        const pageBase = order / pages.length;
-        const pageSpan = 1 / pages.length;
-        const detail = `صفحة ${order + 1} من ${pages.length}`;
-        updateProgress({ percent: pageBase * 100, detail });
-        const bitmap = await renderResult(page, (frac, stepDetail) => {
-          const clamped = Math.max(0, Math.min(1, frac));
-          updateProgress({ percent: (pageBase + pageSpan * clamped) * 100, detail: stepDetail || detail });
-        });
-        throwIfCancelled();
-        const bytes = await bitmapToBytes(bitmap, "image/jpeg", 0.9);
-        throwIfCancelled();
-        const embedded = await doc.embedJpg(bytes);
-
-        let pageWidth;
-        let pageHeight;
-        if (preset === "fit") {
-          // The sheet fits the image exactly — no free layout on fit.
-          pageWidth = embedded.width * 0.75;
-          pageHeight = embedded.height * 0.75;
-        } else {
-          const base = PAGE_SIZES[preset] ?? PAGE_SIZES.a4;
-          const landscape =
-            orientation === "landscape" || (orientation === "auto" && embedded.width > embedded.height);
-          pageWidth = landscape ? base.height : base.width;
-          pageHeight = landscape ? base.width : base.height;
-        }
-        const created = doc.addPage([pageWidth, pageHeight]);
-        // Free layout: the stored rect, or the automatic centered fill /
-        // fixed-size ID card — exactly what the result preview shows.
-        const rect = preset === "fit"
-          ? { x: 0, y: 0, w: pageWidth, h: pageHeight }
-          : rectForPagePt(page, pageWidth, pageHeight, embedded.width, embedded.height);
-        created.drawImage(embedded, {
-          x: rect.x,
-          y: rect.y,
-          width: rect.w,
-          height: rect.h
-        });
-        // Let the overlay paint between heavy pages.
-        await yieldToUi();
-      }
-
-      throwIfCancelled();
-      updateProgress({ percent: 96, desc: "نكتب الملف.", detail: "" });
-      const bytes = await doc.save();
+      const bytes = await buildScanPdfBytes();
       endProgress();
-      const docName = (/** @type {HTMLInputElement} */ (el("scan-name"))?.value || el("tb-name").value || "مستند-ممسوح").trim();
+      const docName = scanDocName();
       const saved = await saveFile(bytes, withExtension(docName, "pdf"), "pdf");
       reportSave(saved, `تم مسح ${pages.length} صفحة إلى ملف PDF.`);
       if (saved) reportUpscaleFallbacks();
@@ -1967,6 +2170,8 @@ export const scanTool = {
     draggingEdge = -1;
     layoutDrag = null;
     dragOrigCorners = null;
+    hoverCorner = -1;
+    lensAt = null;
     lastSnap = { x: false, y: false };
     badgeUntil = 0;
     lastPointer = null;
@@ -1994,6 +2199,7 @@ export const scanTool = {
     el("scan-add")?.addEventListener("click", () => el("scan-input").click());
     el("scan-clear")?.addEventListener("click", clearAll);
     el("scan-save")?.addEventListener("click", () => void run());
+    el("scan-print")?.addEventListener("click", () => void printNow());
     el("scan-save-menu")?.addEventListener("click", toggleExportPop);
     el("scan-export-confirm")?.addEventListener("click", () => {
       closeExportPop();

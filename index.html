@@ -71,6 +71,7 @@
     <symbol id="icon-eye-off" viewBox="0 0 24 24"><path d="M3 3L21 21"/><path d="M10.6 10.6C9.6 11.6 9.6 13.4 10.6 14.4C11.6 15.4 13.4 15.4 14.4 14.4"/><path d="M9.7 5.3C11 4.5 13 4.3 15 5.5C17 6.7 19 9 21 12C21 12 19.5 14.5 17 16.5"/><path d="M3 12C3 12 5 8.5 9 6"/></symbol>
     <symbol id="icon-chev" viewBox="0 0 24 24"><path d="M9 6L15 12L9 18"/></symbol>
     <symbol id="icon-expand" viewBox="0 0 24 24"><path d="M15 3H21V9"/><path d="M9 21H3V15"/><path d="M21 3L14 10"/><path d="M3 21L10 14"/></symbol>
+    <symbol id="icon-print" viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><path d="M4 9h16a1 1 0 0 1 1 1v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a1 1 0 0 1 1-1Z"/><path d="M6 14h12v7H6z"/></symbol>
   </svg>
 
   <div class="board">
@@ -217,6 +218,9 @@
 
                 <span class="scan__spacer"></span>
 
+                <button id="scan-print" type="button" class="btn btn--compact">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-print"></use></svg> طباعة
+                </button>
                 <div class="scan__save-split">
                   <button id="scan-save" type="button" class="btn btn--compact btn--act scan__save">
                     <span class="btn__label" id="scan-save-label">إنشاء PDF</span>

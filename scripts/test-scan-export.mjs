@@ -107,9 +107,13 @@ console.log("\nscan export — intra-page progress and cancellation");
     `${renderCancels} checkpoints found, need at least 3`
   );
 
-  const runStart = scanTool.indexOf("async function run()");
+  const exportStart = Math.min(
+    ...["async function buildScanPdfBytes()", "async function run()"]
+      .map((marker) => scanTool.indexOf(marker))
+      .filter((i) => i >= 0)
+  );
   const toolStart = scanTool.indexOf("export const scanTool");
-  const runBody = runStart >= 0 && toolStart > runStart ? scanTool.slice(runStart, toolStart) : "";
+  const runBody = exportStart >= 0 && toolStart > exportStart ? scanTool.slice(exportStart, toolStart) : "";
   check(
     "export passes a per-page progress mapper into renderResult",
     runBody.includes("renderResult(page,"),
@@ -685,6 +689,26 @@ console.log("\nscan result mode — edits never flash the crop UI");
       "drag bursts must coalesce instead of queueing a worker run per move"
     );
   }
+}
+
+console.log("\ndirect print — output fills the sheet like the preview");
+{
+  const printSrc = await load("assets/js/lib/print.js");
+  check(
+    "print uses borderless @page so fill stays fill",
+    /@page\s*\{\s*size:\s*auto;\s*margin:\s*0;\s*\}/.test(printSrc),
+    "any @page margin shrinks the sheet image and leaves a white frame"
+  );
+  check(
+    "no fixed print margin remains",
+    !/10mm/.test(printSrc),
+    "the old 10mm margin was the reported fill bug"
+  );
+  check(
+    "print images span the full page width",
+    /#print-root img\s*\{[^}]*width:\s*100%/.test(printSrc),
+    "narrow images would not match the in-app preview"
+  );
 }
 
 console.log(`\n${checks - failures}/${checks} checks passed`);

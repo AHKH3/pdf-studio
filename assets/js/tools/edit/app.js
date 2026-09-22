@@ -1,4 +1,5 @@
 import { baseName, humanSize, isPdfFile, saveFile, withExtension } from "../../lib/files.js";
+import { printPdfBytes } from "../../lib/print.js";
 import { endProgress, isCancellation, startProgress, toast } from "../../ui/feedback.js";
 import { getName, setName, setRunEnabled, setSource, setState } from "../../ui/titleblock.js";
 import { confirmDiscard, confirmReplace, readPdfFile, reportFailure as reportFailureToChrome, reportSave as reportSaveToChrome, tabTitle, uid } from "../shared.js";
@@ -266,6 +267,7 @@ function refresh(overlay = true) {
   if (session.ui?.prev) session.ui.prev.disabled = session.pageIndex <= 0;
   if (session.ui?.next) session.ui.next.disabled = session.pageIndex >= session.pages - 1;
   if (session.ui?.save) session.ui.save.disabled = session.objects.length === 0;
+  if (session.ui?.print) session.ui.print.disabled = !session.bytes;
   const hasSel = session.selectedIds.length > 0;
   if (session.ui?.remove) session.ui.remove.disabled = !hasSel;
   if (session.ui?.dup) session.ui.dup.disabled = !hasSel;
@@ -1296,6 +1298,28 @@ function onRootKey(event) {
   }
 }
 
+/** طباعة مباشرة: الناتج النهائي (مدمجًا إن وُجدت تعديلات) عبر حوار النظام. */
+export async function printNow() {
+  if (!session.bytes) {
+    toast("افتح ملف PDF أولاً.", "info");
+    return;
+  }
+  if (hasTitleblock()) setState("busy");
+  startProgress({ title: "تجهيز الطباعة", desc: "نجهّز الملف للطباعة." });
+  try {
+    const bytes = session.objects.length
+      ? await flattenObjects(session.bytes, session.objects)
+      : session.bytes;
+    endProgress();
+    await printPdfBytes(bytes, suggestedName());
+  } catch (error) {
+    reportFailure(error, "تعذّرت الطباعة.");
+  } finally {
+    endProgress();
+    syncChrome();
+  }
+}
+
 export async function run() {
   if (!session.bytes) {
     toast("افتح ملف PDF أولاً.", "info");
@@ -1527,6 +1551,7 @@ export function mount(rootEl) {
     refresh();
   }, { signal });
   session.ui.save.addEventListener("click", () => run(), { signal });
+  session.ui.print?.addEventListener("click", () => void printNow(), { signal });
   session.ui.clear.addEventListener("click", () => closeDocument(), { signal });
   session.ui.prev.addEventListener("click", () => goTo(session.pageIndex - 1), { signal });
   session.ui.next.addEventListener("click", () => goTo(session.pageIndex + 1), { signal });
